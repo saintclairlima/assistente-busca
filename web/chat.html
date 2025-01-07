@@ -379,7 +379,7 @@
                                     } else if (retorno['dados']['tag']=='resposta-completa-llm') {
                                         var dados_resposta = retorno['dados']['conteudo'];
                                         divResposta.innerHTML = formatarResposta(dados_resposta);
-                                        contexto = dados_resposta.resposta_llama.context;
+                                        contexto = dados_resposta.resposta_ollama.context;
                                         console.log(dados_resposta);
                                         habilitarCampos = true;
                                     }

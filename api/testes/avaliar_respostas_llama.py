@@ -17,21 +17,21 @@ FAZER_LOG = False
 
 
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
-URL_LLAMA = 'http://localhost:11434'
-MODELO_LLAMA='llama3.1'
+URL_OLLAMA = 'http://localhost:11434'
+MODELO_OLLAMA='llama3.1'
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 URL_BANCO_VETORES=os.path.join(URL_LOCAL,"../conteudo/bancos_vetores/banco_vetores_regimento_resolucoes_rh")
 NOME_COLECAO='regimento_resolucoes_rh'
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
-async def avaliar_respostas_llama(url_arquivo_entrada, nome_banco_vetores, nome_colecao, url_arquivo_saida=None, instrucao=None):
+async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome_colecao, url_arquivo_saida=None, instrucao=None):
     if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada
     if FAZER_LOG: print('Carregando JSON')
     with open(url_arquivo_entrada, 'r', encoding='utf-8') as arq:
         dados = json.load(arq)
         dados=dados['dados'] # por motivodfe mudança na estrutura do arquivo
     if FAZER_LOG: print('Criando interface Ollama')
-    interface_ollama = InterfaceOllama(url_llama=URL_LLAMA, nome_modelo=MODELO_LLAMA)
+    interface_ollama = InterfaceOllama(url_ollama=URL_OLLAMA, nome_modelo=MODELO_OLLAMA)
 
     if FAZER_LOG: print('Criando cliente Chroma')
     url_banco_vetores = os.path.join(URL_LOCAL, f"../conteudo/bancos_vetores/{nome_banco_vetores}")
@@ -47,8 +47,8 @@ async def avaliar_respostas_llama(url_arquivo_entrada, nome_banco_vetores, nome_
         print(f'\rPergunta {idx+1} de {num_itens}', end="")
         item = dados[idx]
 
-        # Ignora Cada item que já tem uma resposta do llama
-        if 'llama' in item: continue
+        # Ignora Cada item que já tem uma resposta do ollama
+        if 'resp_llm' in item: continue
 
         pergunta = item['pergunta']
         if FAZER_LOG: print('Recuperando documentos')
@@ -56,19 +56,19 @@ async def avaliar_respostas_llama(url_arquivo_entrada, nome_banco_vetores, nome_
             ids=[doc['id'] for doc in item['documentos']]
         )
         if FAZER_LOG: print('Enviando dados para o ollama')
-        texto_resposta_llama = ''
-        async for resp_llama in interface_ollama.gerar_resposta_llama(
+        texto_resposta_llm = ''
+        async for resp_llm in interface_ollama.gerar_resposta_ollama(
                     pergunta=pergunta,
-                    # Inclui o título dos documentos no prompt do Llama
+                    # Inclui o título dos documentos no prompt do Ollama
                     documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'], documentos['documents'])],
                     contexto=[]):
             
-            texto_resposta_llama += resp_llama['response']
+            texto_resposta_llm += resp_llm['response']
 
-        resp_llama['response'] = texto_resposta_llama
-        resp_llama['context'] = []
+        resp_llm['response'] = texto_resposta_llm
+        resp_llm['context'] = []
 
-        item['llama'] = resp_llama
+        item['resp_llm'] = resp_llm
 
         if FAZER_LOG: print('salvando json')
         with open(os.path.join(url_arquivo_saida), 'w', encoding='utf-8') as arq:
@@ -89,7 +89,7 @@ if __name__ == '__main__':
     nome_colecao = args.nome_colecao
     url_saida = None if not args.url_saida else args.url_saida
     instrucao = None if not args.instrucao else args.instrucao
-    asyncio.run(avaliar_respostas_llama(
+    asyncio.run(avaliar_respostas_ollama(
         url_arquivo_entrada=url_entrada,
         nome_banco_vetores=nome_banco_vetores,
         nome_colecao=nome_colecao,
@@ -97,7 +97,7 @@ if __name__ == '__main__':
         instrucao=instrucao
     ))
 # else:
-#     avaliar_respostas_llama(
+#     avaliar_respostas_ollama(
 #         url_arquivo_entrada=url_entrada,
 #         nome_banco_vetores=nome_banco_vetores,
 #         nome_colecao=nome_colecao,

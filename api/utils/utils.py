@@ -36,13 +36,13 @@ class FuncaoEmbeddings(EmbeddingFunction):
         return embeddings.tolist()
     
 class ClienteOllama:
-    def __init__(self, nome_modelo: str, url_llama: str, temperature: float=0):
+    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=0):
         self.modelo = nome_modelo
-        self.url_llama = url_llama
+        self.url_ollama = url_ollama
         self.temperature = temperature
 
     async def stream(self, prompt: str, contexto=[]):
-        url = f"{self.url_llama}/api/generate"
+        url = f"{self.url_ollama}/api/generate"
         
         payload = {
             "model": self.modelo,
@@ -66,9 +66,9 @@ class ClienteOllama:
                             print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
 
 class InterfaceOllama:
-    def __init__(self, nome_modelo: str, url_llama: str, temperature: float=0):
+    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=0):
 
-        self.cliente_ollama = ClienteOllama(url_llama= url_llama, nome_modelo=nome_modelo, temperature=temperature)
+        self.cliente_ollama = ClienteOllama(url_ollama= url_ollama, nome_modelo=nome_modelo, temperature=temperature)
 
         self.papel_do_LLM = '''ALERN e ALRN significam Assembleia Legislativa do Estado do Rio Grande do Norte.
 Você é um assistente que responde a dúvidas de servidores da ALERN sobre o regimento interno da ALRN, o regime jurídico dos servidores estaduais do RN, bem como resoluções da ALRN.
@@ -82,13 +82,13 @@ Se você não souber a resposta, assuma um tom gentil e diga que não tem inform
     def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]):
         return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
 
-    def criar_prompt_llama(self, prompt_usuario: str):
+    def criar_prompt_ollama(self, prompt_usuario: str):
         definicoes_sistema = f'''PAPEL: {self.papel_do_LLM}. DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes}'''
         return f'<s>[INST]<<SYS>>\n{definicoes_sistema}\n<</SYS>>\n{prompt_usuario}[/INST]'
     
-    async def gerar_resposta_llama(self, pergunta: str, documentos: List[str], contexto:List[int]=environment.CONTEXTO_BASE):
+    async def gerar_resposta_ollama(self, pergunta: str, documentos: List[str], contexto:List[int]=environment.CONTEXTO_BASE):
         prompt_usuario = self.formatar_prompt_usuario(pergunta, documentos)
-        prompt = self.criar_prompt_llama(prompt_usuario=prompt_usuario)
+        prompt = self.criar_prompt_ollama(prompt_usuario=prompt_usuario)
         async for fragmento_resposta in self.cliente_ollama.stream(prompt=prompt, contexto=contexto):
             yield fragmento_resposta
 

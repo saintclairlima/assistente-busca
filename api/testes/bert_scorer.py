@@ -17,10 +17,10 @@ def aplicar_score(url_arquivo_entrada, url_arquivo_saida=None):
 
     for idx in range(len(dados)):
         item = dados[idx]
-        if 'llama' in item:
+        if 'resp_llm' in item:
             indices.append(idx)
             candidates.append(item['resposta'])
-            references.append(item['llama']['response'])
+            references.append(item['resp_llm']['response'])
 
     print('Calculando BertScore...')
     P, R, F1 = score(candidates, references, lang="pt-br", verbose=False)

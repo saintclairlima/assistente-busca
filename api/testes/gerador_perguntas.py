@@ -9,8 +9,8 @@ from sentence_transformers import SentenceTransformer
 
 from ..utils.utils import FuncaoEmbeddings
 from ..environment.environment import environment
-URL_LLAMA = 'http://localhost:11434/api/generate'
-MODELO_LLAMA='llama3.1'
+URL_OLLAMA = 'http://localhost:11434/api/generate'
+MODELO_OLLAMA='llama3.1'
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../conteudo"))
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 URL_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_vetores_regimento_resolucoes_rh")
@@ -19,15 +19,15 @@ DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class GeradorPerguntas:
     def __init__(self,
-                 url_llama=URL_LLAMA,
-                 modelo_llama=MODELO_LLAMA,
+                 url_ollama=URL_OLLAMA,
+                 modelo_ollama=MODELO_OLLAMA,
                  url_local=URL_LOCAL,
                  nome_modelo=EMBEDDING_INSTRUCTOR,
                  url_banco_vetores=URL_BANCO_VETORES,
                  nome_colecao=NOME_COLECAO,
                  device=DEVICE):
-        self.URL_LLAMA = url_llama
-        self.MODELO_LLAMA = modelo_llama
+        self.URL_OLLAMA = url_ollama
+        self.MODELO_OLLAMA = modelo_ollama
         self.URL_LOCAL = url_local
         self.NOME_MODELO = nome_modelo
         self.URL_BANCO_VETORES = url_banco_vetores
@@ -37,12 +37,12 @@ class GeradorPerguntas:
     def gerar_perguntas(self, artigo, contexto):
         prompt = '''Considere o artigo abaixo. Crie pelo menos 5 perguntas que possam ser respondidas com fragmentos do artigo. A saída deve ser uma lista de objetos JSON, com os atributos {{"pergunta": "Texto da pergunta Gerada", "resposta": "fragmento do artigo que responde a pergunta"}}. Não adicione nada na resposta, exceto a lista de objetos JSON, sem qualquer comentário adicional. ARTIGO: {}'''.format(artigo)
         payload = {
-            "model": MODELO_LLAMA,
+            "model": MODELO_OLLAMA,
             "prompt": prompt,
             "temperature": 0.0,
             "context": contexto
         }
-        resposta = requests.post(self.URL_LLAMA, json=payload, stream=True)
+        resposta = requests.post(self.URL_OLLAMA, json=payload, stream=True)
         resposta.raise_for_status()
         texto_resposta = ''
         for fragmento in resposta.iter_content(chunk_size=None):

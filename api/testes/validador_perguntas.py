@@ -9,8 +9,8 @@ from sentence_transformers import SentenceTransformer
 
 from ..utils.utils import FuncaoEmbeddings
 from ..environment.environment import environment
-URL_LLAMA = 'http://localhost:11434/api/generate'
-MODELO_LLAMA='llama3.1'
+URL_OLLAMA = 'http://localhost:11434/api/generate'
+MODELO_OLLAMA='llama3.1'
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../conteudo"))
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 URL_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_vetores_regimento_resolucoes_rh")
@@ -19,13 +19,13 @@ DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class ValidadorPerguntas:
     def __init__(self,
-                 url_llama=URL_LLAMA,
-                 modelo_llama=MODELO_LLAMA,
+                 url_ollama=URL_OLLAMA,
+                 modelo_ollama=MODELO_OLLAMA,
                  url_local=URL_LOCAL,
                  nome_modelo=EMBEDDING_INSTRUCTOR,
                  device=DEVICE):
-        self.URL_LLAMA = url_llama
-        self.MODELO_LLAMA = modelo_llama
+        self.URL_OLLAMA = url_ollama
+        self.MODELO_OLLAMA = modelo_ollama
         self.URL_LOCAL = url_local
         self.NOME_MODELO = nome_modelo
         self.DEVICE = device
@@ -33,12 +33,12 @@ class ValidadorPerguntas:
     def validar_pergunta(self, artigo, pergunta, contexto):
         prompt = f'''Considere este texto: {artigo}. Considere esta pergunta: {pergunta}. Analise a pergunta de forma criteriosa e crítica. Avalie se a pergunta é coerente e clara. Avalie se a pergunta pode ser respondida com base no texto. A saída deve ser um objeto JSON, com os atributos {{"coerente": true, "texto_responde": true}}. O atributo "coerente" deve ser true se a pergunta for clara e coerente. O atributo "texto_responde" deve ser true se a pergunta puder ser respondida com base no texto. Não adicione nada na resposta, exceto o objeto JSON, sem qualquer comentário adicional antes ou depois'''
         payload = {
-            "model": MODELO_LLAMA,
+            "model": MODELO_OLLAMA,
             "prompt": prompt,
             "temperature": 0.0,
             "context": contexto
         }
-        resposta = requests.post(self.URL_LLAMA, json=payload, stream=True)
+        resposta = requests.post(self.URL_OLLAMA, json=payload, stream=True)
         resposta.raise_for_status()
         retorno = ''
         for fragmento in resposta.iter_content(chunk_size=None):

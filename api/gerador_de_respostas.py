@@ -37,8 +37,8 @@ class GeradorDeRespostas:
         
         self.modelo_bert_qa_pipeline = pipeline("question-answering", environment.EMBEDDING_SQUAD_PORTUGUESE, device=self.device)
 
-        if fazer_log: print(f'--- preparando o Llama (usando {environment.MODELO_LLAMA})...')
-        self.interface_ollama = InterfaceOllama(url_llama=environment.URL_LLAMA, nome_modelo=environment.MODELO_LLAMA)
+        if fazer_log: print(f'--- preparando o Ollama (usando {environment.MODELO_OLLAMA})...')
+        self.interface_ollama = InterfaceOllama(url_ollama=environment.URL_OLLAMA, nome_modelo=environment.MODELO_OLLAMA)
 
     async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=environment.NUM_DOCUMENTOS_RETORNADOS):
         return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
@@ -175,8 +175,8 @@ class GeradorDeRespostas:
         tempo_bert = marcador_tempo_fim - marcador_tempo_inicio
         if fazer_log: print(f'--- scores atribuídos ({tempo_bert} segundos)')
         
-        # Gerando resposta utilizando o Llama
-        if fazer_log: print(f'--- gerando resposta com o Llama')
+        # Gerando resposta utilizando o Ollama
+        if fazer_log: print(f'--- gerando resposta com o Ollama')
         yield MensagemControle(
             descricao='Informação de Status',
             dados={'tag':'status', 'conteudo':'Gerando resposta'}
@@ -184,15 +184,15 @@ class GeradorDeRespostas:
         
         try:
             marcador_tempo_inicio = time()
-            texto_resposta_llama = ''
+            texto_resposta_llm = ''
             flag_tempo_resposta = False
-            async for item in self.interface_ollama.gerar_resposta_llama(
+            async for item in self.interface_ollama.gerar_resposta_ollama(
                         pergunta=pergunta,
-                        # Inclui o título dos documentos no prompt do Llama
+                        # Inclui o título dos documentos no prompt do LLM
                         documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])],
                         contexto=contexto):
                 
-                texto_resposta_llama += item['response']
+                texto_resposta_llm += item['response']
                 yield MensagemDados(
                     descricao='Fragmento de Resposta do LLM',
                     dados={
@@ -205,16 +205,16 @@ class GeradorDeRespostas:
                     tempo_inicio_resposta = time() - marcador_tempo_inicio
                     if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
 
-            item['response'] = texto_resposta_llama
+            item['response'] = texto_resposta_llm
             marcador_tempo_fim = time()
-            tempo_llama = marcador_tempo_fim - marcador_tempo_inicio
-            if fazer_log: print(f'--- resposta do Llama concluída ({tempo_llama} segundos)')
+            tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
+            if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
         except Exception as excecao:
             yield MensagemErro(
-                descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_LLAMA} não disponível. {excecao.__class__.__name__})',
+                descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__})',
                 mensagem=f'Houve um problema geração de sua resposta. Tente mais tarde. (Tipo do erro: {excecao.__class__.__name__})'
             ).json() + '\n'
-            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_LLAMA} não disponível. {excecao.__class__.__name__}')
+            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__}')
             return
         
 
@@ -226,31 +226,31 @@ class GeradorDeRespostas:
                     'conteudo': {
                         "pergunta": pergunta,
                         "documentos": lista_documentos,
-                        "resposta_llama": item,
-                        "resposta": texto_resposta_llama.replace('\n\n', '\n'),
+                        "resposta_ollama": item,
+                        "resposta": texto_resposta_llm.replace('\n\n', '\n'),
                         "tempo_consulta": tempo_consulta,
                         "tempo_bert": tempo_bert,
                         "tempo_inicio_resposta": tempo_inicio_resposta,
-                        "tempo_llama_total": tempo_llama
+                        "tempo_ollama_total": tempo_ollama
                     }
                 }
             ).json()
         print('Concluído')
 
 '''
-Referência para Mocking do Llama
+Referência para Mocking do Ollama
 #AFAZER: testar contexto grandão
 
         docs = [doc['conteudo'].split(' ') for doc in lista_documentos]
         ctxt = list(contexto)
         for doc in docs: ctxt += doc
-        mock_llama_data = {
+        mock_ollama_data = {
             'context': ctxt * 3,
             'response': 'Esta é uma resposta padrão pra ser usada somente em testes'
         }
         marcador_tempo_fim = time()
-        tempo_llama = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- resposta do Llama concluída ({tempo_llama} segundos)')
+        tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
+        if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
 
         # Retornando dados compilados
         yield MensagemDados(
@@ -260,12 +260,12 @@ Referência para Mocking do Llama
                     'conteudo': {
                         "pergunta": pergunta,
                         "documentos": lista_documentos,
-                        "resposta_llama": mock_llama_data,
-                        "resposta": mock_llama_data['response'].replace('\n\n', '\n'),
+                        "resposta_ollama": mock_ollama_data,
+                        "resposta": mock_ollama_data['response'].replace('\n\n', '\n'),
                         "tempo_consulta": tempo_consulta,
                         "tempo_bert": tempo_bert,
                         "tempo_inicio_resposta": 0.0,
-                        "tempo_llama_total": tempo_llama
+                        "tempo_ollama_total": tempo_ollama
                     }
                 }
             ).json()
