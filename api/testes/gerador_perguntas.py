@@ -34,13 +34,12 @@ class GeradorPerguntas:
         self.NOME_COLECAO = nome_colecao
         self.DEVICE = device
 
-    def gerar_perguntas(self, artigo, contexto):
+    def gerar_perguntas(self, artigo):
         prompt = '''Considere o artigo abaixo. Crie pelo menos 5 perguntas que possam ser respondidas com fragmentos do artigo. A saída deve ser uma lista de objetos JSON, com os atributos {{"pergunta": "Texto da pergunta Gerada", "resposta": "fragmento do artigo que responde a pergunta"}}. Não adicione nada na resposta, exceto a lista de objetos JSON, sem qualquer comentário adicional. ARTIGO: {}'''.format(artigo)
         payload = {
             "model": MODELO_OLLAMA,
             "prompt": prompt,
-            "temperature": 0.0,
-            "context": contexto
+            "temperature": 0.0
         }
         resposta = requests.post(self.URL_OLLAMA, json=payload, stream=True)
         resposta.raise_for_status()
@@ -82,7 +81,7 @@ class GeradorPerguntas:
             print(f'\rProcessando documento {idx+1} de {qtd_docs}', end='')
             doc = documentos[idx]
             if 'perguntas' not in doc:
-                perguntas = self.gerar_perguntas(artigo=doc['page_content'], contexto=[])
+                perguntas = self.gerar_perguntas(artigo=doc['page_content'])
                 doc['perguntas'] = perguntas
                 
                 with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:

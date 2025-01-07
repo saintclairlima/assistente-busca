@@ -263,7 +263,7 @@
     </div>
 
     <script>
-        var contexto = []
+        var historico = []
 
         function formatarResposta(dados_resposta){
             var textoResposta = 
@@ -299,11 +299,11 @@
             if (document.getElementById("text-input").value){
                 document.getElementById("botao-enviar").disabled = true;
                 document.getElementById("text-input").disabled = true;
-                var input = document.getElementById("text-input").value;
+                var pergunta = document.getElementById("text-input").value;
                 document.getElementById("text-input").value = "";
                 var divPergunta = document.createElement("div");
                 divPergunta.className = "text-box";
-                divPergunta.textContent = input;
+                divPergunta.textContent = pergunta;
                 divPergunta.classList.add("align-right");
                 divPergunta.classList.add("mensagem-enviada");
                 document.getElementById("container-exibicao-mensagens").appendChild(divPergunta);
@@ -329,8 +329,8 @@
                     const response = await fetch("TAG_INSERCAO_URL_HOST/chat/enviar_pergunta/", {
                         method: "POST",
                         body: JSON.stringify({
-                            pergunta: input,
-                            contexto: contexto,
+                            pergunta: pergunta,
+                            historico: historico,
                         }),
                         headers: {
                             "Content-type": "application/json; charset=UTF-8"
@@ -379,8 +379,8 @@
                                     } else if (retorno['dados']['tag']=='resposta-completa-llm') {
                                         var dados_resposta = retorno['dados']['conteudo'];
                                         divResposta.innerHTML = formatarResposta(dados_resposta);
-                                        contexto = dados_resposta.resposta_ollama.context;
-                                        console.log(dados_resposta);
+                                        historico.push([pergunta, dados_resposta.resposta])
+                                        console.log(dados_resposta, historico);
                                         habilitarCampos = true;
                                     }
                                     continue;

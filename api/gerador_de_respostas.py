@@ -117,7 +117,7 @@ class GeradorDeRespostas:
         }
 
     async def consultar(self, dados_chat: DadosChat, fazer_log:bool=True):
-        contexto = dados_chat.contexto
+        historico = dados_chat.historico
         pergunta = dados_chat.pergunta
         
         if len(pergunta.split(' ')) > 300:
@@ -190,14 +190,14 @@ class GeradorDeRespostas:
                         pergunta=pergunta,
                         # Inclui o título dos documentos no prompt do LLM
                         documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])],
-                        contexto=contexto):
+                        historico=historico):
                 
-                texto_resposta_llm += item['response']
+                texto_resposta_llm += item['message']['content']
                 yield MensagemDados(
                     descricao='Fragmento de Resposta do LLM',
                     dados={
                         'tag': 'frag-resposta-llm',
-                        'conteudo': item['response']
+                        'conteudo': item['message']['content']
                     }
                     ).json() + '\n'
                 if not flag_tempo_resposta:
@@ -205,7 +205,7 @@ class GeradorDeRespostas:
                     tempo_inicio_resposta = time() - marcador_tempo_inicio
                     if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
 
-            item['response'] = texto_resposta_llm
+            item['message']['content'] = texto_resposta_llm
             marcador_tempo_fim = time()
             tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
             if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
@@ -236,38 +236,3 @@ class GeradorDeRespostas:
                 }
             ).json()
         print('Concluído')
-
-'''
-Referência para Mocking do Ollama
-#AFAZER: testar contexto grandão
-
-        docs = [doc['conteudo'].split(' ') for doc in lista_documentos]
-        ctxt = list(contexto)
-        for doc in docs: ctxt += doc
-        mock_ollama_data = {
-            'context': ctxt * 3,
-            'response': 'Esta é uma resposta padrão pra ser usada somente em testes'
-        }
-        marcador_tempo_fim = time()
-        tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
-
-        # Retornando dados compilados
-        yield MensagemDados(
-                descricao='Resposta completa',
-                dados={
-                    'tag': 'resposta-completa-llm',
-                    'conteudo': {
-                        "pergunta": pergunta,
-                        "documentos": lista_documentos,
-                        "resposta_ollama": mock_ollama_data,
-                        "resposta": mock_ollama_data['response'].replace('\n\n', '\n'),
-                        "tempo_consulta": tempo_consulta,
-                        "tempo_bert": tempo_bert,
-                        "tempo_inicio_resposta": 0.0,
-                        "tempo_ollama_total": tempo_ollama
-                    }
-                }
-            ).json()
-        print('Concluído')
-'''

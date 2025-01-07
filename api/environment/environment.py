@@ -24,8 +24,7 @@ class Environment:
         self.NUM_DOCUMENTOS_RETORNADOS=int(os.getenv('NUM_DOCUMENTOS_RETORNADOS'))
 
         self.MODELO_DE_EMBEDDINGS = self.EMBEDDING_INSTRUCTOR
-
-        self.CONTEXTO_BASE = []
+        
         with open(os.getenv('URL_INDICE_DOCUMENTOS'), 'r') as arq:
             self.DOCUMENTOS = json.load(arq)
 

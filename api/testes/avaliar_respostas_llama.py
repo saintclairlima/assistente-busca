@@ -61,7 +61,7 @@ async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome
                     pergunta=pergunta,
                     # Inclui o título dos documentos no prompt do Ollama
                     documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'], documentos['documents'])],
-                    contexto=[]):
+                    historico=[]):
             
             texto_resposta_llm += resp_llm['response']
 

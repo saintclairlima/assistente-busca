@@ -11,7 +11,7 @@ from typing import List
 
 class DadosChat(BaseModel):
     pergunta: str
-    contexto: list
+    historico: list
 
 class FuncaoEmbeddings(EmbeddingFunction):
     # A instrução oferecida tem melhor resultado em inglês e no formato proposto no artigo do instructor. (Represent the legislative document question for retrieving supporting documents)
@@ -41,16 +41,15 @@ class ClienteOllama:
         self.url_ollama = url_ollama
         self.temperature = temperature
 
-    async def stream(self, prompt: str, contexto=[]):
-        url = f"{self.url_ollama}/api/generate"
+    async def stream(self, mensagens: List[dict]):
+        url = f"{self.url_ollama}/api/chat"
         
         payload = {
             "model": self.modelo,
-            "prompt": prompt,
+            "messages": mensagens,
             "temperature": self.temperature,
-            "context": contexto,
             "stream": True,
-            "max_new_tokens": 4096
+            # "max_new_tokens": 4096 ## AFAZER: considerar remover esse atributo
         }
         
         # Using httpx in synchronous mode
@@ -82,14 +81,23 @@ Se você não souber a resposta, assuma um tom gentil e diga que não tem inform
     def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]):
         return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
 
-    def criar_prompt_ollama(self, prompt_usuario: str):
+    def formatar_mensagens_chat(self, prompt_usuario: str, historico:List[dict]):
         definicoes_sistema = f'''PAPEL: {self.papel_do_LLM}. DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes}'''
-        return f'<s>[INST]<<SYS>>\n{definicoes_sistema}\n<</SYS>>\n{prompt_usuario}[/INST]'
+
+        mensagens = [{'role': 'system', 'content': definicoes_sistema}]
+
+        for pergunta, resposta in historico:
+            mensagens.append({'role': 'user', 'content': pergunta})
+            mensagens.append({'role': 'assistant', 'content': resposta})
+
+        mensagens.append({'role': 'user', 'content': prompt_usuario})
+        
+        return mensagens
     
-    async def gerar_resposta_ollama(self, pergunta: str, documentos: List[str], contexto:List[int]=environment.CONTEXTO_BASE):
+    async def gerar_resposta_ollama(self, pergunta: str, documentos: List[str], historico:List[dict]):
         prompt_usuario = self.formatar_prompt_usuario(pergunta, documentos)
-        prompt = self.criar_prompt_ollama(prompt_usuario=prompt_usuario)
-        async for fragmento_resposta in self.cliente_ollama.stream(prompt=prompt, contexto=contexto):
+        mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
+        async for fragmento_resposta in self.cliente_ollama.stream(mensagens=mensagens):
             yield fragmento_resposta
 
 class InterfaceChroma:

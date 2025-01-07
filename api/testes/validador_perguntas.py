@@ -30,13 +30,12 @@ class ValidadorPerguntas:
         self.NOME_MODELO = nome_modelo
         self.DEVICE = device
 
-    def validar_pergunta(self, artigo, pergunta, contexto):
+    def validar_pergunta(self, artigo, pergunta):
         prompt = f'''Considere este texto: {artigo}. Considere esta pergunta: {pergunta}. Analise a pergunta de forma criteriosa e crítica. Avalie se a pergunta é coerente e clara. Avalie se a pergunta pode ser respondida com base no texto. A saída deve ser um objeto JSON, com os atributos {{"coerente": true, "texto_responde": true}}. O atributo "coerente" deve ser true se a pergunta for clara e coerente. O atributo "texto_responde" deve ser true se a pergunta puder ser respondida com base no texto. Não adicione nada na resposta, exceto o objeto JSON, sem qualquer comentário adicional antes ou depois'''
         payload = {
             "model": MODELO_OLLAMA,
             "prompt": prompt,
-            "temperature": 0.0,
-            "context": contexto
+            "temperature": 0.0
         }
         resposta = requests.post(self.URL_OLLAMA, json=payload, stream=True)
         resposta.raise_for_status()
@@ -60,7 +59,7 @@ class ValidadorPerguntas:
             doc = documentos[idx]
             for pergunta in doc['perguntas']:
                 if 'validacao' not in pergunta:
-                    validacao = self.validar_pergunta(artigo=doc['page_content'], pergunta=pergunta, contexto=[])
+                    validacao = self.validar_pergunta(artigo=doc['page_content'], pergunta=pergunta)
                     pergunta['validacao'] = validacao
                     
                     with open(url_arquivo, 'w', encoding='utf-8') as arq:
