@@ -3,9 +3,6 @@ Este repositório é a continuação do projeto RAG-Chat (https://github.com/sai
 
 Para um histórico do processo, clone aquele repositório.
 
-## Setup
-O aquivo `./setup.sh` permite a disponibilização de arquivos de teste, meramente para colocar o projeto para funcionar. O banco vetorial e sua coleção mencionados no .env.TEMPLATE se referem ao banco vetorial que é descompactado com a execução do arquivo.
-
 ## Ollama: Instalação e Configuração
 ### Instalando o Ollama
 #### Linux
@@ -178,6 +175,14 @@ pip install -r requirements.txt
 ```
 
 Obs: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos requisitos (2.x) e a biblioteca `transformers`. Sendo este o caso, basta instalax uma versão 1.x do `Numpy`.
+
+### Arquivos opcionais inclusos no projeto
+Há dois arquivos contidos no projeto que contém dados que podem ser utilizados.
+`api/conteudo/bancos_vetores/bancos_vetores.zip` possui um conjunto de bancos vetoriais já prontos para uso -- dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. O que obteve melhores resultados foi a coleção `sem_instrucao` do banco vetorial `resultados_testes` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
+
+`api/testes/resultados/testes_automatizados.json.zip` contém os resultados de testes automatizados extensivos feitos sobre o sistema como um todo.
+
+Se for de sua conveniência, a exclusão dos documentos pode ser realizada, dado que são dispensáveis.
 
 ### Iniciando o projeto
 Na pasta raiz do projeto, executar:
