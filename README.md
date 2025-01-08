@@ -180,6 +180,12 @@ Obs: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos re
 Há dois arquivos contidos no projeto que contém dados que podem ser utilizados.
 `api/conteudo/bancos_vetores/bancos_vetores.zip` possui um conjunto de bancos vetoriais já prontos para uso -- dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. O que obteve melhores resultados foi a coleção `sem_instrucao` do banco vetorial `resultados_testes` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
 
+Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`, semelhantemente a:
+
+```bash
+unzip api/conteudo/bancos_vetores/bancos_vetores.zip -d api/conteudo/bancos_vetores
+```
+
 `api/testes/resultados/testes_automatizados.json.zip` contém os resultados de testes automatizados extensivos feitos sobre o sistema como um todo.
 
 Se for de sua conveniência, a exclusão dos documentos pode ser realizada, dado que são dispensáveis.
