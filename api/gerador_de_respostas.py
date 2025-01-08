@@ -158,13 +158,11 @@ class GeradorDeRespostas:
         marcador_tempo_inicio = time()
         for documento in lista_documentos:
             try:
-                raise Exception('Exceção para agilizar')
                 resposta_estimada = await self.estimar_resposta(pergunta, documento['conteudo'])
                 documento['score_bert'] = resposta_estimada['score']
                 documento['score_ponderado'] = resposta_estimada['score_ponderado']
                 documento['resposta_bert'] = resposta_estimada['resposta']
             except Exception as excecao:
-                print(excecao.__traceback__)
                 documento['score_bert'] = None
                 documento['score_ponderado'] = None
                 documento['resposta_bert'] = None
