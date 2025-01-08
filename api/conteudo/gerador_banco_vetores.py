@@ -236,7 +236,7 @@ class GeradorBancoVetores:
             funcao_de_embeddings=dados_funcao_de_embeddings['funcao_de_embeddings'] if dados_funcao_de_embeddings else None
         )
 
-        with open(os.path.join(URL_LOCAL,"bancos_vetores/" + nome_banco_vetores+ 'descritor.json'), 'w', encoding='utf-8') as arq:
+        with open(nome_banco_vetores+ 'descritor.json', 'w', encoding='utf-8') as arq:
             json.dump({
                 "nome": nome_banco_vetores,
                 "colecoes": [
