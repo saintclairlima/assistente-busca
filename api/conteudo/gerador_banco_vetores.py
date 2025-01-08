@@ -1,3 +1,5 @@
+import argparse
+import json
 import os
 import sys
 from ..environment.environment import environment
@@ -75,8 +77,7 @@ class GeradorBancoVetores:
                     'titulo': f'{info["titulo"]}',
                     'subtitulo': f'Art. {tit} - {titulos.count(tit)}',
                     'autor': f'{info["autor"]}',
-                    'fonte': f'{info["fonte"]}',
-                    'pagina': None
+                    'fonte': f'{info["fonte"]}'
                 },
             }
             fragmentos.append(fragmento)
@@ -90,18 +91,19 @@ class GeradorBancoVetores:
             return self.processar_texto_articulado(texto, info, comprimento_max_fragmento)
         
         if len(texto.split(' ')) <= comprimento_max_fragmento:
-            return [{
-                    'page_content': texto,
-                    'metadata': {
-                        'titulo': f'{info["titulo"]}',
-                        'subtitulo':
-                            f'Página {pagina} - Fragmento 1' if pagina
-                            else f'Fragmento 1',
-                        'autor': f'{info["autor"]}',
-                        'fonte': f'{info["fonte"]}',
-                        'pagina': pagina if pagina else None
-                    },
-                }]
+            fragmento = {
+                'page_content': texto,
+                'metadata': {
+                    'titulo': f'{info["titulo"]}',
+                    'subtitulo':
+                        f'Página {pagina} - Fragmento 1' if pagina
+                        else f'Fragmento 1',
+                    'autor': f'{info["autor"]}',
+                    'fonte': f'{info["fonte"]}',
+                },
+            }
+            if pagina: fragmento['pagina']=pagina
+            return [fragmento]
             
         linhas = texto.replace('. ', '.\n')
         linhas = linhas.split('\n')
@@ -122,16 +124,16 @@ class GeradorBancoVetores:
                             else f'Fragmento {len(fragmentos)+1}',
                         'autor': f'{info["autor"]}',
                         'fonte': f'{info["fonte"]}',
-                        'pagina': pagina if pagina else None
                     },
                 }
+                if pagina: fragmento['pagina'] = pagina
                 fragmentos.append(fragmento)
                 texto_fragmento = ''
             
         return fragmentos       
     
     def extrair_fragmento_txt(self, rotulo, info, comprimento_max_fragmento):
-        with open(os.path.join(URL_LOCAL,info['url']), 'r') as arq:
+        with open(os.path.join(URL_LOCAL,info['url']), 'r', encoding='utf-8') as arq:
             texto = arq.read()
         
         fragmentos = self.processar_texto(texto, info, comprimento_max_fragmento)
@@ -168,8 +170,11 @@ class GeradorBancoVetores:
     }    
     
     def extrair_fragmentos(self,
-        indice_documentos=environment.DOCUMENTOS,
+        indice_documentos=None,
         comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO):
+
+        if not indice_documentos: indice_documentos = environment.DOCUMENTOS
+
         fragmentos = []
         for rotulo, info in indice_documentos.items():
             print(f'Processando {rotulo}')
@@ -184,18 +189,20 @@ class GeradorBancoVetores:
             documentos,
             nome_banco_vetores=NOME_BANCO_VETORES,
             nome_colecao=NOME_COLECAO,
-            instrucao=None):
+            instrucao=None,
+            funcao_de_embeddings=None):
         
         # Utilizando o ChromaDb diretamente
         client = chromadb.PersistentClient(path=nome_banco_vetores)
         
-        funcao_de_embeddings_sentence_tranformer = FuncaoEmbeddings(
-            nome_modelo=EMBEDDING_INSTRUCTOR,
-            tipo_modelo=SentenceTransformer,
-            device=DEVICE,
-            instrucao=instrucao)
+        if not funcao_de_embeddings:
+            funcao_de_embeddings = FuncaoEmbeddings(
+                nome_modelo=EMBEDDING_INSTRUCTOR,
+                tipo_modelo=SentenceTransformer,
+                device=DEVICE,
+                instrucao=instrucao)
         
-        collection = client.create_collection(name=nome_colecao, embedding_function=funcao_de_embeddings_sentence_tranformer, metadata={'hnsw:space': 'cosine'})
+        collection = client.create_collection(name=nome_colecao, embedding_function=funcao_de_embeddings, metadata={'hnsw:space': 'cosine'})
         
         print(f'Gerando >>> Banco {nome_banco_vetores} - Coleção {nome_colecao} - Instrução: {instrucao}')
         qtd_docs = len(documentos)
@@ -210,12 +217,15 @@ class GeradorBancoVetores:
         client._system.stop()
         
     def run(self,
+            indice_documentos=None,
             nome_banco_vetores=NOME_BANCO_VETORES,
             nome_colecao=NOME_COLECAO,
             comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO,
-            instrucao=None):
+            instrucao=None,
+            dados_funcao_de_embeddings=None):
         
         docs = self.extrair_fragmentos(
+            indice_documentos=indice_documentos,
             comprimento_max_fragmento=comprimento_max_fragmento
         )
         
@@ -223,25 +233,55 @@ class GeradorBancoVetores:
             documentos=docs,
             nome_banco_vetores=nome_banco_vetores,
             nome_colecao=nome_colecao,
-            instrucao=instrucao
+            instrucao=instrucao,
+            funcao_de_embeddings=dados_funcao_de_embeddings['funcao_de_embeddings'] if dados_funcao_de_embeddings else None
         )
+
+        with open(os.path.join(URL_LOCAL,"bancos_vetores/" + nome_banco_vetores+ 'descritor.json'), 'w', encoding='utf-8') as arq:
+            json.dump({
+                "nome": nome_banco_vetores,
+                "colecoes": [
+                    {
+                        "nome": nome_colecao,
+                        "instrução": instrucao,
+                        "quantidade_max_palavras_por_documento": comprimento_max_fragmento,
+                        # Se não for fornecida uma função, vai ser utilizada a padrão
+                        "funcao_embeddings": dados_funcao_de_embeddings if dados_funcao_de_embeddings else {
+                            "nome_modelo": "hkunlp/instructor-xl",
+                            "tipo_modelo": "SentenceTransformer"
+                        }
+                    },
+                ]
+            }, arq, ensure_ascii=False, indent=4)
         
         
-if __name__ == "__main__":   
+if __name__ == "__main__":
+
+    parser = argparse.ArgumentParser(description="Gera resultados de busca por documentos a partir de uma lista de perguntas")
+    parser.add_argument('--url_indice_documentos', type=str, help="caminho para arquivo com a lista de documentos")
+    parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--nome_colecao', type=str, required=True, help="coleção do banco a ser utilizada")
+    parser.add_argument('--comprimento_max_fragmento', type=int, required=True, help="número máximo de palavras por fragmento")
+    parser.add_argument('--instrucao', type=str, help="instrucao a ser utilizada na função de embeddings")
+
+    args = parser.parse_args()
+    url_indice_documentos = None if not args.url_indice_documentos else args.url_indice_documentos
+
+    if url_indice_documentos:
+        with open(url_indice_documentos, 'r') as arq:
+            indice_documentos = json.load(arq)
+    else:
+        indice_documentos = None
+            
+    nome_banco_vetores = os.path.join(URL_LOCAL,"bancos_vetores/" + args.nome_banco_vetores)
+    nome_colecao = args.nome_colecao
+    comprimento_max_fragmento = args.comprimento_max_fragmento
+    instrucao = None if not args.instrucao else args.instrucao
+
     gerador_banco_vetores = GeradorBancoVetores()
-    nome_banco_vetores=os.path.join(URL_LOCAL,"bancos_vetores/" + sys.argv[1])
-    nome_colecao=sys.argv[2]
-    comprimento_max_fragmento = int(sys.argv[3])
-    try:
-        instrucao = sys.argv[4]
-        gerador_banco_vetores.run(
-            nome_banco_vetores=nome_banco_vetores,
-            nome_colecao=nome_colecao,
-            comprimento_max_fragmento=comprimento_max_fragmento,
-            instrucao=instrucao)
-    except:
-        gerador_banco_vetores.run(
-            nome_banco_vetores=nome_banco_vetores,
-            nome_colecao=nome_colecao,
-            comprimento_max_fragmento=comprimento_max_fragmento,
-            instrucao=None)
+    gerador_banco_vetores.run(
+        indice_documentos=indice_documentos,
+        nome_banco_vetores=nome_banco_vetores,
+        nome_colecao=nome_colecao,
+        comprimento_max_fragmento=comprimento_max_fragmento,
+        instrucao=instrucao)
