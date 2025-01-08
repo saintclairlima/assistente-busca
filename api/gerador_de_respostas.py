@@ -1,7 +1,7 @@
 import torch
 
 from concurrent.futures import ThreadPoolExecutor
-from time import time
+from time import sleep, time
 from transformers import BertTokenizer, BertForQuestionAnswering, pipeline
 from typing import Callable
 
@@ -158,6 +158,7 @@ class GeradorDeRespostas:
         marcador_tempo_inicio = time()
         for documento in lista_documentos:
             try:
+                raise Exception('Exceção para agilizar')
                 resposta_estimada = await self.estimar_resposta(pergunta, documento['conteudo'])
                 documento['score_bert'] = resposta_estimada['score']
                 documento['score_ponderado'] = resposta_estimada['score_ponderado']
@@ -182,42 +183,84 @@ class GeradorDeRespostas:
             dados={'tag':'status', 'conteudo':'Gerando resposta'}
             ).json() + '\n'
         
-        try:
-            marcador_tempo_inicio = time()
-            texto_resposta_llm = ''
-            flag_tempo_resposta = False
-            async for item in self.interface_ollama.gerar_resposta_ollama(
-                        pergunta=pergunta,
-                        # Inclui o título dos documentos no prompt do LLM
-                        documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])],
-                        historico=historico):
+        # try:
+        #     marcador_tempo_inicio = time()
+        #     texto_resposta_llm = ''
+        #     flag_tempo_resposta = False
+        #     async for item in self.interface_ollama.gerar_resposta_ollama(
+        #                 pergunta=pergunta,
+        #                 # Inclui o título dos documentos no prompt do LLM
+        #                 documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])],
+        #                 historico=historico):
                 
-                texto_resposta_llm += item['message']['content']
-                yield MensagemDados(
-                    descricao='Fragmento de Resposta do LLM',
-                    dados={
-                        'tag': 'frag-resposta-llm',
-                        'conteudo': item['message']['content']
-                    }
-                    ).json() + '\n'
-                if not flag_tempo_resposta:
-                    flag_tempo_resposta = True
-                    tempo_inicio_resposta = time() - marcador_tempo_inicio
-                    if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
+        #         texto_resposta_llm += item['message']['content']
+        #         yield MensagemDados(
+        #             descricao='Fragmento de Resposta do LLM',
+        #             dados={
+        #                 'tag': 'frag-resposta-llm',
+        #                 'conteudo': item['message']['content']
+        #             }
+        #             ).json() + '\n'
+        #         if not flag_tempo_resposta:
+        #             flag_tempo_resposta = True
+        #             tempo_inicio_resposta = time() - marcador_tempo_inicio
+        #             if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
 
-            item['message']['content'] = texto_resposta_llm
-            marcador_tempo_fim = time()
-            tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
-            if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
-        except Exception as excecao:
-            yield MensagemErro(
-                descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__})',
-                mensagem=f'Houve um problema geração de sua resposta. Tente mais tarde. (Tipo do erro: {excecao.__class__.__name__})'
-            ).json() + '\n'
-            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__}')
-            return
+        #     item['message']['content'] = texto_resposta_llm
+        #     marcador_tempo_fim = time()
+        #     tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
+        #     if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
+        # except Exception as excecao:
+        #     yield MensagemErro(
+        #         descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__})',
+        #         mensagem=f'Houve um problema geração de sua resposta. Tente mais tarde. (Tipo do erro: {excecao.__class__.__name__})'
+        #     ).json() + '\n'
+        #     print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__}')
+        #     return
         
 
+        # # Retornando dados compilados
+        # yield MensagemDados(
+        #         descricao='Resposta completa',
+        #         dados={
+        #             'tag': 'resposta-completa-llm',
+        #             'conteudo': {
+        #                 "pergunta": pergunta,
+        #                 "documentos": lista_documentos,
+        #                 "resposta_ollama": item,
+        #                 "resposta": texto_resposta_llm.replace('\n\n', '\n'),
+        #                 "tempo_consulta": tempo_consulta,
+        #                 "tempo_bert": tempo_bert,
+        #                 "tempo_inicio_resposta": tempo_inicio_resposta,
+        #                 "tempo_ollama_total": tempo_ollama
+        #             }
+        #         }
+        #     ).json()
+        # print('Concluído')
+        marcador_tempo_inicio = time()
+        texto_resposta_llm = ''
+        flag_tempo_resposta = False
+        for palavra in ['Resposta ', 'mockada ', 'só ', 'para ', 'testar']:
+            item={'message': {'content': palavra}}
+            texto_resposta_llm += item['message']['content']
+            yield MensagemDados(
+                descricao='Fragmento de Resposta do LLM',
+                dados={
+                    'tag': 'frag-resposta-llm',
+                    'conteudo': item['message']['content']
+                }
+                ).json() + '\n'
+            if not flag_tempo_resposta:
+                flag_tempo_resposta = True
+                tempo_inicio_resposta = time() - marcador_tempo_inicio
+                if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
+            print(texto_resposta_llm)
+
+        item['message']['content'] = texto_resposta_llm
+        marcador_tempo_fim = time()
+        tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
+        if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
+        
         # Retornando dados compilados
         yield MensagemDados(
                 descricao='Resposta completa',
@@ -226,8 +269,8 @@ class GeradorDeRespostas:
                     'conteudo': {
                         "pergunta": pergunta,
                         "documentos": lista_documentos,
-                        "resposta_ollama": item,
-                        "resposta": texto_resposta_llm.replace('\n\n', '\n'),
+                        "resposta_ollama": {'dados_mockados': 'Dados Mockados'},
+                        "resposta": texto_resposta_llm,
                         "tempo_consulta": tempo_consulta,
                         "tempo_bert": tempo_bert,
                         "tempo_inicio_resposta": tempo_inicio_resposta,

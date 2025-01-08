@@ -143,6 +143,23 @@
             background-color: #ffdddd;
             color:#bb3434
         }
+
+        .documento{
+            border-style: solid;
+            border-width: 1px;
+            border-color: var(--azul-claro);
+            border-radius: 5px;
+            padding: 3px;
+            margin-bottom: 10px;
+            color: var(--cinza-medio);
+            display: none;
+        }
+        .documento-titulo{
+            font-weight: bold;
+        }
+        .documento-conteudo{
+            
+        }
         .container-envio-mensagens{
             display: flex;
             flex-direction: row;
@@ -275,7 +292,11 @@
                 "<hr>\n<p><b>Fontes</b></p>\n<div style='font-size: smaller;font-style: italic;'>\n" + 
 
                 dados_resposta.documentos.map((documento) =>{
-                    return `<p><b>${documento.metadados.titulo}</b><br>${documento.conteudo}</p>`
+                    return `
+                    <div class="documento">
+                        <div class="documento-titulo" onclick="toggleConteudo(this)">${documento.metadados.subtitulo} | ${documento.metadados.titulo}</div>
+                        <div class="documento-conteudo">${documento.conteudo}</div>
+                    </div>`
                 }).join("\n") + 
                 
                 `</div>`;
@@ -292,6 +313,13 @@
             // faz a rolagem automática
             if (posicaoMargemInferiorNovaMensagem <= (posicaoMargemInferiorContainer + 20)){
                 containerMensagens.scrollTop = containerMensagens.scrollHeight;
+            }
+        }
+
+        function toggleConteudo(tituloElement) {
+            const conteudo = tituloElement.nextElementSibling; // Get the next sibling
+            if (conteudo && conteudo.classList.contains('documento-conteudo')) {
+                conteudo.style.display = conteudo.style.display === 'block' ? 'none' : 'block';
             }
         }
 
