@@ -1,7 +1,7 @@
 import torch
 
 from concurrent.futures import ThreadPoolExecutor
-from time import sleep, time
+from time import time
 from transformers import BertTokenizer, BertForQuestionAnswering, pipeline
 from typing import Callable
 
