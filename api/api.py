@@ -56,6 +56,9 @@ async def favicon(): return FileResponse('web/img/favicon/apple-touch-icon.png')
 @app.get('/web/img/favicon/site.webmanifest')
 async def favicon(): return FileResponse('web/img/favicon/site.webmanifest')
 
+@app.get('/web/img/Assistente_.png')
+async def assistente(): return FileResponse('web/img/Assistente_.png')
+
 @app.get('/web/img/Assistente.png')
 async def assistente(): return FileResponse('web/img/Assistente.png')
 
