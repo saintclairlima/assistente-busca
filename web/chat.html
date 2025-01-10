@@ -89,7 +89,7 @@
         }
         .img-assistente{
             margin: 10px;
-            height: 40px;
+            height: 30px;
             border-radius: 50%;
             border-style: solid;
             border-width: 1px;
@@ -273,7 +273,7 @@
 
         <div class="nome-bot">
             <img class="img-assistente" src="/web/img/Assistente_.png">
-            <span class="rotulo-assistente">Zé Augusto</span>
+            <span class="rotulo-assistente">Legis</span>
         </div>
 
 
@@ -282,11 +282,11 @@
                 <!-- Divs das mensagens serão adicionadas aqui -->
                  <div class="text-box mensagem-recebida">
                     <p>Oi! 😊</p>
-                    <p>Eu sou Zé Augusto, um assistente de busca de conteúdo em documentos normativos da ALRN.</p>
-                    <p>Posso responder perguntas sobre o Regimento Interno da ALRN e resoluções que tratam do Auxílio de Assistência à Saúde, 
+                    <p>Eu sou Legis, e posso ser seu assistente de busca de conteúdo em documentos normativos da ALRN.</p>
+                    <p>Você pode fazer perguntas sobre o Regimento Interno da ALRN, o Regime Jurídico dos Servidores do RN e resoluções que tratam do Auxílio de Assistência à Saúde, 
                         da Base de Cálculo de Férias e Décimo Terceiro, da Avaliação de Desempenho de Estágio Probatório, do Plano de Cargos e Carreira 
                         e da Substituição de Férias de Cargos Comissionados ou Funções Gratificadas.</p>
-                    <p>Para facilitar, peço a gentileza de fazer perguntas detalhadas e específicas. Farei o possível para encontrar a resposta.</p>
+                    <p>Para facilitar, peço a gentileza de fazer perguntas de forma clara e específica. Farei o possível para encontrar a resposta.</p>
                     <p>Tenha em mente que, como estou em fase de testes, é possível que minhas respostas tenham algumas incorreções. 
                         É importante verificar os documentos normativos diretamente, em caso de dúvida.</p>
                  </div>
@@ -301,15 +301,73 @@
     <script>
         var historico = []
 
-        function formatarResposta(dados_resposta){
-            var textoResposta = 
-                dados_resposta.resposta.split('\n').map((linha) =>{
-                    return `<p>${linha}</p>\n`
-                }).join('\n') + 
-                
+        //=== simple markdown parser
+        function converterMarkdownHTML(textoMD) {
+
+            // first, handle syntax for code-block
+            textoMD = textoMD.replace(/\r\n/g, '\n')
+            textoMD = textoMD.replace(/\n~~~ *(.*?)\n([\s\S]*?)\n~~~/g, '<pre><code title="$1">$2</code></pre>' )
+            textoMD = textoMD.replace(/\n``` *(.*?)\n([\s\S]*?)\n```/g, '<pre><code title="$1">$2</code></pre>' )
+
+            // split by "pre>", skip for code-block and process normal text
+            var html = ''
+            var codigoMD = textoMD.split( 'pre>')
+
+            for (var i=0; i<codigoMD.length; i++) {
+                if ( codigoMD[i].substr(-2) == '</' ) {
+                    html += '<pre>' + codigoMD[i] + 'pre>'
+                } else {
+                    html += codigoMD[i].replace(/(.*)<$/, '$1')
+                    .replace(/^##### (.*?)\s*#*$/gm, '<h5>$1</h5>')
+                    .replace(/^#### (.*?)\s*#*$/gm, '<h4 id="$1">$1</h4>')
+                    .replace(/^### (.*?)\s*#*$/gm, '<h3 id="$1">$1</h3>')
+                    .replace(/^## (.*?)\s*#*$/gm, '<h2 id="$1">$1</h2>')
+                    .replace(/^# (.*?)\s*#*$/gm, '<h1 id="$1">$1</h1>')    
+                    .replace(/^-{3,}|^\_{3,}|^\*{3,}/gm, '<hr/>')    
+                    .replace(/``(.*?)``/gm, '<code>$1</code>' )
+                    .replace(/`(.*?)`/gm, '<code>$1</code>' )
+                    .replace(/^\>> (.*$)/gm, '<blockquote><blockquote>$1</blockquote></blockquote>')
+                    .replace(/^\> (.*$)/gm, '<blockquote>$1</blockquote>')
+                    .replace(/<\/blockquote\>\n<blockquote\>/g, '\n<br>' )
+                    .replace(/<\/blockquote\>\n<br\><blockquote\>/g, '\n<br>' )
+                    .replace(/!\[(.*?)\]\((.*?) "(.*?)"\)/gm, '<img alt="$1" src="$2" $3 />')
+                    .replace(/!\[(.*?)\]\((.*?)\)/gm, '<img alt="$1" src="$2" />')
+                    .replace(/\[(.*?)\]\((.*?) "(.*?)"\)/gm, '<a href="$2" title="$3">$1</a>')
+                    .replace(/<http(.*?)\>/gm, '<a href="http$1">http$1</a>')
+                    .replace(/\[(.*?)\]\(\)/gm, '<a href="$1">$1</a>')
+                    .replace(/\[(.*?)\]\((.*?)\)/gm, '<a href="$2">$1</a>')
+                    .replace(/^[\*|+|-][ |.](.*)/gm, '<ul><li>$1</li></ul>' ).replace(/<\/ul\>\n<ul\>/g, '\n' )
+                    .replace(/^\d[ |.](.*)/gm, '<ol><li>$1</li></ol>' ).replace(/<\/ol\>\n<ol\>/g, '\n' )
+                    .replace(/\*\*\*(.*)\*\*\*/gm, '<b><em>$1</em></b>')
+                    .replace(/\*\*(.*)\*\*/gm, '<b>$1</b>')
+                    .replace(/\*([\w \d]*)\*/gm, '<em>$1</em>')
+                    .replace(/___(.*)___/gm, '<b><em>$1</em></b>')
+                    .replace(/__(.*)__/gm, '<u>$1</u>')
+                    .replace(/_([\w \d]*)_/gm, '<em>$1</em>')
+                    .replace(/~~(.*)~~/gm, '<del>$1</del>')
+                    .replace(/\^\^(.*)\^\^/gm, '<ins>$1</ins>')
+                    .replace(/ +\n/g, '\n<br/>')
+                    .replace(/\n\s*\n/g, '</p>\n<p>')
+                    .replace(/^ {4,10}(.*)/gm, '<pre><code>$1</code></pre>' )
+                    .replace(/^\t(.*)/gm, '<pre><code>$1</code></pre>' )
+                    .replace(/<\/code\><\/pre\>\n<pre\><code\>/g, '\n' )
+                    .replace(/\\([`_\\\*\+\-\.\(\)\[\]\{\}])/gm, '$1' )
+                }  
+            }
+
+            return html.trim()
+        }
+
+        function gerarRespostaFormatada(resposta){
+            var html = `<p>${converterMarkdownHTML(resposta)}</p>\n`
+            return html
+        }
+
+        function gerarFontesFormatadas(documentos){
+            var htmlFontes =                
                 `<hr>\n<p class="toggle-fontes-label" id="toggle-fontes-label" onclick="toggleFontes(this)">Mostrar Fontes</p>\n` + 
                 `<div class="fontes fontes-fechado" id="fontes">`+
-                    dados_resposta.documentos.map((documento) =>{
+                    documentos.map((documento) =>{
                         return `
                         <div class="documento">
                             <div class="documento-titulo"><a href="${documento.metadados.fonte}" target="_blank">${documento.metadados.titulo} | ${documento.metadados.subtitulo}</a></div>
@@ -317,7 +375,8 @@
                         </div>`
                     }).join("\n") + 
                 `</div>`;
-            return textoResposta;
+            
+            return htmlFontes;
         }
 
         function rolagemAutomatica(){
@@ -396,8 +455,7 @@
         
                     const reader = response.body.getReader();
                     const decoder = new TextDecoder("utf-8");
-                    let recebeuFlagFimMensagem = false;
-                    let textoAcumulado = "<p>";
+                    let textoAcumulado = "";
         
                     while (true) {
                         rolagemAutomatica();
@@ -409,30 +467,31 @@
                             if (linha.trim() === '') continue;
                             try {
                                 var retorno = JSON.parse(linha.trim());
-                                if (retorno['tipo'] == 'erro') {
-                                    console.error(`${retorno['descricao']}: ${retorno['mensagem']}`);
+                                if (retorno.tipo == 'erro') {
+                                    console.error(`${retorno.descricao}: ${retorno.mensagem}`);
                                     divResposta.classList.remove("mensagem-recebida");
                                     divResposta.classList.add("mensagem-erro");
-                                    divResposta.innerHTML = retorno['mensagem'];
+                                    divResposta.innerHTML = retorno.mensagem;
                                     habilitarCampos = true;
                                     break;
-                                } else if (retorno['tipo'] == 'info') {
-                                    console.info(`${retorno['descricao']}: ${retorno['mensagem']? retorno['mensagem'] : '<sem conteúdo>'}`);
+                                } else if (retorno.tipo == 'info') {
+                                    console.info(`${retorno.descricao}: ${retorno.mensagem? retorno.mensagem : '<sem conteúdo>'}`);
                                     continue;
-                                } else if (retorno['tipo'] == 'controle') {
-                                    if (retorno['dados']['tag']=='status') {
-                                        divResposta.innerHTML = `<i>${retorno['dados']['conteudo']}<i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>`;
+                                } else if (retorno.tipo == 'controle') {
+                                    if (retorno.dados.tag == 'status') {
+                                        divResposta.innerHTML = `<i>${retorno.dados.conteudo}<i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>`;
                                     }
                                     continue;
-                                } else if (retorno['tipo'] == 'dados') {
-                                    if (retorno['dados']['tag']=='frag-resposta-llm') {
-                                        textoAcumulado += retorno['dados']['conteudo']
-                                        divResposta.innerHTML = textoAcumulado
-                                    } else if (retorno['dados']['tag']=='resposta-completa-llm') {
-                                        var dados_resposta = retorno['dados']['conteudo'];
-                                        divResposta.innerHTML = formatarResposta(dados_resposta);
-                                        historico.push([pergunta, dados_resposta.resposta])
-                                        console.log(dados_resposta);
+                                } else if (retorno.tipo == 'dados') {
+                                    if (retorno.dados.tag == 'frag-resposta-llm') {
+                                        textoAcumulado += retorno.dados.conteudo;
+                                        divResposta.innerHTML = gerarRespostaFormatada(textoAcumulado);
+                                    } else if (retorno.dados.tag == 'resposta-completa-llm') {
+                                        var documentos = retorno.dados.conteudo.documentos;
+                                        var resposta = retorno.dados.conteudo.resposta;
+                                        divResposta.innerHTML = gerarRespostaFormatada(resposta) + gerarFontesFormatadas(documentos);
+                                        historico.push([pergunta, resposta])
+                                        console.log(retorno.dados.conteudo);
                                         habilitarCampos = true;
                                     }
                                     continue;

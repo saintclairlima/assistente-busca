@@ -50,14 +50,13 @@ CREATE TABLE Interacao (
 );
 
 CREATE TABLE Documento_em_Interacao (
-    Id_Documento_Interacao INT NOT NULL,
     Resposta_Bert VARCHAR(MAX), 
     Score_Bert NUMERIC,
     Score_Distancia NUMERIC,
     Score_Ponderado NUMERIC,
     Id_Documento INT,
     Id_Interacao INT,
-    CONSTRAINT Pk_Documento_em_Interacao PRIMARY KEY (Id_Documento_Interacao));
+    CONSTRAINT Pk_Documento_em_Interacao PRIMARY KEY (Id_Documento, Id_Interacao));
 
 ALTER TABLE Documento ADD CONSTRAINT Fk_Documento_Colecao FOREIGN KEY(Id_Colecao) REFERENCES Colecao (Id_Colecao);
 ALTER TABLE Colecao ADD CONSTRAINT Fk_Colecao_Banco_Vetores FOREIGN KEY(Id_Banco_Vetores) REFERENCES Banco_Vetores (Id_Banco_Vetores);

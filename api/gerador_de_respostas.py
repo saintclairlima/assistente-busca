@@ -218,7 +218,7 @@ class GeradorDeRespostas:
         
 
         # Retornando dados compilados
-        yield MensagemDados(
+        msg = MensagemDados(
                 descricao='Resposta completa',
                 dados={
                     'tag': 'resposta-completa-llm',
@@ -226,7 +226,7 @@ class GeradorDeRespostas:
                         "pergunta": pergunta,
                         "documentos": lista_documentos,
                         "resposta_ollama": item,
-                        "resposta": texto_resposta_llm.replace('\n\n', '\n'),
+                        "resposta": texto_resposta_llm,
                         "tempo_consulta": tempo_consulta,
                         "tempo_bert": tempo_bert,
                         "tempo_inicio_resposta": tempo_inicio_resposta,
@@ -234,6 +234,7 @@ class GeradorDeRespostas:
                     }
                 }
             ).json()
+        yield msg
         print('Concluído')
 
 

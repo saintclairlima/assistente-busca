@@ -57,12 +57,15 @@ async def favicon(): return FileResponse('web/img/favicon/apple-touch-icon.png')
 async def favicon(): return FileResponse('web/img/favicon/site.webmanifest')
 
 @app.get('/web/img/Assistente_.png')
-async def assistente(): return FileResponse('web/img/Assistente_.png')
+async def assistente_(): return FileResponse('web/img/Assistente_.png')
 
 @app.get('/web/img/Assistente.png')
 async def assistente(): return FileResponse('web/img/Assistente.png')
 
 @app.get('/web/img/logo_al.png')
 async def logo(): return FileResponse('web/img/logo_al.png')
+
+@app.get('/web/markdown.js')
+async def markdown(): return FileResponse('web/markdown.js')
 
 print('API inicializada')
