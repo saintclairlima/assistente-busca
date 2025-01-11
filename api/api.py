@@ -68,4 +68,10 @@ async def logo(): return FileResponse('web/img/logo_al.png')
 @app.get('/web/markdown.js')
 async def markdown(): return FileResponse('web/markdown.js')
 
+@app.get('/web/chat.js')
+async def chat_js(): return FileResponse('web/chat.js')
+
+@app.get('/web/chat.css')
+async def chat_css(): return FileResponse('web/chat.css')
+
 print('API inicializada')
