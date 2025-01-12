@@ -79,7 +79,7 @@ async function submitText(){
         const timeoutId = setTimeout(() => controller.abort(), 120000);
 
         try {
-            const response = await fetch("TAG_INSERCAO_URL_HOST/chat/enviar_pergunta/", {
+            const response = await fetch(`${url_host}/chat/enviar_pergunta/`, {
                 method: "POST",
                 body: JSON.stringify({
                     pergunta: pergunta,
