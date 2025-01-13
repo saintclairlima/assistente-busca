@@ -35,14 +35,26 @@ class FuncaoEmbeddings(EmbeddingFunction):
             embeddings = self.model.encode(input, convert_to_numpy=True, device=self.device)
         return embeddings.tolist()
     
-class ClienteOllama:
-    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=0):
+class ClienteLLM:
+    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=0):
         self.modelo = nome_modelo
-        self.url_ollama = url_ollama
+        self.url_llm = url_llm
         self.temperature = temperature
+    
+    async def stream(self, mensagens: List[dict]):
+        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        
+    
+class ClienteOllama(ClienteLLM):
+    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=0):
+        ClienteLLM.__init__(self,
+                            nome_modelo=nome_modelo,
+                            url_llm=url_llm,
+                            temperature=temperature)
+        self.url_llm = url_llm
 
     async def stream(self, mensagens: List[dict]):
-        url = f"{self.url_ollama}/api/chat"
+        url = f"{self.url_llm}/api/chat"
         
         payload = {
             "model": self.modelo,
@@ -52,7 +64,6 @@ class ClienteOllama:
             # "max_new_tokens": 4096 ## AFAZER: considerar remover esse atributo
         }
         
-        # Using httpx in synchronous mode
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", url, json=payload, timeout=120) as resposta:
                 resposta.raise_for_status()
@@ -64,15 +75,12 @@ class ClienteOllama:
                         except:
                             print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
 
-class InterfaceOllama:
-    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=0):
-
-        self.cliente_ollama = ClienteOllama(url_ollama= url_ollama, nome_modelo=nome_modelo, temperature=temperature)
-
+class InterfaceLLM:
+    
+    def __init__(self):
         self.papel_do_LLM = '''ALERN e ALRN significam Assembleia Legislativa do Estado do Rio Grande do Norte.
 Você é um assistente que responde a dúvidas de servidores da ALERN sobre o regimento interno da ALRN, o regime jurídico dos servidores estaduais do RN, bem como resoluções da ALRN.
 Assuma um tom formal, porém caloroso, com gentileza nas respostas. Utilize palavras e termos que sejam claros, autoexplicativos e linguagem simples, próximo do que o cidadão comum utiliza.'''
-        
         self.diretrizes = '''Use as informações dos DOCUMENTOS fornecidos para gerar uma resposta clara para a PERGUNTA.
 Na resposta, não mencione que foi fornecido documentos de referência. Cite os nomes dos DOCUMENTOS e números dos artigos em que a resposta se baseia.
 A resposta não deve ter saudação, vocativo, nem qualquer tipo de introdução que dê a entender que não houve interação anterior.
@@ -94,7 +102,15 @@ Se você não souber a resposta, assuma um tom gentil e diga que não tem inform
         
         return mensagens
     
-    async def gerar_resposta_ollama(self, pergunta: str, documentos: List[str], historico:List[dict]):
+    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[dict]):
+        raise NotImplementedError('Método gerar_resposta_llm() não foi implantado para esta classe')
+        
+class InterfaceOllama(InterfaceLLM):
+    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=0):
+        InterfaceLLM.__init__(self)
+        self.cliente_ollama = ClienteOllama(url_llm=url_ollama, nome_modelo=nome_modelo, temperature=temperature)
+        
+    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[dict]):
         prompt_usuario = self.formatar_prompt_usuario(pergunta, documentos)
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
         async for fragmento_resposta in self.cliente_ollama.stream(mensagens=mensagens):

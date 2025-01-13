@@ -57,7 +57,7 @@ async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome
         )
         if FAZER_LOG: print('Enviando dados para o ollama')
         texto_resposta_llm = ''
-        async for resp_llm in interface_ollama.gerar_resposta_ollama(
+        async for resp_llm in interface_ollama.gerar_resposta_llm(
                     pergunta=pergunta,
                     # Inclui o título dos documentos no prompt do Ollama
                     documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'], documentos['documents'])],

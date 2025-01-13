@@ -175,7 +175,7 @@ class GeradorDeRespostas:
         if fazer_log: print(f'--- scores atribuídos ({tempo_bert} segundos)')
         
         # Gerando resposta utilizando o Ollama
-        if fazer_log: print(f'--- gerando resposta com o Ollama')
+        if fazer_log: print(f'--- gerando resposta com o cliente LLM')
         yield MensagemControle(
             descricao='Informação de Status',
             dados={'tag':'status', 'conteudo':'Gerando resposta'}
@@ -185,7 +185,7 @@ class GeradorDeRespostas:
             marcador_tempo_inicio = time()
             texto_resposta_llm = ''
             flag_tempo_resposta = False
-            async for item in self.interface_ollama.gerar_resposta_ollama(
+            async for item in self.interface_ollama.gerar_resposta_llm(
                         pergunta=pergunta,
                         # Inclui o título dos documentos no prompt do LLM
                         documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])],
