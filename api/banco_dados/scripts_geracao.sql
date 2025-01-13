@@ -41,7 +41,7 @@ CREATE TABLE Interacao (
     LLM_Tempo_Processamento_Prompt NUMERIC,
     LLM_Num_Tokens_Resposta INT,
     LLM_Tempo_Processamento_Resposta NUMERIC,
-    LLM_Contexto_Interacao VARCHAR(MAX),
+    LLM_Historico VARCHAR(MAX),
     LLM_Resposta VARCHAR(MAX),
     LLM_Tempo_Inicio_Stream NUMERIC, 
     Tempo_Recuperacao_Documentos NUMERIC,
