@@ -137,7 +137,9 @@ class GeradorBancoVetores:
         
         fragmentos = self.processar_texto(texto, info, comprimento_max_fragmento)
         
-        for idx in range(len(fragmentos)): fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
+        for idx in range(len(fragmentos)):
+            fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
+            fragmentos[idx]['metadata']['id'] = f'{rotulo}:{idx+1}'
         return fragmentos
     
     def extrair_fragmento_pdf(self, rotulo, info, comprimento_max_fragmento):
