@@ -224,13 +224,19 @@ class GeradorDeRespostas:
                     'tag': 'resposta-completa-llm',
                     'conteudo': {
                         "pergunta": pergunta,
-                        "documentos": lista_documentos,
-                        "resposta_ollama": item,
+                        #"documentos": lista_documentos,
+                        "documentos": [
+                            {"metadados":{
+                                "fonte": doc['metadados']['fonte'], 
+                                "titulo": doc['metadados']['titulo'],
+                                "subtitulo": doc['metadados']['subtitulo']
+                                }} for doc in lista_documentos],
+                        #"resposta_ollama": item,
                         "resposta": texto_resposta_llm,
-                        "tempo_consulta": tempo_consulta,
-                        "tempo_bert": tempo_bert,
-                        "tempo_inicio_resposta": tempo_inicio_resposta,
-                        "tempo_ollama_total": tempo_ollama
+                        #"tempo_consulta": tempo_consulta,
+                        #"tempo_bert": tempo_bert,
+                        #"tempo_inicio_resposta": tempo_inicio_resposta,
+                        #"tempo_ollama_total": tempo_ollama
                     }
                 }
             ).json()
