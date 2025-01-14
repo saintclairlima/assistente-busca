@@ -2,4 +2,4 @@
 chat-env
 api/.env
 api/testes/resultados/*
-api/conteudo/bancos_vetores/*
+api/dados/bancos_vetores/*

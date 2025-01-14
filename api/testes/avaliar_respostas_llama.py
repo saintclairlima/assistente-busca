@@ -20,7 +20,7 @@ URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
 URL_OLLAMA = 'http://localhost:11434'
 MODELO_OLLAMA='llama3.1'
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
-URL_BANCO_VETORES=os.path.join(URL_LOCAL,"../conteudo/bancos_vetores/banco_vetores_regimento_resolucoes_rh")
+URL_BANCO_VETORES=os.path.join(URL_LOCAL,"../dados/bancos_vetores/banco_vetores_regimento_resolucoes_rh")
 NOME_COLECAO='regimento_resolucoes_rh'
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
@@ -34,7 +34,7 @@ async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome
     interface_ollama = InterfaceOllama(url_ollama=URL_OLLAMA, nome_modelo=MODELO_OLLAMA)
 
     if FAZER_LOG: print('Criando cliente Chroma')
-    url_banco_vetores = os.path.join(URL_LOCAL, f"../conteudo/bancos_vetores/{nome_banco_vetores}")
+    url_banco_vetores = os.path.join(URL_LOCAL, f"../dados/bancos_vetores/{nome_banco_vetores}")
     client = chromadb.PersistentClient(path=url_banco_vetores)
     if FAZER_LOG: print('Criando função de embeddings')
     funcao_de_embeddings_sentence_tranformer = FuncaoEmbeddings(nome_modelo=EMBEDDING_INSTRUCTOR, tipo_modelo=SentenceTransformer, instrucao=instrucao, device=DEVICE)

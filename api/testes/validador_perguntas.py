@@ -11,7 +11,7 @@ from ..utils.utils import FuncaoEmbeddings
 from ..environment.environment import environment
 URL_OLLAMA = 'http://localhost:11434/api/generate'
 MODELO_OLLAMA='llama3.1'
-URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../conteudo"))
+URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../dados"))
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 URL_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_vetores_regimento_resolucoes_rh")
 NOME_COLECAO='regimento_resolucoes_rh'

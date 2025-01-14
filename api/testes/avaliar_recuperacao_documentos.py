@@ -25,7 +25,7 @@ async def avaliar_recuperacao_documentos(
     fazer_log=False):
     
     if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada.split('.')[0] + '_recup_docs.json'
-    url_banco_vetores = os.path.join(URL_LOCAL, f"../conteudo/bancos_vetores/{nome_banco_vetores}")
+    url_banco_vetores = os.path.join(URL_LOCAL, f"../dados/bancos_vetores/{nome_banco_vetores}")
     print(f'Criando GeradorDeRespostas (usando {EMBEDDING_INSTRUCTOR} e instrução "{instrucao}")...')
     funcao_de_embeddings = FuncaoEmbeddings(nome_modelo=EMBEDDING_INSTRUCTOR, tipo_modelo=SentenceTransformer, device=DEVICE, instrucao=instrucao)
     gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddings, url_banco_vetores=url_banco_vetores, colecao_de_documentos=nome_colecao, device=DEVICE)
