@@ -226,7 +226,7 @@ class GeradorBancoVetores:
                 model_name="text-embedding-ada-002"
             )
         
-        nome_colecao_openai = nome_colecao+'_openai"'
+        nome_colecao_openai = nome_colecao+'_openai'
         
         collection2 = client.create_collection(name=nome_colecao_openai, embedding_function=openai_ef, metadata={'hnsw:space': 'cosine'})
         
