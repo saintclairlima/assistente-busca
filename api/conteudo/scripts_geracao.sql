@@ -21,6 +21,7 @@ CREATE TABLE Colecao (
 
 CREATE TABLE Documento (
     Id_Documento INT NOT NULL,
+    Tag_Id_Metadados VARCHAR(500),
     Conteudo VARCHAR(MAX),
     Titulo VARCHAR(500),
     Subtitulo VARCHAR(2000),
