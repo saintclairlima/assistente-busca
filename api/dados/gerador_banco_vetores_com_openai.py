@@ -10,6 +10,8 @@ from chromadb import chromadb
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
 
+import chromadb.utils.embedding_functions as embedding_functions
+
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 DEVICE='cuda' if cuda.is_available() else 'cpu'
@@ -215,6 +217,30 @@ class GeradorBancoVetores:
                 ids=[str(doc['id'])],
                 metadatas=[doc['metadata']],
             )
+
+
+        
+
+        openai_ef = embedding_functions.OpenAIEmbeddingFunction(
+                api_key= os.environ.get("OPENAI_API_KEY", None),
+                model_name="text-embedding-ada-002"
+            )
+        
+        nome_colecao_openai = nome_colecao+'_openai"'
+        
+        collection2 = client.create_collection(name=nome_colecao_openai, embedding_function=openai_ef, metadata={'hnsw:space': 'cosine'})
+        
+        print(f'Gerando >>> Banco {nome_banco_vetores} - Coleção {nome_colecao_openai} - Instrução: {instrucao}')
+        qtd_docs = len(documentos)
+        for idx in range(qtd_docs):
+            print(f'\r>>> Incluindo documento {idx+1} de {qtd_docs}', end='')
+            doc = documentos[idx]
+            collection2.add(
+                documents=[doc['page_content']],
+                ids=[str(doc['id'])],
+                metadatas=[doc['metadata']],
+            )
+
         client._system.stop()
         
     def run(self,

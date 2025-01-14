@@ -206,8 +206,8 @@ class GeradorDeRespostas:
 
             item['message']['content'] = texto_resposta_llm
             marcador_tempo_fim = time()
-            tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
-            if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
+            tempo_llm = marcador_tempo_fim - marcador_tempo_inicio
+            if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_llm} segundos)')
         except Exception as excecao:
             yield MensagemErro(
                 descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__})',
@@ -216,7 +216,6 @@ class GeradorDeRespostas:
             print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__}')
             return
         
-
         # Retornando dados compilados
         msg = MensagemDados(
                 descricao='Resposta completa',
@@ -224,19 +223,21 @@ class GeradorDeRespostas:
                     'tag': 'resposta-completa-llm',
                     'conteudo': {
                         "pergunta": pergunta,
-                        #"documentos": lista_documentos,
-                        "documentos": [
-                            {"metadados":{
-                                "fonte": doc['metadados']['fonte'], 
-                                "titulo": doc['metadados']['titulo'],
-                                "subtitulo": doc['metadados']['subtitulo']
-                                }} for doc in lista_documentos],
-                        #"resposta_ollama": item,
                         "resposta": texto_resposta_llm,
+                        "documentos": [
+                            {
+                                "metadados":{
+                                    "fonte": doc['metadados']['fonte'],
+                                    "titulo": doc['metadados']['titulo'],
+                                    "subtitulo": doc['metadados']['subtitulo']
+                                },
+                                "conteudo": doc['conteudo']} for doc in lista_documentos],
+                        #"documentos": lista_documentos,
+                        #"resposta_completa_llm": item,
                         #"tempo_consulta": tempo_consulta,
                         #"tempo_bert": tempo_bert,
                         #"tempo_inicio_resposta": tempo_inicio_resposta,
-                        #"tempo_ollama_total": tempo_ollama
+                        #"tempo_ollama_total": tempo_llm
                     }
                 }
             ).json()

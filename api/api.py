@@ -9,8 +9,8 @@ from api.gerador_de_respostas import GeradorDeRespostas, DadosChat
 from api.utils.utils import FuncaoEmbeddings
 
 print('Instanciando a api (FastAPI)...')
-app = FastAPI()
-app.add_middleware(
+controller = FastAPI()
+controller.add_middleware(
     CORSMiddleware,
     allow_origins=['*'],  # Allow all origins
     allow_credentials=True,
@@ -24,12 +24,12 @@ gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddi
 
 print('Definindo as rotas')
 
-@app.post('/chat/enviar_pergunta/')
+@controller.post('/chat/enviar_pergunta/')
 async def gerar_resposta(dadosRecebidos: DadosChat):
     return StreamingResponse(gerador_de_respostas.consultar(dadosRecebidos), media_type='text/plain')
 
 
-@app.get('/chat/')
+@controller.get('/chat/')
 async def pagina_chat(url_redirec: str = Query(None)):
     with open('web/chat.html', 'r', encoding='utf-8') as arquivo: conteudo_html = arquivo.read()
     # AFAZER: considerar se manter esse elemento faz sentido. Só é utilizado para uso de testes com o ngrok, no colab
@@ -41,37 +41,37 @@ async def pagina_chat(url_redirec: str = Query(None)):
         conteudo_html = conteudo_html.replace(tag, valor)
     return HTMLResponse(content=conteudo_html, status_code=200)
 
-@app.get('/web/img/favicon/favicon.ico')
+@controller.get('/web/img/favicon/favicon.ico')
 async def favicon(): return FileResponse('web/img/favicon/favicon.ico')
 
-@app.get('/web/img/favicon/favicon.svg')
+@controller.get('/web/img/favicon/favicon.svg')
 async def favicon(): return FileResponse('web/img/favicon/favicon.svg')
 
-@app.get('/web/img/favicon/favicon-48x48.png')
+@controller.get('/web/img/favicon/favicon-48x48.png')
 async def favicon(): return FileResponse('web/img/favicon/favicon-48x48.png')
 
-@app.get('/web/img/favicon/apple-touch-icon.png')
+@controller.get('/web/img/favicon/apple-touch-icon.png')
 async def favicon(): return FileResponse('web/img/favicon/apple-touch-icon.png')
 
-@app.get('/web/img/favicon/site.webmanifest')
+@controller.get('/web/img/favicon/site.webmanifest')
 async def favicon(): return FileResponse('web/img/favicon/site.webmanifest')
 
-@app.get('/web/img/Assistente_.png')
+@controller.get('/web/img/Assistente_.png')
 async def assistente_(): return FileResponse('web/img/Assistente_.png')
 
-@app.get('/web/img/Assistente.png')
+@controller.get('/web/img/Assistente.png')
 async def assistente(): return FileResponse('web/img/Assistente.png')
 
-@app.get('/web/img/logo_al.png')
+@controller.get('/web/img/logo_al.png')
 async def logo(): return FileResponse('web/img/logo_al.png')
 
-@app.get('/web/markdown.js')
+@controller.get('/web/markdown.js')
 async def markdown(): return FileResponse('web/markdown.js')
 
-@app.get('/web/chat.js')
+@controller.get('/web/chat.js')
 async def chat_js(): return FileResponse('web/chat.js')
 
-@app.get('/web/chat.css')
+@controller.get('/web/chat.css')
 async def chat_css(): return FileResponse('web/chat.css')
 
 print('API inicializada')

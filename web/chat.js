@@ -13,7 +13,7 @@ function gerarFontesFormatadas(documentos){
                 return `
                 <div class="documento">
                     <div class="documento-titulo"><a href="${documento.metadados.fonte}" target="_blank">${documento.metadados.titulo} | ${documento.metadados.subtitulo}</a></div>` + 
-                    //`<div class="documento-conteudo">${documento.conteudo}</div>`+ 
+                    `<div class="documento-conteudo">${documento.conteudo}</div>`+ 
                 `</div>`
             }).join("\n") + 
         `</div>`;
