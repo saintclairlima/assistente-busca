@@ -48,7 +48,6 @@ class ClienteLLM:
 class ClienteOllama(ClienteLLM):
     def __init__(self, nome_modelo: str, url_llm: str, temperature: float=0):
         super().__init__(
-            self,
             nome_modelo=nome_modelo,
             url_llm=url_llm,
             temperature=temperature)
