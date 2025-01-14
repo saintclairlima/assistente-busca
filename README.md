@@ -193,6 +193,10 @@ Se for de sua conveniência, a exclusão dos documentos pode ser realizada, dado
 ### Iniciando o projeto
 Na pasta raiz do projeto, executar:
 ```
-uvicorn api.api:app --reload
+uvicorn api.api:controller --reload
+```
+Outras opções possíveis são definir o número de workers, para lidar com concorrência e abrir o host para todas as requisições, em ambiente de desenvolvimento:
 
+```
+uvicorn api.api:controller --reload --workers 1 --host 0.0.0.0
 ```
