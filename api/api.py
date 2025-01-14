@@ -18,8 +18,8 @@ controller.add_middleware(
     allow_headers=['*'],  # Allow all headers
 )
 
-print(f'Criando GeradorDeRespostas (usando {environment.MODELO_DE_EMBEDDINGS} - device={environment.DEVICE})...')
-funcao_de_embeddings = FuncaoEmbeddings(nome_modelo=environment.MODELO_DE_EMBEDDINGS, tipo_modelo=SentenceTransformer, device=environment.DEVICE)
+print(f'Criando GeradorDeRespostas (usando {environment.MODELO_FUNCAO_DE_EMBEDDINGS} - device={environment.DEVICE})...')
+funcao_de_embeddings = FuncaoEmbeddings(nome_modelo=environment.MODELO_FUNCAO_DE_EMBEDDINGS, tipo_modelo=SentenceTransformer, device=environment.DEVICE)
 gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddings, url_banco_vetores=environment.URL_BANCO_VETORES, device=environment.DEVICE)
 
 print('Definindo as rotas')

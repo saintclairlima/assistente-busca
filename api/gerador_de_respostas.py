@@ -29,7 +29,7 @@ class GeradorDeRespostas:
                 project=environment.WANDB_NOME_PROJETO,
                 entity=None, # AFAZER: entender o que isso faz
                 job_type=environment.WANDB_TIPO_EXECUCAO,
-                config=environment.WANDB_CONFIGS,
+                config=environment.CONFIGS,
             )
             self.tabela_log_requisicao = wandb.Table(columns=['pergunta', 'resposta', 'documentos','tempo_consulta', 'tempo_bert', 'resposta_completa_llm','tempo_inicio_resposta', 'tempo_ollama_total'])
         else:
@@ -50,8 +50,8 @@ class GeradorDeRespostas:
         
         self.modelo_bert_qa_pipeline = pipeline("question-answering", environment.EMBEDDING_SQUAD_PORTUGUESE, device=self.device)
 
-        if fazer_log: print(f'--- preparando o Ollama (usando {environment.MODELO_OLLAMA})...')
-        self.interface_ollama = InterfaceOllama(url_ollama=environment.URL_OLLAMA, nome_modelo=environment.MODELO_OLLAMA)
+        if fazer_log: print(f'--- preparando o Ollama (usando {environment.MODELO_LLM})...')
+        self.interface_ollama = InterfaceOllama(url_ollama=environment.URL_OLLAMA, nome_modelo=environment.MODELO_LLM)
 
     async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=environment.NUM_DOCUMENTOS_RETORNADOS):
         return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
@@ -224,10 +224,10 @@ class GeradorDeRespostas:
             if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_llm} segundos)')
         except Exception as excecao:
             yield MensagemErro(
-                descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__})',
+                descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_LLM} não disponível. {excecao.__class__.__name__})',
                 mensagem=f'Houve um problema geração de sua resposta. Tente mais tarde. (Tipo do erro: {excecao.__class__.__name__})'
             ).json() + '\n'
-            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_OLLAMA} não disponível. {excecao.__class__.__name__}')
+            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_LLM} não disponível. {excecao.__class__.__name__}')
             return
         
         # Retornando dados compilados

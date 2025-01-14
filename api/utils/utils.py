@@ -125,8 +125,8 @@ class InterfaceChroma:
         if fazer_log: print('--- interface do ChromaDB em inicialização')
 
         if not funcao_de_embeddings:
-            print(f'--- criando a função de embeddings do ChromaDB com {environment.MODELO_DE_EMBEDDINGS} (device={environment.DEVICE})...')
-            funcao_de_embeddings = FuncaoEmbeddings(model_name=environment.MODELO_DE_EMBEDDINGS, biblioteca=SentenceTransformer, device=environment.DEVICE)
+            print(f'--- criando a função de embeddings do ChromaDB com {environment.MODELO_FUNCAO_DE_EMBEDDINGS} (device={environment.DEVICE})...')
+            funcao_de_embeddings = FuncaoEmbeddings(model_name=environment.MODELO_FUNCAO_DE_EMBEDDINGS, biblioteca=SentenceTransformer, device=environment.DEVICE)
         
         if fazer_log: print(f'--- inicializando banco de vetores (usando "{url_banco_vetores}")...')
         self.banco_de_vetores = chromadb.PersistentClient(path=url_banco_vetores)
