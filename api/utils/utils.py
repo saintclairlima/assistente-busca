@@ -6,7 +6,7 @@ from torch import cuda
 import httpx
 import json
 from api.environment.environment import environment
-from typing import List
+from typing import List, Tuple
 
 
 class DadosChat(BaseModel):
@@ -47,11 +47,11 @@ class ClienteLLM:
     
 class ClienteOllama(ClienteLLM):
     def __init__(self, nome_modelo: str, url_llm: str, temperature: float=0):
-        ClienteLLM.__init__(self,
-                            nome_modelo=nome_modelo,
-                            url_llm=url_llm,
-                            temperature=temperature)
-        self.url_llm = url_llm
+        super().__init__(
+            self,
+            nome_modelo=nome_modelo,
+            url_llm=url_llm,
+            temperature=temperature)
 
     async def stream(self, mensagens: List[dict]):
         url = f"{self.url_llm}/api/chat"
@@ -89,7 +89,7 @@ Se você não souber a resposta, assuma um tom gentil e diga que não tem inform
     def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]):
         return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
 
-    def formatar_mensagens_chat(self, prompt_usuario: str, historico:List[dict]):
+    def formatar_mensagens_chat(self, prompt_usuario: str, historico:List[Tuple[str, str]]):
         definicoes_sistema = f'''PAPEL: {self.papel_do_LLM}. DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes}'''
 
         mensagens = [{'role': 'system', 'content': definicoes_sistema}]
@@ -102,15 +102,15 @@ Se você não souber a resposta, assuma um tom gentil e diga que não tem inform
         
         return mensagens
     
-    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[dict]):
+    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[Tuple[str, str]]):
         raise NotImplementedError('Método gerar_resposta_llm() não foi implantado para esta classe')
         
 class InterfaceOllama(InterfaceLLM):
     def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=0):
-        InterfaceLLM.__init__(self)
+        super().__init__()
         self.cliente_ollama = ClienteOllama(url_llm=url_ollama, nome_modelo=nome_modelo, temperature=temperature)
         
-    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[dict]):
+    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[Tuple[str, str]]):
         prompt_usuario = self.formatar_prompt_usuario(pergunta, documentos)
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
         async for fragmento_resposta in self.cliente_ollama.stream(mensagens=mensagens):

@@ -25,7 +25,7 @@ class MensagemInfo(Mensagem):
     def __init__(self,
         descricao: str,
         mensagem: str = None):
-            Mensagem.__init__(self, 'info', descricao)
+            super().__init__(self, 'info', descricao)
             self.mensagem=mensagem
 
     def json(self):
@@ -41,7 +41,7 @@ class MensagemErro(Mensagem):
     def __init__(self,
         descricao: str,
         mensagem: str = None):
-            Mensagem.__init__(self, 'erro', descricao)
+            super().__init__(self, 'erro', descricao)
             self.mensagem=mensagem
 
     def json(self):
@@ -58,7 +58,7 @@ class MensagemControle(Mensagem):
         descricao: str,
         dados: DadosMensagem = None,
         mensagem: str = None):
-            Mensagem.__init__(self, 'controle', descricao)
+            super().__init__(self, 'controle', descricao)
             self.mensagem=mensagem
             self.dados=dados
 
@@ -80,7 +80,7 @@ class MensagemDados(Mensagem):
         descricao: str,
         dados: DadosMensagem,
         mensagem: str = None):
-            Mensagem.__init__(self, 'dados', descricao)
+            super().__init__(self, 'dados', descricao)
             self.mensagem=mensagem
             self.dados=dados
 
