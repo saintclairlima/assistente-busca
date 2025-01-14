@@ -5,6 +5,8 @@ from time import time
 from transformers import BertTokenizer, BertForQuestionAnswering, pipeline
 from typing import Callable
 
+import wandb
+
 from api.environment.environment import environment
 from api.utils.utils import InterfaceChroma, InterfaceOllama, DadosChat
 from api.utils.mensagem import MensagemControle, MensagemDados, MensagemErro, MensagemInfo
@@ -21,6 +23,17 @@ class GeradorDeRespostas:
                 funcao_de_embeddings:Callable=None,
                 fazer_log:bool=True,
                 device: str=None):
+        
+        if environment.USAR_WANDB:
+            self.wandb_run = wandb.init(
+                project=environment.WANDB_NOME_PROJETO,
+                entity=None, # AFAZER: entender o que isso faz
+                job_type=environment.WANDB_TIPO_EXECUCAO,
+                config=environment.WANDB_CONFIGS,
+            )
+            self.tabela_log_requisicao = wandb.Table(columns=['pergunta', 'resposta', 'documentos','tempo_consulta', 'tempo_bert', 'resposta_completa_llm','tempo_inicio_resposta', 'tempo_ollama_total'])
+        else:
+            self.tabela_log_requisicao = None
 
         self.device = device
         self.executor = ThreadPoolExecutor(max_workers=environment.THREADPOOL_MAX_WORKERS)
@@ -204,7 +217,8 @@ class GeradorDeRespostas:
                     tempo_inicio_resposta = time() - marcador_tempo_inicio
                     if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
 
-            item['message']['content'] = texto_resposta_llm
+            resposta_completa_llm = item
+            resposta_completa_llm['message']['content'] = texto_resposta_llm
             marcador_tempo_fim = time()
             tempo_llm = marcador_tempo_fim - marcador_tempo_inicio
             if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_llm} segundos)')
@@ -233,14 +247,19 @@ class GeradorDeRespostas:
                                 },
                                 "conteudo": doc['conteudo']} for doc in lista_documentos],
                         #"documentos": lista_documentos,
-                        #"resposta_completa_llm": item,
+                        #"resposta_completa_llm": resposta_completa_llm,
                         #"tempo_consulta": tempo_consulta,
                         #"tempo_bert": tempo_bert,
                         #"tempo_inicio_resposta": tempo_inicio_resposta,
-                        #"tempo_ollama_total": tempo_llm
+                        #"tempo_llm": tempo_llm
                     }
                 }
             ).json()
+        
+        if self.tabela_log_requisicao:
+            self.tabela_log_requisicao.add_data(pergunta, texto_resposta_llm, lista_documentos, tempo_consulta, tempo_bert, resposta_completa_llm, tempo_inicio_resposta, tempo_llm)
+            self.wandb_run.log({"Tabela_Requisicao": self.tabela_log_requisicao})
+
         yield msg
         print('Concluído')
 

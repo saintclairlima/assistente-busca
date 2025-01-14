@@ -22,10 +22,24 @@ class Environment:
         self.MODELO_OLLAMA=os.getenv('MODELO_OLLAMA')
         self.DEVICE=os.getenv('DEVICE') # ['cpu', cuda']
         self.NUM_DOCUMENTOS_RETORNADOS=int(os.getenv('NUM_DOCUMENTOS_RETORNADOS'))
+        self.AMBIENTE_EXECUCAO=os.getenv('AMBIENTE_EXECUCAO')
+        self.USAR_WANDB=bool(int(os.getenv('USAR_WANDB')))
 
         self.MODELO_DE_EMBEDDINGS = self.EMBEDDING_INSTRUCTOR
         
         with open(os.getenv('URL_INDICE_DOCUMENTOS'), 'r') as arq:
             self.DOCUMENTOS = json.load(arq)
+
+        # Obrigatórios assim
+        self.WANDB_NOME_PROJETO="assistente-busca"  
+        self.WANDB_TIPO_EXECUCAO="producao"
+
+        self.WANDB_CONFIGS={
+            'modelo': self.MODELO_OLLAMA,
+            'modelo_embeddings': self.MODELO_DE_EMBEDDINGS
+        }
+
+        self.vector_store_artifact="cleiane-projetos/assistente-busca/vector_store:latest",
+        self.chat_prompt_artifact="cleiane-projetos/assistente-busca/prompt_mensagem_sistema:latest",
 
 environment = Environment()
