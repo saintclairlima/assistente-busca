@@ -74,6 +74,35 @@ class ClienteOllama(ClienteLLM):
                         except:
                             print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
 
+class ClienteOpenAi(ClienteLLM):
+    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature):
+        super().__init__(
+            nome_modelo=nome_modelo,
+            url_llm=url_llm,
+            temperature=temperature)
+
+    async def stream(self, mensagens: List[dict]):
+        url = f"{self.url_llm}/api/chat"
+        
+        payload = {
+            "model": self.modelo,
+            "messages": mensagens,
+            "temperature": self.temperature,
+            "stream": True
+        }
+        
+        async with httpx.AsyncClient() as client:
+            async with client.stream("POST", url, json=payload, timeout=120) as resposta:
+                resposta.raise_for_status()
+
+                async for fragmento in resposta.aiter_bytes():
+                    if fragmento:
+                        try:
+                            yield json.loads(fragmento.decode())
+                        except:
+                            print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
+
+    
 class InterfaceLLM:
     
     def __init__(self):
