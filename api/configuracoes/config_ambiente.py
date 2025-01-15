@@ -10,6 +10,13 @@ load_dotenv(url_dotenv)
 class ConfiguracoesAmbiente:
     def __init__(self):
         self.url_llm=os.getenv('URL_LLM')
-        self.url_host=os.getenv('URL_HOST')        
+        self.url_host=os.getenv('URL_HOST')
+        
         self.device=os.getenv('DEVICE') # ['cpu', cuda']
         self.ambiente_execucao=os.getenv('AMBIENTE_EXECUCAO')
+        
+    def configuracoes_ambiente(self) -> dict:
+        return {
+            'device': self.device,
+            'ambiente_execucao': self.ambiente_execucao
+        }

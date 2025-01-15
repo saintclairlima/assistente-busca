@@ -11,5 +11,11 @@ class ConfiguracoesGerais(ConfiguracoesAmbiente, ConfiguracoesAplicacao, Configu
         self.tags_substituicao_html={
             'TAG_INSERCAO_URL_HOST': self.url_host
             }
+    def sumarizar_configuracoes(self) -> dict:
+        sumario = self.configuracoes_ambiente()
+        sumario.update(self.configuracoes_banco_vetores())
+        sumario.update(self.configuracoes_llm())
+        
+        return sumario
 
 configuracoes = ConfiguracoesGerais()
