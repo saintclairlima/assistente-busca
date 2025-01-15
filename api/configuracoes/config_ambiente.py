@@ -1,0 +1,15 @@
+import os
+import json
+from dotenv import load_dotenv
+
+
+url_raiz_projeto = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+url_dotenv = os.path.join(url_raiz_projeto, ".env")
+load_dotenv(url_dotenv)
+
+class ConfiguracoesAmbiente:
+    def __init__(self):
+        self.url_llm=os.getenv('URL_LLM')
+        self.url_host=os.getenv('URL_HOST')        
+        self.device=os.getenv('DEVICE') # ['cpu', cuda']
+        self.ambiente_execucao=os.getenv('AMBIENTE_EXECUCAO')
