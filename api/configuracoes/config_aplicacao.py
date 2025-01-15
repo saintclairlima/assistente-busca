@@ -18,8 +18,6 @@ class ConfiguracoesAplicacao:
         self.num_documentos_retornados=5
 
         self.modelo_funcao_de_embeddings = self.embedding_instructor
-        print(self.modelo_funcao_de_embeddings)
-        print(self.embedding_instructor)
 
         self.cliente_llm='ollama'
         self.modelo_llm='llama3.1'
