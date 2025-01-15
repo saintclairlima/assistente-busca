@@ -36,7 +36,7 @@ class FuncaoEmbeddings(EmbeddingFunction):
         return embeddings.tolist()
     
 class ClienteLLM:
-    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=0):
+    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature):
         self.modelo = nome_modelo
         self.url_llm = url_llm
         self.temperature = temperature
@@ -46,7 +46,7 @@ class ClienteLLM:
         
     
 class ClienteOllama(ClienteLLM):
-    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=0):
+    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature):
         super().__init__(
             nome_modelo=nome_modelo,
             url_llm=url_llm,
@@ -105,7 +105,7 @@ Se você não souber a resposta, assuma um tom gentil e diga que não tem inform
         raise NotImplementedError('Método gerar_resposta_llm() não foi implantado para esta classe')
         
 class InterfaceOllama(InterfaceLLM):
-    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=0):
+    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=configuracoes.temperature):
         super().__init__()
         self.cliente_ollama = ClienteOllama(url_llm=url_ollama, nome_modelo=nome_modelo, temperature=temperature)
         
