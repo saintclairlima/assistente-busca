@@ -8,45 +8,49 @@ load_dotenv(url_dotenv)
 
 class Environment:
     def __init__(self):
-        self.URL_BANCO_VETORES = os.getenv('URL_BANCO_VETORES')
-        self.URL_LLM=os.getenv('URL_LLM')
-        self.URL_HOST=os.getenv('URL_HOST')
-        self.TAGS_SUBSTITUICAO_HTML={
-            'TAG_INSERCAO_URL_HOST': self.URL_HOST
+        self.url_banco_vetores = os.getenv('URL_BANCO_VETORES')
+        self.url_llm=os.getenv('URL_LLM')
+        self.url_host=os.getenv('URL_HOST')
+        self.tags_substituicao_html={
+            'TAG_INSERCAO_URL_HOST': self.url_host
             }
 
-        self.THREADPOOL_MAX_WORKERS=int(os.getenv('THREADPOOL_MAX_WORKERS'))
-        self.NOME_COLECAO_DE_DOCUMENTOS=os.getenv('COLECAO_DE_DOCUMENTOS')
-        self.EMBEDDING_INSTRUCTOR=os.getenv('EMBEDDING_INSTRUCTOR')
-        self.EMBEDDING_SQUAD_PORTUGUESE=os.getenv('EMBEDDING_SQUAD_PORTUGUESE')
-        self.CLIENTE_LLM=os.getenv('CLIENTE_LLM')
-        self.MODELO_LLM=os.getenv('MODELO_LLM')
-        self.DEVICE=os.getenv('DEVICE') # ['cpu', cuda']
-        self.NUM_DOCUMENTOS_RETORNADOS=int(os.getenv('NUM_DOCUMENTOS_RETORNADOS'))
-        self.AMBIENTE_EXECUCAO=os.getenv('AMBIENTE_EXECUCAO')
-        self.USAR_WANDB=bool(int(os.getenv('USAR_WANDB')))
+        self.threadpool_max_workers=int(os.getenv('THREADPOOL_MAX_WORKERS'))
+        self.nome_colecao_de_documentos=os.getenv('COLECAO_DE_DOCUMENTOS')
+        self.embedding_instructor=os.getenv('EMBEDDING_INSTRUCTOR')
+        self.embedding_squad_portuguese=os.getenv('EMBEDDING_SQUAD_PORTUGUESE')
+        self.cliente_llm=os.getenv('CLIENTE_LLM')
+        self.modelo_llm=os.getenv('MODELO_LLM')
+        self.device=os.getenv('DEVICE') # ['cpu', cuda']
+        self.num_documentos_retornados=int(os.getenv('NUM_DOCUMENTOS_RETORNADOS'))
+        self.ambiente_execucao=os.getenv('AMBIENTE_EXECUCAO')
+        self.usar_wandb=bool(int(os.getenv('USAR_WANDB')))
 
-        self.MODELO_FUNCAO_DE_EMBEDDINGS = self.EMBEDDING_INSTRUCTOR
+        self.modelo_funcao_de_embeddings = self.embedding_instructor
         
         with open(os.getenv('URL_INDICE_DOCUMENTOS'), 'r') as arq:
             self.DOCUMENTOS = json.load(arq)
 
         # Elementos Wandb
-        self.WANDB_PREFIXO=''
-        self.WANDB_NOME_PROJETO="assistente-busca"  
-        self.WANDB_TIPO_EXECUCAO="producao"
+        self.wandb_prefixo='cleiane-projetos' # grumpyai
+        self.wandb_nome_projeto="assistente-busca"
+        self.wandb_tipo_execucao="producao"
 
         self.CONFIGS={
-            'cliente_llm': self.CLIENTE_LLM,
-            'modelo_llm': self.MODELO_LLM,
-            'modelo_funcao_de_embeddings': self.MODELO_FUNCAO_DE_EMBEDDINGS,
+            'modelo_funcao_de_embeddings': self.modelo_funcao_de_embeddings,
             'banco_vetorial':{
-                'url': self.URL_BANCO_VETORES,
-                'colecao': self.NOME_COLECAO_DE_DOCUMENTOS
-            }
+                'url': self.url_banco_vetores,
+                'colecao': self.nome_colecao_de_documentos
+            },
+            'num_documentos_retornados': self.num_documentos_retornados,
+            'threadpool_max_workers': self.threadpool_max_workers,
+            'device_api': self.device,
+            'ambiente_execucao':self.ambiente_execucao,
+            'cliente_llm': self.cliente_llm,
+            'modelo_llm': self.modelo_llm,
         }
 
-        self.WANDB_ARTEFATO_BANCO_VETORIAL=f"{self.WANDB_PREFIXO}/{self.WANDB_NOME_PROJETO}/banco-vetorial-chroma:latest",
+        self.WANDB_ARTEFATO_BANCO_VETORIAL=f"{self.wandb_prefixo}/{self.wandb_nome_projeto}/banco-vetorial-chroma:latest",
         #AFAZER: colocar artefato do prompt
 
 configuracoes = Environment()

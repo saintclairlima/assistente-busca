@@ -18,9 +18,9 @@ controller.add_middleware(
     allow_headers=['*'],  # Allow all headers
 )
 
-print(f'Criando GeradorDeRespostas (usando {configuracoes.MODELO_FUNCAO_DE_EMBEDDINGS} - device={configuracoes.DEVICE})...')
-funcao_de_embeddings = FuncaoEmbeddings(nome_modelo=configuracoes.MODELO_FUNCAO_DE_EMBEDDINGS, tipo_modelo=SentenceTransformer, device=configuracoes.DEVICE)
-gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddings, url_banco_vetores=configuracoes.URL_BANCO_VETORES, device=configuracoes.DEVICE)
+print(f'Criando GeradorDeRespostas (usando {configuracoes.modelo_funcao_de_embeddings} - device={configuracoes.device})...')
+funcao_de_embeddings = FuncaoEmbeddings(nome_modelo=configuracoes.modelo_funcao_de_embeddings, tipo_modelo=SentenceTransformer, device=configuracoes.device)
+gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddings, url_banco_vetores=configuracoes.url_banco_vetores, device=configuracoes.device)
 
 print('Definindo as rotas')
 
@@ -34,10 +34,10 @@ async def pagina_chat(url_redirec: str = Query(None)):
     with open('web/chat.html', 'r', encoding='utf-8') as arquivo: conteudo_html = arquivo.read()
     # AFAZER: considerar se manter esse elemento faz sentido. Só é utilizado para uso de testes com o ngrok, no colab
     if url_redirec:
-        configuracoes.TAGS_SUBSTITUICAO_HTML['TAG_INSERCAO_URL_HOST'] = url_redirec
+        configuracoes.tags_substituicao_html['TAG_INSERCAO_URL_HOST'] = url_redirec
         
     # substituindo as tags dentro do HTML, para maior controle
-    for tag, valor in configuracoes.TAGS_SUBSTITUICAO_HTML.items():
+    for tag, valor in configuracoes.tags_substituicao_html.items():
         conteudo_html = conteudo_html.replace(tag, valor)
     return HTMLResponse(content=conteudo_html, status_code=200)
 

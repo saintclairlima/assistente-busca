@@ -258,7 +258,7 @@ class GeradorBancoVetores:
             json.dump(descritor, arq, ensure_ascii=False, indent=4)
         
         import wandb
-        run=wandb.init(project=configuracoes.WANDB_NOME_PROJETO, job_type='ingest', config=descritor)
+        run=wandb.init(project=configuracoes.wandb_nome_projeto, job_type='ingest', config=descritor)
         idx_artif = wandb.Artifact(name='banco-vetorial-chroma', type='banco-vetorial')
         idx_artif.add_dir(url_banco_vetores)
         run.log_artifact(idx_artif)
