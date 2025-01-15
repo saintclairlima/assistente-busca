@@ -9,7 +9,7 @@ from sentence_transformers import SentenceTransformer
 
 from ..utils.utils import FuncaoEmbeddings
 from ..configuracoes.config_gerais import configuracoes
-URL_OLLAMA = 'http://localhost:11434/api/generate'
+URL_LLM = 'http://localhost:11434/api/generate'
 MODELO_OLLAMA='llama3.1'
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../dados"))
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
@@ -19,15 +19,15 @@ DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class GeradorPerguntas:
     def __init__(self,
-                 url_ollama=URL_OLLAMA,
-                 modelo_ollama=MODELO_OLLAMA,
+                 url_llm=URL_LLM,
+                 modelo_llm=MODELO_OLLAMA,
                  url_local=URL_LOCAL,
                  nome_modelo=EMBEDDING_INSTRUCTOR,
                  url_banco_vetores=URL_BANCO_VETORES,
                  nome_colecao=NOME_COLECAO,
                  device=DEVICE):
-        self.URL_OLLAMA = url_ollama
-        self.MODELO_OLLAMA = modelo_ollama
+        self.URL_LLM = url_llm
+        self.MODELO_LLM = modelo_llm
         self.URL_LOCAL = url_local
         self.NOME_MODELO = nome_modelo
         self.URL_BANCO_VETORES = url_banco_vetores
@@ -41,7 +41,7 @@ class GeradorPerguntas:
             "prompt": prompt,
             "temperature": 0.0
         }
-        resposta = requests.post(self.URL_OLLAMA, json=payload, stream=True)
+        resposta = requests.post(self.URL_LLM, json=payload, stream=True)
         resposta.raise_for_status()
         texto_resposta = ''
         for fragmento in resposta.iter_content(chunk_size=None):

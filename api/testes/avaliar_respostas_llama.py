@@ -17,7 +17,7 @@ FAZER_LOG = False
 
 
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
-URL_OLLAMA = 'http://localhost:11434'
+URL_LLM = 'http://localhost:11434'
 MODELO_OLLAMA='llama3.1'
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 URL_BANCO_VETORES=os.path.join(URL_LOCAL,"../dados/bancos_vetores/banco_vetores_regimento_resolucoes_rh")
@@ -31,7 +31,7 @@ async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome
         dados = json.load(arq)
         dados=dados['dados'] # por motivodfe mudança na estrutura do arquivo
     if FAZER_LOG: print('Criando interface Ollama')
-    interface_ollama = InterfaceOllama(url_ollama=URL_OLLAMA, nome_modelo=MODELO_OLLAMA)
+    interface_ollama = InterfaceOllama(url_ollama=URL_LLM, nome_modelo=MODELO_OLLAMA)
 
     if FAZER_LOG: print('Criando cliente Chroma')
     url_banco_vetores = os.path.join(URL_LOCAL, f"../dados/bancos_vetores/{nome_banco_vetores}")

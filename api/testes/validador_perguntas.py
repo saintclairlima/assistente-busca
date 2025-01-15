@@ -9,8 +9,8 @@ from sentence_transformers import SentenceTransformer
 
 from ..utils.utils import FuncaoEmbeddings
 from ..configuracoes.config_gerais import configuracoes
-URL_OLLAMA = 'http://localhost:11434/api/generate'
-MODELO_OLLAMA='llama3.1'
+URL_LLM = 'http://localhost:11434/api/generate'
+MODELO_LLM='llama3.1'
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../dados"))
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 URL_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_vetores_regimento_resolucoes_rh")
@@ -19,13 +19,13 @@ DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class ValidadorPerguntas:
     def __init__(self,
-                 url_ollama=URL_OLLAMA,
-                 modelo_ollama=MODELO_OLLAMA,
+                 url_llm=URL_LLM,
+                 modelo_llm=MODELO_LLM,
                  url_local=URL_LOCAL,
                  nome_modelo=EMBEDDING_INSTRUCTOR,
                  device=DEVICE):
-        self.URL_OLLAMA = url_ollama
-        self.MODELO_OLLAMA = modelo_ollama
+        self.URL_LLM = url_llm
+        self.MODELO_LLM = modelo_llm
         self.URL_LOCAL = url_local
         self.NOME_MODELO = nome_modelo
         self.DEVICE = device
@@ -33,11 +33,11 @@ class ValidadorPerguntas:
     def validar_pergunta(self, artigo, pergunta):
         prompt = f'''Considere este texto: {artigo}. Considere esta pergunta: {pergunta}. Analise a pergunta de forma criteriosa e crítica. Avalie se a pergunta é coerente e clara. Avalie se a pergunta pode ser respondida com base no texto. A saída deve ser um objeto JSON, com os atributos {{"coerente": true, "texto_responde": true}}. O atributo "coerente" deve ser true se a pergunta for clara e coerente. O atributo "texto_responde" deve ser true se a pergunta puder ser respondida com base no texto. Não adicione nada na resposta, exceto o objeto JSON, sem qualquer comentário adicional antes ou depois'''
         payload = {
-            "model": MODELO_OLLAMA,
+            "model": MODELO_LLM,
             "prompt": prompt,
             "temperature": 0.0
         }
-        resposta = requests.post(self.URL_OLLAMA, json=payload, stream=True)
+        resposta = requests.post(self.URL_LLM, json=payload, stream=True)
         resposta.raise_for_status()
         retorno = ''
         for fragmento in resposta.iter_content(chunk_size=None):

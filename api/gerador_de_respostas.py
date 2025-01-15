@@ -51,7 +51,7 @@ class GeradorDeRespostas:
         self.modelo_bert_qa_pipeline = pipeline("question-answering", configuracoes.EMBEDDING_SQUAD_PORTUGUESE, device=self.device)
 
         if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.MODELO_LLM})...')
-        self.interface_ollama = InterfaceOllama(url_ollama=configuracoes.URL_OLLAMA, nome_modelo=configuracoes.MODELO_LLM)
+        self.interface_ollama = InterfaceOllama(url_ollama=configuracoes.URL_LLM, nome_modelo=configuracoes.MODELO_LLM)
 
     async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=configuracoes.NUM_DOCUMENTOS_RETORNADOS):
         return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
