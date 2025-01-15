@@ -5,7 +5,7 @@ import json
 from time import time
 from sentence_transformers import SentenceTransformer
 from chromadb import chromadb
-from ..environment.environment import environment
+from ..configuracoes.config_gerais import configuracoes
 from ..utils.utils import FuncaoEmbeddings, InterfaceOllama
 import asyncio
 import os

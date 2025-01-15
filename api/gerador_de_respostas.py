@@ -7,7 +7,7 @@ from typing import Callable
 
 import wandb
 
-from api.environment.environment import environment
+from api.configuracoes.config_gerais import configuracoes
 from api.utils.utils import InterfaceChroma, InterfaceOllama, DadosChat
 from api.utils.mensagem import MensagemControle, MensagemDados, MensagemErro, MensagemInfo
     
@@ -18,25 +18,25 @@ class GeradorDeRespostas:
     gera uma texto de resposta que condensa as informações resultantes da consulta.
     '''
     def __init__(self,
-                url_banco_vetores:str=environment.URL_BANCO_VETORES,
-                colecao_de_documentos:str=environment.NOME_COLECAO_DE_DOCUMENTOS,
+                url_banco_vetores:str=configuracoes.URL_BANCO_VETORES,
+                colecao_de_documentos:str=configuracoes.NOME_COLECAO_DE_DOCUMENTOS,
                 funcao_de_embeddings:Callable=None,
                 fazer_log:bool=True,
                 device: str=None):
         
-        if environment.USAR_WANDB:
+        if configuracoes.USAR_WANDB:
             self.wandb_run = wandb.init(
-                project=environment.WANDB_NOME_PROJETO,
+                project=configuracoes.WANDB_NOME_PROJETO,
                 entity=None, # AFAZER: entender o que isso faz
-                job_type=environment.WANDB_TIPO_EXECUCAO,
-                config=environment.CONFIGS,
+                job_type=configuracoes.WANDB_TIPO_EXECUCAO,
+                config=configuracoes.CONFIGS,
             )
             self.tabela_log_requisicao = wandb.Table(columns=['pergunta', 'resposta', 'documentos','tempo_consulta', 'tempo_bert', 'resposta_completa_llm','tempo_inicio_resposta', 'tempo_ollama_total'])
         else:
             self.tabela_log_requisicao = None
 
         self.device = device
-        self.executor = ThreadPoolExecutor(max_workers=environment.THREADPOOL_MAX_WORKERS)
+        self.executor = ThreadPoolExecutor(max_workers=configuracoes.THREADPOOL_MAX_WORKERS)
         
         if fazer_log: print(f'-- Gerador de respostas em inicialização (device={self.device})...')
 
@@ -44,16 +44,16 @@ class GeradorDeRespostas:
 
         # Carregando modelo e tokenizador pre-treinados
         # optou-se por não usar pipeline, por ser mais lento que usar o modelo diretamente
-        if fazer_log: print(f'--- preparando modelo e tokenizador do Bert (usando {environment.EMBEDDING_SQUAD_PORTUGUESE})...')
-        self.modelo_bert_qa = BertForQuestionAnswering.from_pretrained(environment.EMBEDDING_SQUAD_PORTUGUESE).to(self.device)
-        self.tokenizador_bert = BertTokenizer.from_pretrained(environment.EMBEDDING_SQUAD_PORTUGUESE, device=self.device)
+        if fazer_log: print(f'--- preparando modelo e tokenizador do Bert (usando {configuracoes.EMBEDDING_SQUAD_PORTUGUESE})...')
+        self.modelo_bert_qa = BertForQuestionAnswering.from_pretrained(configuracoes.EMBEDDING_SQUAD_PORTUGUESE).to(self.device)
+        self.tokenizador_bert = BertTokenizer.from_pretrained(configuracoes.EMBEDDING_SQUAD_PORTUGUESE, device=self.device)
         
-        self.modelo_bert_qa_pipeline = pipeline("question-answering", environment.EMBEDDING_SQUAD_PORTUGUESE, device=self.device)
+        self.modelo_bert_qa_pipeline = pipeline("question-answering", configuracoes.EMBEDDING_SQUAD_PORTUGUESE, device=self.device)
 
-        if fazer_log: print(f'--- preparando o Ollama (usando {environment.MODELO_LLM})...')
-        self.interface_ollama = InterfaceOllama(url_ollama=environment.URL_OLLAMA, nome_modelo=environment.MODELO_LLM)
+        if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.MODELO_LLM})...')
+        self.interface_ollama = InterfaceOllama(url_ollama=configuracoes.URL_OLLAMA, nome_modelo=configuracoes.MODELO_LLM)
 
-    async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=environment.NUM_DOCUMENTOS_RETORNADOS):
+    async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=configuracoes.NUM_DOCUMENTOS_RETORNADOS):
         return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
     
     def formatar_lista_documentos(self, documentos: dict):
@@ -224,10 +224,10 @@ class GeradorDeRespostas:
             if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_llm} segundos)')
         except Exception as excecao:
             yield MensagemErro(
-                descricao=f'Falha na Geração da Resposta (Ollama offline ou {environment.MODELO_LLM} não disponível. {excecao.__class__.__name__})',
+                descricao=f'Falha na Geração da Resposta (Ollama offline ou {configuracoes.MODELO_LLM} não disponível. {excecao.__class__.__name__})',
                 mensagem=f'Houve um problema geração de sua resposta. Tente mais tarde. (Tipo do erro: {excecao.__class__.__name__})'
             ).json() + '\n'
-            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {environment.MODELO_LLM} não disponível. {excecao.__class__.__name__}')
+            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {configuracoes.MODELO_LLM} não disponível. {excecao.__class__.__name__}')
             return
         
         # Retornando dados compilados

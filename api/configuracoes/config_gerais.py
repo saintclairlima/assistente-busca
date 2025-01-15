@@ -32,6 +32,7 @@ class Environment:
             self.DOCUMENTOS = json.load(arq)
 
         # Elementos Wandb
+        self.WANDB_PREFIXO=''
         self.WANDB_NOME_PROJETO="assistente-busca"  
         self.WANDB_TIPO_EXECUCAO="producao"
 
@@ -45,7 +46,7 @@ class Environment:
             }
         }
 
-        self.vector_store_artifact="cleiane-projetos/assistente-busca/vector_store:latest",
-        self.chat_prompt_artifact="cleiane-projetos/assistente-busca/prompt_mensagem_sistema:latest",
+        self.WANDB_ARTEFATO_BANCO_VETORIAL=f"{self.WANDB_PREFIXO}/{self.WANDB_NOME_PROJETO}/banco-vetorial-chroma:latest",
+        #AFAZER: colocar artefato do prompt
 
-environment = Environment()
+configuracoes = Environment()

@@ -1,7 +1,7 @@
 import argparse
 import json
 import os
-from ..environment.environment import environment
+from ..configuracoes.config_gerais import configuracoes
 from ..utils.utils import FuncaoEmbeddings
 from torch import cuda
 
@@ -176,7 +176,7 @@ class GeradorBancoVetores:
         indice_documentos=None,
         comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO):
 
-        if not indice_documentos: indice_documentos = environment.DOCUMENTOS
+        if not indice_documentos: indice_documentos = configuracoes.DOCUMENTOS
 
         fragmentos = []
         for rotulo, info in indice_documentos.items():

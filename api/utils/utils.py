@@ -5,7 +5,7 @@ from torch import cuda
 
 import httpx
 import json
-from api.environment.environment import environment
+from api.configuracoes.config_gerais import configuracoes
 from typing import List, Tuple
 
 
@@ -117,16 +117,16 @@ class InterfaceOllama(InterfaceLLM):
 
 class InterfaceChroma:
     def __init__(self,
-                 url_banco_vetores=environment.URL_BANCO_VETORES,
-                 colecao_de_documentos=environment.NOME_COLECAO_DE_DOCUMENTOS,
+                 url_banco_vetores=configuracoes.URL_BANCO_VETORES,
+                 colecao_de_documentos=configuracoes.NOME_COLECAO_DE_DOCUMENTOS,
                  funcao_de_embeddings=None,
                  fazer_log=True):
     
         if fazer_log: print('--- interface do ChromaDB em inicialização')
 
         if not funcao_de_embeddings:
-            print(f'--- criando a função de embeddings do ChromaDB com {environment.MODELO_FUNCAO_DE_EMBEDDINGS} (device={environment.DEVICE})...')
-            funcao_de_embeddings = FuncaoEmbeddings(model_name=environment.MODELO_FUNCAO_DE_EMBEDDINGS, biblioteca=SentenceTransformer, device=environment.DEVICE)
+            print(f'--- criando a função de embeddings do ChromaDB com {configuracoes.MODELO_FUNCAO_DE_EMBEDDINGS} (device={configuracoes.DEVICE})...')
+            funcao_de_embeddings = FuncaoEmbeddings(model_name=configuracoes.MODELO_FUNCAO_DE_EMBEDDINGS, biblioteca=SentenceTransformer, device=configuracoes.DEVICE)
         
         if fazer_log: print(f'--- inicializando banco de vetores (usando "{url_banco_vetores}")...')
         self.banco_de_vetores = chromadb.PersistentClient(path=url_banco_vetores)
@@ -134,5 +134,5 @@ class InterfaceChroma:
         if fazer_log: print(f'--- definindo a coleção a ser usada ({colecao_de_documentos})...')
         self.colecao_documentos = self.banco_de_vetores.get_collection(name=colecao_de_documentos, embedding_function=funcao_de_embeddings)
     
-    def consultar_documentos(self, termos_de_consulta: str, num_resultados=environment.NUM_DOCUMENTOS_RETORNADOS):
+    def consultar_documentos(self, termos_de_consulta: str, num_resultados=configuracoes.NUM_DOCUMENTOS_RETORNADOS):
         return self.colecao_documentos.query(query_texts=[termos_de_consulta], n_results=num_resultados)

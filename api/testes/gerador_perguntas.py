@@ -8,7 +8,7 @@ from torch import cuda
 from sentence_transformers import SentenceTransformer
 
 from ..utils.utils import FuncaoEmbeddings
-from ..environment.environment import environment
+from ..configuracoes.config_gerais import configuracoes
 URL_OLLAMA = 'http://localhost:11434/api/generate'
 MODELO_OLLAMA='llama3.1'
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../dados"))

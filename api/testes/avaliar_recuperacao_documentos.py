@@ -3,7 +3,7 @@ print('Importando bibliotecas...')
 import json
 import sys
 from sentence_transformers import SentenceTransformer
-from ..environment.environment import environment
+from ..configuracoes.config_gerais import configuracoes
 from ..gerador_de_respostas import GeradorDeRespostas
 from ..utils.utils import FuncaoEmbeddings
 from time import time
