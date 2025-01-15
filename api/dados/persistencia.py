@@ -2,6 +2,9 @@ from chromadb import chromadb
 import json
 import sqlite3
 
+from api.utils.utils import FuncaoEmbeddings
+from api.configuracoes.config_gerais import configuracoes
+
 
 class InterfacePersistencia:
     def __init__(self, url_banco):
@@ -61,3 +64,20 @@ class GerenciadorPersistenciaSQLite:
             ids_colecoes_salvas.append(id_colecao_salva)
         
         return ids_colecoes_salvas
+    
+    def persistir_documentos(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str):
+        with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
+            desc_banco_vetorial = json.load(arq)
+        
+        client = chromadb.PersistentClient(path=desc_banco_vetorial['nome'])
+
+        if not funcao_de_embeddings:
+            funcao_de_embeddings = FuncaoEmbeddings(
+                nome_modelo=desc_banco_vetorial['funcao_embeddings']['nome_modelo'],
+                tipo_modelo=desc_banco_vetorial['funcao_embeddings']['tipo_modelo'],
+                device=configuracoes.device,
+                instrucao=desc_banco_vetorial['instrucao'])
+        
+        for colecao in desc_banco_vetorial['colecoes']:
+            collection = client.get_collection(name=colecao['nome'])
+            documentos = collection.get()
