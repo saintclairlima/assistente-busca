@@ -1,3 +1,4 @@
+from typing import Tuple
 from chromadb import chromadb
 import json
 import sqlite3
@@ -37,7 +38,13 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             conexao.commit()
             return cursor.fetchall()
     
-    def executar_query_select(self, tabela, colunas):
+    def executar_query_select(self, tabela: str, colunas: Tuple[str], query_select: str=None):
+        if query_select:
+            with sqlite3.connect(self.url_banco) as conexao:
+                cursor  = conexao.cursor()
+                cursor.execute(query_select)
+                conexao.commit()
+                return cursor.fetchall()
         return self.__select(tabela, colunas)
         
 class GerenciadorPersistenciaSQLite:
