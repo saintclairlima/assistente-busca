@@ -1,22 +1,11 @@
-CREATE TABLE Banco_Vetores (
-    Id_Banco_Vetores INT NOT NULL,
-    Nome VARCHAR(500),
-    Localizacao VARCHAR(2000),
-    CONSTRAINT Pk_Banco_Vetores PRIMARY KEY (Id_Banco_Vetores));
-
-CREATE TABLE Funcao_Embeddings (
-    Id_Funcao_Embeddings INT NOT NULL,
-    Nome_Modelo VARCHAR(500),
-    Tipo_Modelo VARCHAR(500),
-    CONSTRAINT Pk_Funcao_Embeddings PRIMARY KEY (Id_Funcao_Embeddings));
-
 CREATE TABLE Colecao (
     Id_Colecao INT NOT NULL,
     Nome VARCHAR(500),
+    Banco_Vetores VARCHAR(500),
+    Nome_Modelo_Fn_Embeddings VARCHAR(500),
+    Tipo_Modelo_Fn_Embeddings VARCHAR(500),
     Instrucao VARCHAR(MAX),
     Qtd_Max_Palavras INT,
-    Id_Banco_Vetores INT,
-    Id_Funcao_Embeddings INT,
     CONSTRAINT Pk_Colecao PRIMARY KEY (Id_Colecao));
 
 CREATE TABLE Documento (
@@ -60,7 +49,5 @@ CREATE TABLE Documento_em_Interacao (
     CONSTRAINT Pk_Documento_em_Interacao PRIMARY KEY (Id_Documento, Id_Interacao));
 
 ALTER TABLE Documento ADD CONSTRAINT Fk_Documento_Colecao FOREIGN KEY(Id_Colecao) REFERENCES Colecao (Id_Colecao);
-ALTER TABLE Colecao ADD CONSTRAINT Fk_Colecao_Banco_Vetores FOREIGN KEY(Id_Banco_Vetores) REFERENCES Banco_Vetores (Id_Banco_Vetores);
-ALTER TABLE Colecao ADD CONSTRAINT Fk_Colecao_Funcao_Embeddings FOREIGN KEY(Id_Funcao_Embeddings) REFERENCES Funcao_Embeddings (Id_Funcao_Embeddings);
 ALTER TABLE Documento_em_Interacao ADD CONSTRAINT Fk_Documento_em_Interacao_Documento FOREIGN KEY(Id_Documento) REFERENCES Documento (Id_Documento);
 ALTER TABLE Documento_em_Interacao ADD CONSTRAINT Fk_Documento_em_Interacao_Interacao FOREIGN KEY(Id_Interacao) REFERENCES Interacao (Id_Interacao);
