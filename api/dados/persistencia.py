@@ -20,6 +20,9 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             cursor.execute(query, dados)
             conexao.commit()
             return cursor.lastrowid
+        
+    def executar_query_insercao(self, query: str, dados: tuple):
+        return self.__insert(query, dados)
             
     def __update(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
@@ -36,7 +39,7 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             return cursor.fetchall()
         
 class GerenciadorPersistenciaSQLite:
-    def persistir_dados_colecao(url_descritor_banco_vetorial: str, url_arquivo_sqlite: str):
+    def persistir_dados_colecao(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
             
@@ -51,9 +54,9 @@ class GerenciadorPersistenciaSQLite:
             instrucao=colecao["instrucao"]
             qtd_max_palavras=colecao['quantidade_max_palavras_por_documento']
             
-            query='INSERT INTO Colecao VALUES(?,?,?,?,?,?,?,);'
+            query='INSERT INTO Colecao VALUES(?,?,?,?,?,?,?);'
             valores=(id, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras)
-            id_colecao_salva = banco_sqlite.__insert(query, valores)
+            id_colecao_salva = banco_sqlite.executar_query_insercao(query, valores)
             print(f'Coleção {nome} salva em {url_arquivo_sqlite} com id {id_colecao_salva}')
             ids_colecoes_salvas.append(id_colecao_salva)
         
