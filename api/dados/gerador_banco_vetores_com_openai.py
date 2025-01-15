@@ -270,7 +270,7 @@ class GeradorBancoVetores:
                 "colecoes": [
                     {
                         "nome": nome_colecao,
-                        "instrução": instrucao,
+                        "instrucao": instrucao,
                         "quantidade_max_palavras_por_documento": comprimento_max_fragmento,
                         # Se não for fornecida uma função, vai ser utilizada a padrão
                         "funcao_embeddings": dados_funcao_de_embeddings if dados_funcao_de_embeddings else {
