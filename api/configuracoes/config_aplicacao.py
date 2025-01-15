@@ -11,8 +11,8 @@ class ConfiguracoesAplicacao:
             
         self.threadpool_max_workers=10
         
-        self.url_banco_vetores = 'api/dados/bancos_vetores/resultados_testes'
-        self.nome_colecao_de_documentos='sem_instrucao'
+        self.url_banco_vetores = 'api/dados/bancos_vetores/banco_assistente'
+        self.nome_colecao_de_documentos='documentos_rh'
         self.embedding_instructor='hkunlp/instructor-xl'
         self.embedding_squad_portuguese='pierreguillou/bert-base-cased-squad-v1.1-portuguese'
         self.num_documentos_retornados=5
