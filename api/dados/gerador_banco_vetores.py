@@ -174,7 +174,7 @@ class GeradorBancoVetores:
         indice_documentos=None,
         comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO):
 
-        if not indice_documentos: indice_documentos = configuracoes.DOCUMENTOS
+        if not indice_documentos: indice_documentos = configuracoes.documentos
 
         fragmentos = []
         for rotulo, info in indice_documentos.items():
@@ -262,7 +262,7 @@ class GeradorBancoVetores:
         idx_artif = wandb.Artifact(name='banco-vetorial-chroma', type='banco-vetorial')
         idx_artif.add_dir(url_banco_vetores)
         run.log_artifact(idx_artif)
-        run.use_artifact(configuracoes.WANDB_ARTEFATO_BANCO_VETORIAL, type='banco-vetorial').download(root='./api/dados/bancos_vetores/')
+        run.use_artifact(configuracoes.wandb_uri_artefato_banco_vetorial, type='banco-vetorial').download(root='./api/dados/bancos_vetores/')
         
         
 if __name__ == "__main__":

@@ -29,7 +29,7 @@ class GeradorDeRespostas:
                 project=configuracoes.wandb_nome_projeto,
                 entity=None, # AFAZER: entender o que isso faz
                 job_type=configuracoes.wandb_tipo_execucao,
-                config=configuracoes.CONFIGS,
+                config=configuracoes.wandb_logs,
             )
             self.tabela_log_requisicao = wandb.Table(columns=['pergunta', 'resposta', 'documentos','tempo_consulta', 'tempo_bert', 'resposta_completa_llm','tempo_inicio_resposta', 'tempo_ollama_total'])
         else:

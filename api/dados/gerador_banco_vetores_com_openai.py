@@ -176,7 +176,7 @@ class GeradorBancoVetores:
         indice_documentos=None,
         comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO):
 
-        if not indice_documentos: indice_documentos = configuracoes.DOCUMENTOS
+        if not indice_documentos: indice_documentos = configuracoes.documentos
 
         fragmentos = []
         for rotulo, info in indice_documentos.items():

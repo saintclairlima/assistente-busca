@@ -6,7 +6,7 @@ url_raiz_projeto = os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 url_dotenv = os.path.join(url_raiz_projeto, ".env")
 load_dotenv(url_dotenv)
 
-class Environment:
+class ConfiguracoesGerais:
     def __init__(self):
         self.url_banco_vetores = os.getenv('URL_BANCO_VETORES')
         self.url_llm=os.getenv('URL_LLM')
@@ -29,14 +29,14 @@ class Environment:
         self.modelo_funcao_de_embeddings = self.embedding_instructor
         
         with open(os.getenv('URL_INDICE_DOCUMENTOS'), 'r') as arq:
-            self.DOCUMENTOS = json.load(arq)
+            self.documentos = json.load(arq)
 
         # Elementos Wandb
         self.wandb_prefixo='cleiane-projetos' # grumpyai
         self.wandb_nome_projeto="assistente-busca"
         self.wandb_tipo_execucao="producao"
 
-        self.CONFIGS={
+        self.wandb_logs={
             'modelo_funcao_de_embeddings': self.modelo_funcao_de_embeddings,
             'banco_vetorial':{
                 'url': self.url_banco_vetores,
@@ -50,7 +50,7 @@ class Environment:
             'modelo_llm': self.modelo_llm,
         }
 
-        self.WANDB_ARTEFATO_BANCO_VETORIAL=f"{self.wandb_prefixo}/{self.wandb_nome_projeto}/banco-vetorial-chroma:latest",
-        #AFAZER: colocar artefato do prompt
+        self.wandb_uri_artefato_banco_vetorial=f"{self.wandb_prefixo}/{self.wandb_nome_projeto}/banco-vetorial-chroma:latest",
+        # AFAZER: colocar artefato do prompt
 
-configuracoes = Environment()
+configuracoes = ConfiguracoesGerais()
