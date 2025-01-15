@@ -1,17 +1,12 @@
 from chromadb import chromadb
 import json
 import sqlite3
-
-from api.utils.utils import FuncaoEmbeddings
 from api.configuracoes.config_gerais import configuracoes
 
 
 class InterfacePersistencia:
     def __init__(self, url_banco):
         self.url_banco = url_banco
-    
-    def executar_query(query, dados):
-        raise NotImplementedError('Método executar_query() não implementado nesta classe.')
 
 class InterfacePersistenciaSQLite(InterfacePersistencia):
     def __init__(self, url_banco):
@@ -34,12 +29,16 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             conexao.commit()
             return cursor.rowcount
             
-    def __select(self, query: str, dados: tuple):
+    def __select(self, tabela: str, colunas: tuple):
+        query = f'''SELECT {','.join(colunas)} FROM {tabela}'''
         with sqlite3.connect(self.url_banco) as conexao:
             cursor  = conexao.cursor()
-            cursor.execute(query, dados)
+            cursor.execute(query)
             conexao.commit()
             return cursor.fetchall()
+    
+    def executar_query_select(self, tabela, colunas):
+        return self.__select(tabela, colunas)
         
 class GerenciadorPersistenciaSQLite:
     def persistir_dados_colecao(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str):
@@ -47,7 +46,7 @@ class GerenciadorPersistenciaSQLite:
             desc_banco_vetorial = json.load(arq)
             
         banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
-        ids_colecoes_salvas=[]
+        ids_colecoes_salvas={}
         for colecao in desc_banco_vetorial['colecoes']:
             id=None
             nome=colecao['nome']
@@ -57,27 +56,61 @@ class GerenciadorPersistenciaSQLite:
             instrucao=colecao["instrucao"]
             qtd_max_palavras=colecao['quantidade_max_palavras_por_documento']
             
-            query='INSERT INTO Colecao VALUES(?,?,?,?,?,?,?);'
+            query='INSERT INTO Colecao '+ \
+                '(Id_Colecao, Nome, Banco_Vetores, Nome_Modelo_Fn_Embeddings, Tipo_Modelo_Fn_Embeddings, Instrucao, Qtd_Max_Palavras) ' +\
+                'VALUES(?,?,?,?,?,?,?);'
             valores=(id, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras)
             id_colecao_salva = banco_sqlite.executar_query_insercao(query, valores)
             print(f'Coleção {nome} salva em {url_arquivo_sqlite} com id {id_colecao_salva}')
-            ids_colecoes_salvas.append(id_colecao_salva)
+            ids_colecoes_salvas[colecao['nome']]=id_colecao_salva
         
         return ids_colecoes_salvas
     
     def persistir_documentos(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
+            
+        banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
+        colecoes_ids = {
+            resultado[1]: resultado[0]
+            for resultado in banco_sqlite.executar_query_select('colecao', ['id_colecao', 'nome'])
+        }
         
-        client = chromadb.PersistentClient(path=desc_banco_vetorial['nome'])
-
-        if not funcao_de_embeddings:
-            funcao_de_embeddings = FuncaoEmbeddings(
-                nome_modelo=desc_banco_vetorial['funcao_embeddings']['nome_modelo'],
-                tipo_modelo=desc_banco_vetorial['funcao_embeddings']['tipo_modelo'],
-                device=configuracoes.device,
-                instrucao=desc_banco_vetorial['instrucao'])
+        query_inserir_doc = 'INSERT INTO Documento ' + \
+                            '(Id_Documento, Tag_Id_Metadados, Conteudo, Titulo, Subtitulo, Autor, Fonte, Id_Colecao) ' + \
+                            'VALUES (?,?,?,?,?,?,?,?)'
+                
+        client = chromadb.PersistentClient(path=f'''api/dados/bancos_vetores/{desc_banco_vetorial['nome']}''')
         
+        docs_inseridos={}
         for colecao in desc_banco_vetorial['colecoes']:
             collection = client.get_collection(name=colecao['nome'])
             documentos = collection.get()
+            
+            documentos = [
+                {
+                    'id': documentos['ids'][idx],
+                    'conteudo': documentos['documents'][idx],
+                    'metadados':  documentos['metadatas'][idx],
+                }
+                for idx in range(len(documentos['ids']))
+            ]
+            for doc in documentos:
+                id=None
+                id_metadados=doc['metadados']['id']
+                conteudo=doc['conteudo']
+                titulo=doc['metadados']['titulo']
+                subtitulo=doc['metadados']['subtitulo']
+                autor=doc['metadados']['autor']
+                fonte=doc['metadados']['fonte']
+                id_colecao=colecoes_ids[colecao['nome']]
+                
+                dados = [id, id_metadados, conteudo, titulo, subtitulo, autor, fonte, id_colecao]
+                
+                id_doc_inserido = banco_sqlite.executar_query_insercao(query=query_inserir_doc, dados=dados)
+                docs_inseridos[id_metadados] = id_doc_inserido
+                
+        client._system.stop()
+        
+        return docs_inseridos
+                
