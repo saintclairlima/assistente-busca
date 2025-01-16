@@ -19,6 +19,9 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             cursor.execute(query, dados)
             conexao.commit()
             return cursor.lastrowid
+    
+    def inicializar_banco_sqlite(self, url_script_sql: str):
+        pass
         
     def executar_query_insercao(self, query: str, dados: tuple):
         return self.__insert(query, dados)
@@ -55,18 +58,19 @@ class GerenciadorPersistenciaSQLite:
         banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
         ids_colecoes_salvas={}
         for colecao in desc_banco_vetorial['colecoes']:
-            id=None
+            uuid_colecao=colecao['uuid']
             nome=colecao['nome']
             nome_banco_vetores=desc_banco_vetorial['nome']
-            modelo_fn_embd=colecao["funcao_embeddings"]["nome_modelo"]
-            tipo_modelo_fn_embd=colecao["funcao_embeddings"]["tipo_modelo"]
-            instrucao=colecao["instrucao"]
+            modelo_fn_embd=colecao['funcao_embeddings']['nome_modelo']
+            tipo_modelo_fn_embd=colecao['funcao_embeddings']['tipo_modelo']
+            instrucao=colecao['instrucao']
             qtd_max_palavras=colecao['quantidade_max_palavras_por_documento']
+            metrica_similaridade=colecao['hnsw:space']
             
             query='INSERT INTO Colecao '+ \
-                '(Id_Colecao, Nome, Banco_Vetores, Nome_Modelo_Fn_Embeddings, Tipo_Modelo_Fn_Embeddings, Instrucao, Qtd_Max_Palavras) ' +\
-                'VALUES(?,?,?,?,?,?,?);'
-            valores=(id, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras)
+                '(UUID_Colecao, Nome, Banco_Vetores, Nome_Modelo_Fn_Embeddings, Tipo_Modelo_Fn_Embeddings, Instrucao, Qtd_Max_Palavras, Metrica_Similaridade) ' +\
+                'VALUES(?,?,?,?,?,?,?,?,?);'
+            valores=(uuid_colecao, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras, metrica_similaridade)
             id_colecao_salva = banco_sqlite.executar_query_insercao(query, valores)
             print(f'Coleção {nome} salva em {url_arquivo_sqlite} com id {id_colecao_salva}')
             ids_colecoes_salvas[colecao['nome']]=id_colecao_salva
@@ -78,13 +82,13 @@ class GerenciadorPersistenciaSQLite:
             desc_banco_vetorial = json.load(arq)
             
         banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
-        colecoes_ids = {
+        colecoes_uuids = {
             resultado[1]: resultado[0]
-            for resultado in banco_sqlite.executar_query_select('colecao', ['id_colecao', 'nome'])
+            for resultado in banco_sqlite.executar_query_select('colecao', ['uuid', 'nome'])
         }
         
         query_inserir_doc = 'INSERT INTO Documento ' + \
-                            '(Id_Documento, Tag_Id_Metadados, Conteudo, Titulo, Subtitulo, Autor, Fonte, Id_Colecao) ' + \
+                            '(UUID_Documento, Tag_Fragmento, Conteudo, Titulo, Subtitulo, Autor, Fonte, UUID_Colecao) ' + \
                             'VALUES (?,?,?,?,?,?,?,?)'
                 
         client = chromadb.PersistentClient(path=f'''api/dados/bancos_vetores/{desc_banco_vetorial['nome']}''')
@@ -103,19 +107,19 @@ class GerenciadorPersistenciaSQLite:
                 for idx in range(len(documentos['ids']))
             ]
             for doc in documentos:
-                id=None
-                id_metadados=doc['metadados']['id']
+                uuid_documento=doc['metadados']['id']
+                tag_fragmento=doc['metadados']['tag_fragmento']
                 conteudo=doc['conteudo']
                 titulo=doc['metadados']['titulo']
                 subtitulo=doc['metadados']['subtitulo']
                 autor=doc['metadados']['autor']
                 fonte=doc['metadados']['fonte']
-                id_colecao=colecoes_ids[colecao['nome']]
+                uuid_colecao=colecoes_uuids[colecao['nome']]
                 
-                dados = [id, id_metadados, conteudo, titulo, subtitulo, autor, fonte, id_colecao]
+                dados = [uuid_documento, tag_fragmento, conteudo, titulo, subtitulo, autor, fonte, uuid_colecao]
                 
                 id_doc_inserido = banco_sqlite.executar_query_insercao(query=query_inserir_doc, dados=dados)
-                docs_inseridos[id_metadados] = id_doc_inserido
+                docs_inseridos[uuid_documento] = id_doc_inserido
                 
         client._system.stop()
         

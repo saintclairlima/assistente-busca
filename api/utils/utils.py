@@ -14,8 +14,7 @@ class DadosChat(BaseModel):
     historico: list
 
 class FuncaoEmbeddings(EmbeddingFunction):
-    # A instrução oferecida tem melhor resultado em inglês e no formato proposto no artigo do instructor. (Represent the legislative document question for retrieving supporting documents)
-    def __init__(self, nome_modelo: str, tipo_modelo=SentenceTransformer, device: str=None, instrucao: str="Represent the legislative document for retrieval:"):
+    def __init__(self, nome_modelo: str, tipo_modelo=SentenceTransformer, device: str=None, instrucao: str=None):
         if device:
             self.device = device
         else:
