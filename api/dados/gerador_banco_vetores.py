@@ -273,7 +273,7 @@ class GeradorBancoVetores:
         idx_artif = wandb.Artifact(name='banco-vetorial-chroma', type='banco-vetorial')
         idx_artif.add_dir(url_banco_vetores)
         run.log_artifact(idx_artif)
-        run.use_artifact(configuracoes.wandb_uri_artefato_banco_vetorial, type='banco-vetorial').download(root='./api/dados/bancos_vetores/')
+        #run.use_artifact(configuracoes.wandb_uri_artefato_banco_vetorial, type='banco-vetorial').download(root='./api/dados/bancos_vetores/')
         
         
 if __name__ == "__main__":
