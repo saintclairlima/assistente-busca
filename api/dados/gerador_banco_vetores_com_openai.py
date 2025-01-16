@@ -1,23 +1,22 @@
 import argparse
 import json
 import os
+import uuid
 from ..configuracoes.config_gerais import configuracoes
 from ..utils.utils import FuncaoEmbeddings
 from torch import cuda
-
+import chromadb.utils.embedding_functions as embedding_functions
 from sentence_transformers import SentenceTransformer
 from chromadb import chromadb
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
-
-import chromadb.utils.embedding_functions as embedding_functions
 
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
 EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 # Valores padrão, geralmente não usados
-NOME_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_teste_default")
+URL_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_teste_default")
 NOME_COLECAO='colecao_teste_default'
 COMPRIMENTO_MAX_FRAGMENTO = 300    
 
@@ -140,8 +139,7 @@ class GeradorBancoVetores:
         fragmentos = self.processar_texto(texto, info, comprimento_max_fragmento)
         
         for idx in range(len(fragmentos)):
-            fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
-            fragmentos[idx]['metadata']['id'] = f'{rotulo}:{idx+1}'
+            fragmentos[idx]['metadata']['tag_fragmento'] = f'{rotulo}:{idx+1}'
         return fragmentos
     
     def extrair_fragmento_pdf(self, rotulo, info, comprimento_max_fragmento):
@@ -190,13 +188,14 @@ class GeradorBancoVetores:
     
     def gerar_banco(self,
             documentos,
-            nome_banco_vetores=NOME_BANCO_VETORES,
+            url_banco_vetores=URL_BANCO_VETORES,
             nome_colecao=NOME_COLECAO,
+            uuid_colecao=str(uuid.uuid4()),
             instrucao=None,
             funcao_de_embeddings=None):
         
         # Utilizando o ChromaDb diretamente
-        client = chromadb.PersistentClient(path=nome_banco_vetores)
+        client = chromadb.PersistentClient(path=url_banco_vetores)
         
         if not funcao_de_embeddings:
             funcao_de_embeddings = FuncaoEmbeddings(
@@ -205,29 +204,31 @@ class GeradorBancoVetores:
                 device=DEVICE,
                 instrucao=instrucao)
         
-        collection = client.create_collection(name=nome_colecao, embedding_function=funcao_de_embeddings, metadata={'hnsw:space': 'cosine'})
+        hnsw_space = configuracoes.hnsw_space
+        colecao = client.create_collection(name=nome_colecao, embedding_function=funcao_de_embeddings, metadata={'hnsw:space': hnsw_space, 'uuid': uuid_colecao})
         
-        print(f'Gerando >>> Banco {nome_banco_vetores} - Coleção {nome_colecao} - Instrução: {instrucao}')
+        print(f'Gerando >>> Banco {url_banco_vetores} - Coleção {nome_colecao} - Instrução: {instrucao}')
         qtd_docs = len(documentos)
         for idx in range(qtd_docs):
             print(f'\r>>> Incluindo documento {idx+1} de {qtd_docs}', end='')
             doc = documentos[idx]
-            collection.add(
+            
+            uuid_doc = str(uuid.uuid4())
+            doc['id'] = uuid_doc
+            doc['metadata']['id'] = uuid_doc
+
+            colecao.add(
                 documents=[doc['page_content']],
                 ids=[str(doc['id'])],
                 metadatas=[doc['metadata']],
             )
-
-
         
-
         openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-                api_key= os.environ.get("OPENAI_API_KEY", None),
-                model_name="text-embedding-ada-002"
-            )
+            api_key= os.environ.get("OPENAI_API_KEY", None),
+            model_name="text-embedding-ada-002"
+        )
         
         nome_colecao_openai = nome_colecao+'_openai'
-        
         collection2 = client.create_collection(name=nome_colecao_openai, embedding_function=openai_ef, metadata={'hnsw:space': 'cosine'})
         
         print(f'Gerando >>> Banco {nome_banco_vetores} - Coleção {nome_colecao_openai} - Instrução: {instrucao}')
@@ -235,6 +236,11 @@ class GeradorBancoVetores:
         for idx in range(qtd_docs):
             print(f'\r>>> Incluindo documento {idx+1} de {qtd_docs}', end='')
             doc = documentos[idx]
+
+            uuid_doc = str(uuid.uuid4())
+            doc['id'] = uuid_doc
+            doc['metadata']['id'] = uuid_doc
+
             collection2.add(
                 documents=[doc['page_content']],
                 ids=[str(doc['id'])],
@@ -245,7 +251,7 @@ class GeradorBancoVetores:
         
     def run(self,
             indice_documentos=None,
-            nome_banco_vetores=NOME_BANCO_VETORES,
+            url_banco_vetores=URL_BANCO_VETORES,
             nome_colecao=NOME_COLECAO,
             comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO,
             instrucao=None,
@@ -256,30 +262,43 @@ class GeradorBancoVetores:
             comprimento_max_fragmento=comprimento_max_fragmento
         )
         
+        uuid_colecao = str(uuid.uuid4())
         self.gerar_banco(
             documentos=docs,
-            nome_banco_vetores=nome_banco_vetores,
+            url_banco_vetores=url_banco_vetores,
             nome_colecao=nome_colecao,
+            uuid_colecao=uuid_colecao,
             instrucao=instrucao,
             funcao_de_embeddings=dados_funcao_de_embeddings['funcao_de_embeddings'] if dados_funcao_de_embeddings else None
         )
 
-        with open(nome_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
-            json.dump({
-                "nome": nome_banco_vetores,
-                "colecoes": [
-                    {
-                        "nome": nome_colecao,
-                        "instrucao": instrucao,
-                        "quantidade_max_palavras_por_documento": comprimento_max_fragmento,
-                        # Se não for fornecida uma função, vai ser utilizada a padrão
-                        "funcao_embeddings": dados_funcao_de_embeddings if dados_funcao_de_embeddings else {
-                            "nome_modelo": "hkunlp/instructor-xl",
-                            "tipo_modelo": "SentenceTransformer"
-                        }
-                    },
-                ]
-            }, arq, ensure_ascii=False, indent=4)
+        descritor = {
+            "nome": url_banco_vetores.split('/')[-1],
+            "colecoes": [
+                {
+                    "uuid": uuid_colecao,
+                    "nome": nome_colecao,
+                    "instrucao": instrucao,
+                    "quantidade_max_palavras_por_documento": comprimento_max_fragmento,
+                    "hnsw:space": configuracoes.hnsw_space,
+                    # Se não for fornecida uma função, vai ser utilizada a padrão
+                    "funcao_embeddings": dados_funcao_de_embeddings if dados_funcao_de_embeddings else {
+                        "nome_modelo": "hkunlp/instructor-xl",
+                        "tipo_modelo": "SentenceTransformer"
+                    }
+                },
+            ]
+        }
+        
+        with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
+            json.dump(descritor, arq, ensure_ascii=False, indent=4)
+        
+        import wandb
+        run=wandb.init(project=configuracoes.wandb_nome_projeto, job_type='ingest', config=descritor)
+        idx_artif = wandb.Artifact(name='banco-vetorial-chroma', type='banco-vetorial')
+        idx_artif.add_dir(url_banco_vetores)
+        run.log_artifact(idx_artif)
+        run.use_artifact(configuracoes.wandb_uri_artefato_banco_vetorial, type='banco-vetorial').download(root='./api/dados/bancos_vetores/')
         
         
 if __name__ == "__main__":
@@ -308,7 +327,7 @@ if __name__ == "__main__":
     gerador_banco_vetores = GeradorBancoVetores()
     gerador_banco_vetores.run(
         indice_documentos=indice_documentos,
-        nome_banco_vetores=nome_banco_vetores,
+        url_banco_vetores=nome_banco_vetores,
         nome_colecao=nome_colecao,
         comprimento_max_fragmento=comprimento_max_fragmento,
         instrucao=instrucao)
