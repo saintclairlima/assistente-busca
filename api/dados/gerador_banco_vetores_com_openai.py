@@ -186,7 +186,7 @@ class GeradorBancoVetores:
         
         return fragmentos
 
-    def obter_funcao_embeddings(tipo: str='instructor', instrucao: str=None):
+    def obter_funcao_embeddings(self, tipo: str='instructor', instrucao: str=None):
         if tipo == 'instructor':
             funcao = FuncaoEmbeddings(
                 nome_modelo=EMBEDDING_INSTRUCTOR,
