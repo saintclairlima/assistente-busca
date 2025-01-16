@@ -11,6 +11,7 @@ class ConfiguracoesAplicacao:
         
         self.url_banco_vetores = 'api/dados/bancos_vetores/banco_assistente'
         self.nome_colecao_de_documentos = 'documentos_rh'
+        self.hnsw_space = 'cosine' # métrica a ser utilizada pelo banco vetorial para medir similaridade de vetores
         self.embedding_instructor = 'hkunlp/instructor-xl'
         self.embedding_squad_portuguese = 'pierreguillou/bert-base-cased-squad-v1.1-portuguese'
         self.num_documentos_retornados = 5
@@ -28,7 +29,8 @@ class ConfiguracoesAplicacao:
             'url_banco_vetores': self.url_banco_vetores,
             'nome_colecao_de_documentos': self.nome_colecao_de_documentos,
             'num_documentos_retornados': self.num_documentos_retornados,
-            'modelo_funcao_de_embeddings': self.modelo_funcao_de_embeddings
+            'modelo_funcao_de_embeddings': self.modelo_funcao_de_embeddings,
+            'hnsw_space': self.hnsw_space
         }
         
     def configuracoes_llm(self):
