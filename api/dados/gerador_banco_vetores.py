@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import uuid
 from ..configuracoes.config_gerais import configuracoes
 from ..utils.utils import FuncaoEmbeddings
 from torch import cuda
@@ -138,8 +139,7 @@ class GeradorBancoVetores:
         fragmentos = self.processar_texto(texto, info, comprimento_max_fragmento)
         
         for idx in range(len(fragmentos)):
-            fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
-            fragmentos[idx]['metadata']['id'] = f'{rotulo}:{idx+1}'
+            fragmentos[idx]['metadata']['tag_fragmento'] = f'{rotulo}:{idx+1}'
         return fragmentos
     
     def extrair_fragmento_pdf(self, rotulo, info, comprimento_max_fragmento):
@@ -190,6 +190,7 @@ class GeradorBancoVetores:
             documentos,
             url_banco_vetores=URL_BANCO_VETORES,
             nome_colecao=NOME_COLECAO,
+            uuid_colecao=str(uuid.uuid4()),
             instrucao=None,
             funcao_de_embeddings=None):
         
@@ -203,14 +204,20 @@ class GeradorBancoVetores:
                 device=DEVICE,
                 instrucao=instrucao)
         
-        collection = client.create_collection(name=nome_colecao, embedding_function=funcao_de_embeddings, metadata={'hnsw:space': 'cosine'})
+        hnsw_space = configuracoes.hnsw_space
+        colecao = client.create_collection(name=nome_colecao, embedding_function=funcao_de_embeddings, metadata={'hnsw:space': hnsw_space, 'uuid': uuid_colecao})
         
         print(f'Gerando >>> Banco {url_banco_vetores} - Coleção {nome_colecao} - Instrução: {instrucao}')
         qtd_docs = len(documentos)
         for idx in range(qtd_docs):
             print(f'\r>>> Incluindo documento {idx+1} de {qtd_docs}', end='')
             doc = documentos[idx]
-            collection.add(
+            
+            uuid_doc = str(uuid.uuid4())
+            doc['id'] = uuid_doc
+            doc['metadata']['id'] = uuid_doc
+
+            colecao.add(
                 documents=[doc['page_content']],
                 ids=[str(doc['id'])],
                 metadatas=[doc['metadata']],
@@ -230,10 +237,12 @@ class GeradorBancoVetores:
             comprimento_max_fragmento=comprimento_max_fragmento
         )
         
+        uuid_colecao = str(uuid.uuid4())
         self.gerar_banco(
             documentos=docs,
             url_banco_vetores=url_banco_vetores,
             nome_colecao=nome_colecao,
+            uuid_colecao=uuid_colecao,
             instrucao=instrucao,
             funcao_de_embeddings=dados_funcao_de_embeddings['funcao_de_embeddings'] if dados_funcao_de_embeddings else None
         )
@@ -242,9 +251,11 @@ class GeradorBancoVetores:
             "nome": url_banco_vetores.split('/')[-1],
             "colecoes": [
                 {
+                    "uuid": uuid_colecao,
                     "nome": nome_colecao,
                     "instrucao": instrucao,
                     "quantidade_max_palavras_por_documento": comprimento_max_fragmento,
+                    "hnsw:space": configuracoes.hnsw_space,
                     # Se não for fornecida uma função, vai ser utilizada a padrão
                     "funcao_embeddings": dados_funcao_de_embeddings if dados_funcao_de_embeddings else {
                         "nome_modelo": "hkunlp/instructor-xl",
