@@ -330,6 +330,6 @@ if __name__ == "__main__":
         indice_documentos=indice_documentos,
         url_banco_vetores=nome_banco_vetores,
         nomes_colecoes=nomes_colecoes,
-        funcoes_embeddings=nomes_funcoes_embeddings,
+        nomes_funcoes_embeddings=nomes_funcoes_embeddings,
         comprimento_max_fragmento=comprimento_max_fragmento,
         instrucao=instrucao)
