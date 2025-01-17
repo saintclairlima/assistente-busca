@@ -24,7 +24,7 @@ Caso `OLLAMA_DEBUG` esteja configurado como `true` (ver abaixo) é feito um log 
 É necessário que o Ollama esteja executando para realizar a adição de modelos.
 
 ### Adicionando os modelos ao Ollama
-No projeto, utilizamos como modelo principal o `Llama3.2`, mas outros modelos são disponíveis para download (como o `phi3.5`, por exemplo).
+No projeto, utilizamos como modelo principal o `Llama3.1`, mas outros modelos são disponíveis para download (como o `phi3.5`, por exemplo).
 Para inclusão do modelo, tanto no Windos como no Linux, por meio do terminal/prompt/Powershell, executa-se:
 
 ```
@@ -32,7 +32,7 @@ ollama pull <nome do modelo>
 ```
 Em nosso caso:
 ```
-ollama pull llama3.2
+ollama pull llama3.1
 ```
 Após a inclusão do modelo no Ollama, pode-se testar se tudo ocorreu corretamente executando o modelo direto no terminal/promt/Powershell:
 ```
@@ -40,7 +40,7 @@ ollama run <nome do modelo>
 ```
 Em nosso caso:
 ```
-ollama run llama3.2
+ollama run llama3.1
 ```
 
 ### Configurações de Ambiente
