@@ -25,28 +25,32 @@ CREATE TABLE Interacao (
     Pergunta VARCHAR(MAX),
     Tipo_Dispositivo_Aplicacao VARCHAR(500),
     Tipo_Dispositivo_LLM VARCHAR(500),
+    Tempo_Recuperacao_Documentos NUMERIC,
+    Tempo_Estimativa_Bert NUMERIC,
+    LLM_Template_System VARCHAR(MAX),
+    LLM_Historico VARCHAR(MAX),
+    LLM_Cliente VARCHAR(500),
     LLM_Nome_Modelo VARCHAR(500),
-    LLM_Tempo_Total NUMERIC,
     LLM_Tempo_Carregamento NUMERIC,
     LLM_Num_Tokens_Prompt INT,
     LLM_Tempo_Processamento_Prompt NUMERIC,
     LLM_Num_Tokens_Resposta INT,
     LLM_Tempo_Processamento_Resposta NUMERIC,
-    LLM_Historico VARCHAR(MAX),
-    LLM_Resposta VARCHAR(MAX),
     LLM_Tempo_Inicio_Stream NUMERIC, 
-    Tempo_Recuperacao_Documentos NUMERIC,
-    Tempo_Avaliacao_Bert NUMERIC,
+    LLM_Tempo_Total NUMERIC,
+    LLM_Resposta VARCHAR(MAX),
+    LLM_Tipo_Conclusao VARCHAR(50),
+    JSON_Interacao VARCHAR(MAX),
     CONSTRAINT Pk_Interacao PRIMARY KEY (UUID_Interacao)
 );
 
 CREATE TABLE Documento_em_Interacao (
+    UUID_Documento VARCHAR(40) NOT NULL,
+    UUID_Interacao VARCHAR(40) NOT NULL,
     Resposta_Bert VARCHAR(MAX), 
     Score_Bert NUMERIC,
     Score_Distancia NUMERIC,
     Score_Ponderado NUMERIC,
-    UUID_Documento VARCHAR(40) NOT NULL,
-    UUID_Interacao VARCHAR(40) NOT NULL,
     CONSTRAINT Pk_Documento_em_Interacao PRIMARY KEY (UUID_Documento, UUID_Interacao));
 
 ALTER TABLE Documento ADD CONSTRAINT Fk_Documento_Colecao FOREIGN KEY(Id_Colecao) REFERENCES Colecao (Id_Colecao);
