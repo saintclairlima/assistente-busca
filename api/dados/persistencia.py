@@ -110,7 +110,7 @@ class GerenciadorPersistenciaSQLite:
             
             query='INSERT INTO Colecao '+ \
                 '(UUID_Colecao, Nome, Banco_Vetores, Nome_Modelo_Fn_Embeddings, Tipo_Modelo_Fn_Embeddings, Instrucao, Qtd_Max_Palavras, Metrica_Similaridade) ' +\
-                'VALUES(?,?,?,?,?,?,?,?,?);'
+                'VALUES(?,?,?,?,?,?,?,?);'
             valores=(uuid_colecao, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras, metrica_similaridade)
             id_colecao_salva = banco_sqlite.executar_query_insercao(query, valores)
             print(f'Coleção {nome} salva em {url_arquivo_sqlite} com id {id_colecao_salva}')
@@ -125,7 +125,7 @@ class GerenciadorPersistenciaSQLite:
         banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
         colecoes_uuids = {
             resultado[1]: resultado[0]
-            for resultado in banco_sqlite.executar_query_select('colecao', ['uuid', 'nome'])
+            for resultado in banco_sqlite.executar_query_select('colecao', ['uuid_colecao', 'nome'])
         }
         
         query_inserir_doc = 'INSERT INTO Documento ' + \
