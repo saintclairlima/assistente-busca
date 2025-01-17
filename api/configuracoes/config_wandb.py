@@ -3,7 +3,7 @@
 class ConfiguracoesWeightsAndBiases:
     def __init__(self):
         
-        self.usar_wandb=True
+        self.usar_wandb=False
         self.wandb_equipe='cleiane-projetos' # grumpyai
         self.wandb_nome_projeto='assistente-busca'
         self.wandb_tipo_execucao='producao'

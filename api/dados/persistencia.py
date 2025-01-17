@@ -14,8 +14,16 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
     def __init__(self, url_banco):
         super().__init__(url_banco)
     
-    def inicializar_banco_sqlite(self, url_script_sql: str):
-        pass
+    def executar_script(self, script: str):
+        with sqlite3.connect(self.url_banco) as conexao:
+            try:
+                cursor  = conexao.cursor()
+                cursor.executescript(script)
+                print(f'Tabelas criadas em {self.url_banco}')
+                conexao.commit()
+            except sqlite3.Error as e:
+                print(f"Ocorreu um erro: {e}")
+                raise
         
     def __insert(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
@@ -25,14 +33,14 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             return cursor.lastrowid
         
     def executar_query_insercao(self, query: str, dados: tuple):
-        return self.__insert(self, query, dados)
+        return self.__insert(query, dados)
     
     def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
         ids_insercoes = {}
         with sqlite3.connect(self.url_banco) as conexao:
             try:
                 cursor = conexao.cursor()
-                parametros = zip(multiplas_queries, multiplos_dados)
+                parametros = list(zip(multiplas_queries, multiplos_dados))
                 for idx in range(len(parametros)):
                     query, dados = parametros[idx]
                     cursor.execute(query, dados)
@@ -45,7 +53,7 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
                 raise
         
     def executar_query_insercao_multipla(self, multiplas_queries: list, multiplos_dados: list):
-        return self.__insert_multiplo(self, multiplas_queries, multiplos_dados)
+        return self.__insert_multiplo(multiplas_queries, multiplos_dados)
             
     def __update(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
@@ -75,6 +83,14 @@ class GerenciadorPersistenciaSQLite:
 
     def __init__(self, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
         self.url_arquivo_sqlite = url_arquivo_sqlite
+
+    def inicializar_banco_SQLite(self, url_script_sql: str=configuracoes.url_script_geracao_banco_sqlite):
+        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
+        print(f"Inicializando banco {self.url_arquivo_sqlite} usando {url_script_sql}")
+        with open(url_script_sql, 'r') as arq:
+            script = arq.read()
+        
+        banco_sqlite.executar_script(script=script)
 
     def persistir_dados_colecao(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
@@ -155,7 +171,6 @@ class GerenciadorPersistenciaSQLite:
         multiplas_queries = []
         multiplos_dados = []
 
-
         banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
         query_inserir_interacao = 'INSERT INTO Interacao ' + \
                                   '(UUID_Interacao, Pergunta, Tipo_Dispositivo_Aplicacao, Tipo_Dispositivo_LLM, Tempo_Recuperacao_Documentos, ' + \
@@ -163,7 +178,7 @@ class GerenciadorPersistenciaSQLite:
                                   'LLM_Tempo_Carregamento, LLM_Num_Tokens_Prompt, LLM_Tempo_Processamento_Prompt, LLM_Num_Tokens_Resposta, ' + \
                                   'LLM_Tempo_Processamento_Resposta, LLM_Tempo_Inicio_Stream, LLM_Tempo_Total, LLM_Resposta, LLM_Tipo_Conclusao, JSON_Interacao) ' + \
                                   'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);'
-        
+
         dados_interacao['uuid_interacao'] = str(uuid.uuid4())
         dados_inserir_interacao=(
             dados_interacao['uuid_interacao'],
@@ -171,9 +186,9 @@ class GerenciadorPersistenciaSQLite:
             dados_interacao['tipo_dispositivo_aplicacao'],
             dados_interacao['tipo_dispositivo_llm'],
             dados_interacao['tempo_recuperacao_documentos'],
-            dados_interacao['tempo_resposta_estimada_bert'],
+            dados_interacao['tempo_estimativa_bert'],
             dados_interacao['template_system_llm'],
-            dados_interacao['historico_llm'],
+            str(dados_interacao['historico_llm']),
             dados_interacao['cliente_llm'],
             dados_interacao['modelo_llm'],
             dados_interacao['resposta_completa_llm']['load_duration'] / 1_000_000_000,         # tempo_carregamento_llm

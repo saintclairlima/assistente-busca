@@ -11,6 +11,7 @@ import wandb
 from api.configuracoes.config_gerais import configuracoes
 from api.utils.utils import InterfaceChroma, InterfaceOllama, DadosChat
 from api.utils.mensagem import MensagemControle, MensagemDados, MensagemErro, MensagemInfo
+from api.dados.persistencia import GerenciadorPersistenciaSQLite
     
 
 class GeradorDeRespostas:
@@ -53,6 +54,8 @@ class GeradorDeRespostas:
 
         if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
         self.interface_ollama = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
+
+        self.gerenciador_persistencia = GerenciadorPersistenciaSQLite()
 
     async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=configuracoes.num_documentos_retornados):
         return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
@@ -244,12 +247,32 @@ class GeradorDeRespostas:
             print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {configuracoes.modelo_llm} não disponível. {excecao.__class__.__name__}')
             return
         
+        dados_interacao = {
+            'pergunta': pergunta,
+            'tipo_dispositivo_aplicacao': configuracoes.device,
+            'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
+            'documentos': lista_documentos,
+            'tempo_recuperacao_documentos': tempo_recuperacao_documentos,
+            'tempo_estimativa_bert': tempo_estimativa_bert,
+            'template_system_llm': configuracoes.template_mensagem_system,
+            'historico_llm': historico,
+            'cliente_llm': configuracoes.cliente_llm,
+            'modelo_llm': configuracoes.modelo_llm,
+            'tempo_inicio_stream_resposta': tempo_inicio_stream_resposta,
+            'tempo_total_llm': tempo_cliente_llm,
+            'resposta': texto_resposta_llm,
+            'resposta_completa_llm': resposta_completa_llm
+        }
+        
+        # id no índice 0 é o da interação persistida
+        ids_persistencia_interacao = self.gerenciador_persistencia.persistir_interacao(dados_interacao=dados_interacao)
+        
         # Retornando dados compilados
         msg = MensagemDados(
-                descricao='Resposta completa',
+                descricao='INTERAÇÃO FINALIZADA. Contém Id da interação (primeiro elemento) e das relações dos documentos na interação',
                 dados={
-                    'tag': 'fim-resposta-llm',
-                    'conteudo': ''
+                    'tag': 'persistencia-interacao',
+                    'conteudo': ids_persistencia_interacao
                 }
             ).json()
         

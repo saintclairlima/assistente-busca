@@ -10,6 +10,8 @@ class ConfiguracoesAplicacao:
         self.threadpool_max_workers=10
         
         self.url_banco_vetores = 'api/dados/bancos_vetores/banco_assistente'
+        self.url_script_geracao_banco_sqlite='api/dados/scripts_geracao_sqlite.sql'
+        self.url_script_geracao_banco_sql='api/dados/scripts_geracao_sqlite.sql'
         self.nome_colecao_de_documentos = 'documentos_rh'
         self.hnsw_space = 'cosine' # métrica a ser utilizada pelo banco vetorial para medir similaridade de vetores
         self.embedding_instructor = 'hkunlp/instructor-xl'

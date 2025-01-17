@@ -21,6 +21,10 @@ function gerarFontesFormatadas(documentos){
     return htmlFontes;
 }
 
+function gerarCampoAvaliacaoInteracao(idsInteracao){
+    console.log(idsInteracao);
+}
+
 function rolagemAutomatica(){
     containerMensagens = document.getElementById("container-exibicao-mensagens");
     const novaMensagem = containerMensagens.lastElementChild;
@@ -131,8 +135,8 @@ async function submitText(){
                                 divResposta.innerHTML = gerarRespostaFormatada(respostaLLM);
                             } else if (retorno.dados.tag == 'lista-docs-recuperados') {
                                 documentos = retorno.dados.conteudo;
-                            } else if (retorno.dados.tag == 'fim-resposta-llm') {
-                                divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos);
+                            } else if (retorno.dados.tag == 'persistencia-interacao') {
+                                divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos) + gerarCampoAvaliacaoInteracao(retorno.dados.conteudo);
                                 historico.push([pergunta, respostaLLM])
                                 habilitarCampos = true;
                             }
