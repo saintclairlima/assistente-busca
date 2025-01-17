@@ -9,14 +9,18 @@ class ConfiguracoesAplicacao:
             
         self.threadpool_max_workers=10
         
+        self.url_pasta_documentos = 'api/dados/documentos'
         self.url_banco_vetores = 'api/dados/bancos_vetores/banco_assistente'
-        self.url_script_geracao_banco_sqlite='api/dados/scripts_geracao_sqlite.sql'
-        self.url_script_geracao_banco_sql='api/dados/scripts_geracao_sqlite.sql'
         self.nome_colecao_de_documentos = 'documentos_rh'
+        self.num_maximo_palavras_por_fragmento = 300
         self.hnsw_space = 'cosine' # métrica a ser utilizada pelo banco vetorial para medir similaridade de vetores
         self.embedding_instructor = 'hkunlp/instructor-xl'
         self.embedding_squad_portuguese = 'pierreguillou/bert-base-cased-squad-v1.1-portuguese'
+        self.embedding_openai = 'text-embedding-ada-002'
         self.num_documentos_retornados = 5
+        
+        self.url_script_geracao_banco_sqlite='api/dados/scripts_geracao_sqlite.sql'
+        self.url_script_geracao_banco_sql='api/dados/scripts_geracao_sqlite.sql'
 
         self.modelo_funcao_de_embeddings = self.embedding_instructor
         

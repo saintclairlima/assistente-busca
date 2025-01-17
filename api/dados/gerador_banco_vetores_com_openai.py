@@ -13,13 +13,7 @@ from pypdf import PdfReader
 from bs4 import BeautifulSoup
 
 URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
-EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
 DEVICE='cuda' if cuda.is_available() else 'cpu'
-
-# Valores padrão, geralmente não usados
-URL_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_teste_default")
-NOME_COLECAO='colecao_teste_default'
-COMPRIMENTO_MAX_FRAGMENTO = 300    
 
 class GeradorBancoVetores:
     
@@ -173,7 +167,7 @@ class GeradorBancoVetores:
     
     def extrair_fragmentos(self,
         indice_documentos=None,
-        comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO):
+        comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento):
 
         if not indice_documentos: indice_documentos = configuracoes.documentos
 
@@ -186,17 +180,17 @@ class GeradorBancoVetores:
         
         return fragmentos
 
-    def obter_funcao_embeddings(self, tipo: str='instructor', instrucao: str=None):
-        if tipo == 'instructor':
+    def obter_funcao_embeddings(self, tipo: str=configuracoes.embedding_instructor, instrucao: str=None):
+        if tipo == configuracoes.embedding_instructor:
             funcao = FuncaoEmbeddings(
-                nome_modelo=EMBEDDING_INSTRUCTOR,
+                nome_modelo=configuracoes.embedding_instructor,
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE,
                 instrucao=instrucao)
-        elif tipo == 'openai':
+        elif tipo == configuracoes.embedding_openai:
             funcao = embedding_functions.OpenAIEmbeddingFunction(
-                api_key= os.environ.get("OPENAI_API_KEY", None),
-                model_name="text-embedding-ada-002")
+                api_key = os.environ.get("OPENAI_API_KEY", None),
+                model_name=configuracoes.embedding_openai)
         
         else:
             raise NameError(f'O tipo {tipo} ainda não tem suporte para geração de função de embeddings implementado')
@@ -206,9 +200,9 @@ class GeradorBancoVetores:
     
     def gerar_banco(self,
             documentos,
-            url_banco_vetores=URL_BANCO_VETORES,
-            nomes_colecoes=[NOME_COLECAO],
-            nomes_funcoes_embeddings=['instructor'],
+            url_banco_vetores=configuracoes.url_banco_vetores,
+            nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
+            nomes_funcoes_embeddings=[configuracoes.embedding_instructor],
             uuids_colecoes=[str(uuid.uuid4())],
             instrucao=None):
         
@@ -242,10 +236,10 @@ class GeradorBancoVetores:
         
     def run(self,
             indice_documentos=None,
-            url_banco_vetores=URL_BANCO_VETORES,
-            nomes_colecoes=[NOME_COLECAO],
-            nomes_funcoes_embeddings=['instructor'],
-            comprimento_max_fragmento=COMPRIMENTO_MAX_FRAGMENTO,
+            url_banco_vetores=configuracoes.url_banco_vetores,
+            nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
+            nomes_funcoes_embeddings=[configuracoes.embedding_instructor],
+            comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
             instrucao=None):
         
         docs = self.extrair_fragmentos(
@@ -264,8 +258,8 @@ class GeradorBancoVetores:
         )
 
         tipos_modelos = {
-            'instructor': 'SentenceTransformer',
-            'openai': 'OpenAI-API'
+            configuracoes.embedding_instructor: 'SentenceTransformer',
+            configuracoes.embedding_openai: 'OpenAI-API'
         }
         descritor = {
             "nome": url_banco_vetores.split('/')[-1],
@@ -288,12 +282,13 @@ class GeradorBancoVetores:
         with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
             json.dump(descritor, arq, ensure_ascii=False, indent=4)
         
-        import wandb
-        run=wandb.init(project=configuracoes.wandb_nome_projeto, job_type='ingest', config=descritor)
-        idx_artif = wandb.Artifact(name='banco-vetorial-chroma', type='banco-vetorial')
-        idx_artif.add_dir(url_banco_vetores)
-        run.log_artifact(idx_artif)
-        #run.use_artifact(configuracoes.wandb_uri_artefato_banco_vetorial, type='banco-vetorial').download(root='./api/dados/bancos_vetores/')
+        if configuracoes.usar_wandb:    
+            import wandb
+            run=wandb.init(project=configuracoes.wandb_nome_projeto, job_type='ingest', config=descritor)
+            idx_artif = wandb.Artifact(name='banco-vetorial-chroma', type='banco-vetorial')
+            idx_artif.add_dir(url_banco_vetores)
+            run.log_artifact(idx_artif)
+            #run.use_artifact(configuracoes.wandb_uri_artefato_banco_vetorial, type='banco-vetorial').download(root='./api/dados/bancos_vetores/')
         
         
 if __name__ == "__main__":
@@ -333,3 +328,10 @@ if __name__ == "__main__":
         nomes_funcoes_embeddings=nomes_funcoes_embeddings,
         comprimento_max_fragmento=comprimento_max_fragmento,
         instrucao=instrucao)
+    
+## Modelo de Execução
+# python -m api.dados.gerador_banco_vetores \
+# --nome_banco_vetores banco_assistente \
+# --lista_colecoes "['documentos_rh', 'documentos_rh_openai']" \
+# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002']" \
+# --comprimento_max_fragmento 300
