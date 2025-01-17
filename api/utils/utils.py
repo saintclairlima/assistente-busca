@@ -105,13 +105,8 @@ class ClienteOpenAi(ClienteLLM):
 class InterfaceLLM:
     
     def __init__(self):
-        self.papel_do_LLM = '''ALERN e ALRN significam Assembleia Legislativa do Estado do Rio Grande do Norte.
-Você é um assistente que responde a dúvidas de servidores da ALERN sobre o regimento interno da ALRN, o regime jurídico dos servidores estaduais do RN, bem como resoluções da ALRN.
-Assuma um tom formal, porém caloroso, com gentileza nas respostas. Utilize palavras e termos que sejam claros, autoexplicativos e linguagem simples, próximo do que o cidadão comum utiliza.'''
-        self.diretrizes = '''Use as informações dos DOCUMENTOS fornecidos para gerar uma resposta clara para a PERGUNTA.
-Na resposta, não mencione que foi fornecido documentos de referência. Cite os nomes dos DOCUMENTOS e números dos artigos em que a resposta se baseia.
-A resposta não deve ter saudação, vocativo, nem qualquer tipo de introdução que dê a entender que não houve interação anterior.
-Se você não souber a resposta, assuma um tom gentil e diga que não tem informações suficientes para responder.'''
+        self.papel_do_LLM = configuracoes.papel_llm
+        self.diretrizes = configuracoes.diretrizes_llm
 
     def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]):
         return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
