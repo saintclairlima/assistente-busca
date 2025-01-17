@@ -1,4 +1,5 @@
 from typing import Tuple
+import uuid
 from chromadb import chromadb
 import json
 import sqlite3
@@ -19,12 +20,32 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             cursor.execute(query, dados)
             conexao.commit()
             return cursor.lastrowid
+        
+    def executar_query_insercao(self, query: str, dados: tuple):
+        return self.__insert(self, query, dados)
+    
+    def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
+        ids_insercoes = {}
+        with sqlite3.connect(self.url_banco) as conexao:
+            try:
+                cursor = conexao.cursor()
+                parametros = zip(multiplas_queries, multiplos_dados)
+                for idx in range(len(parametros)):
+                    query, dados = parametros[idx]
+                    cursor.execute(query, dados)
+                    ids_insercoes[idx] = cursor.lastrowid
+                conexao.commit()
+                return ids_insercoes
+            except sqlite3.Error as e:
+                # Rollback the transaction if any error occurs
+                conexao.rollback()
+                raise
+        
+    def executar_query_insercao_multipla(self, multiplas_queries: list, multiplos_dados: list):
+        return self.__insert_multiplo(self, multiplas_queries, multiplos_dados)
     
     def inicializar_banco_sqlite(self, url_script_sql: str):
         pass
-        
-    def executar_query_insercao(self, query: str, dados: tuple):
-        return self.__insert(query, dados)
             
     def __update(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
@@ -51,7 +72,11 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
         return self.__select(tabela, colunas)
         
 class GerenciadorPersistenciaSQLite:
-    def persistir_dados_colecao(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str):
+
+    def __init__(self, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
+        self.url_arquivo_sqlite = url_arquivo_sqlite
+
+    def persistir_dados_colecao(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
             
@@ -77,7 +102,7 @@ class GerenciadorPersistenciaSQLite:
         
         return ids_colecoes_salvas
     
-    def persistir_documentos(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str):
+    def persistir_documentos(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
             
@@ -89,7 +114,7 @@ class GerenciadorPersistenciaSQLite:
         
         query_inserir_doc = 'INSERT INTO Documento ' + \
                             '(UUID_Documento, Tag_Fragmento, Conteudo, Titulo, Subtitulo, Autor, Fonte, UUID_Colecao) ' + \
-                            'VALUES (?,?,?,?,?,?,?,?)'
+                            'VALUES (?,?,?,?,?,?,?,?);'
                 
         client = chromadb.PersistentClient(path=f'''api/dados/bancos_vetores/{desc_banco_vetorial['nome']}''')
         
@@ -124,4 +149,64 @@ class GerenciadorPersistenciaSQLite:
         client._system.stop()
         
         return docs_inseridos
-                
+    
+    def persistir_interacao(self, dados_interacao: dict, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
+
+        multiplas_queries = []
+        multiplos_dados = []
+
+
+        banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
+        query_inserir_interacao = 'INSERT INTO Interacao ' + \
+                                  '(UUID_Interacao, Pergunta, Tipo_Dispositivo_Aplicacao, Tipo_Dispositivo_LLM, Tempo_Recuperacao_Documentos, ' + \
+                                  'Tempo_Estimativa_Bert, LLM_Template_System, LLM_Historico, LLM_Cliente, LLM_Nome_Modelo, ' + \
+                                  'LLM_Tempo_Carregamento, LLM_Num_Tokens_Prompt, LLM_Tempo_Processamento_Prompt, LLM_Num_Tokens_Resposta, ' + \
+                                  'LLM_Tempo_Processamento_Resposta, LLM_Tempo_Inicio_Stream, LLM_Tempo_Total, LLM_Resposta, LLM_Tipo_Conclusao, JSON_Interacao) ' + \
+                                  'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);'
+        
+        dados_interacao['uuid_interacao'] = str(uuid.uuid4())
+        dados_inserir_interacao=(
+            dados_interacao['uuid_interacao'],
+            dados_interacao['pergunta'],
+            dados_interacao['tipo_dispositivo_aplicacao'],
+            dados_interacao['tipo_dispositivo_llm'],
+            dados_interacao['tempo_recuperacao_documentos'],
+            dados_interacao['tempo_resposta_estimada_bert'],
+            dados_interacao['template_system_llm'],
+            dados_interacao['historico_llm'],
+            dados_interacao['cliente_llm'],
+            dados_interacao['modelo_llm'],
+            dados_interacao['resposta_completa_llm']['load_duration'] / 1_000_000_000,         # tempo_carregamento_llm
+            dados_interacao['resposta_completa_llm']['prompt_eval_count'],                     # num_tokens_promt
+            dados_interacao['resposta_completa_llm']['prompt_eval_duration']  / 1_000_000_000, # tempo_processamento_prompt
+            dados_interacao['resposta_completa_llm']['eval_count'],                            # num_tokens_resposta
+            dados_interacao['resposta_completa_llm']['eval_duration']  / 1_000_000_000,        # tempo_geracao_resposta
+            dados_interacao['tempo_inicio_stream_resposta'],
+            dados_interacao['tempo_total_llm'],
+            dados_interacao['resposta'],
+            dados_interacao['resposta_completa_llm']['done_reason'],                           # tipo_conclusao_llm
+            json.dumps(dados_interacao)                                                        # conteúdo completo da interação em json-string
+        )
+
+        multiplas_queries.append(query_inserir_interacao)
+        multiplos_dados.append(dados_inserir_interacao)
+        
+        query_inserir_doc_interacao = 'INSERT INTO Documento_em_Interacao ' + \
+                                      '(UUID_Documento, UUID_Interacao, Resposta_Bert, Score_Bert, Score_Distancia, Score_Ponderado)' + \
+                                      'VALUES(?,?,?,?,?,?);'
+
+        for doc in dados_interacao['documentos']:
+            dados_inserir_doc_interacao = (
+                # AFAZER: Ajustar quando remover a dupla estimativa do BERT
+                doc['id'],
+                dados_interacao['uuid_interacao'],
+                doc['resposta_bert'][0],
+                doc['score_bert'][2],
+                doc['score_distancia'],
+                doc['score_ponderado']
+            )
+
+            multiplas_queries.append(query_inserir_doc_interacao)
+            multiplos_dados.append(dados_inserir_doc_interacao)
+        
+        return banco_sqlite.executar_query_insercao_multipla(multiplas_queries=multiplas_queries, multiplos_dados=multiplos_dados)
