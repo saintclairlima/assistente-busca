@@ -13,6 +13,9 @@ class InterfacePersistencia:
 class InterfacePersistenciaSQLite(InterfacePersistencia):
     def __init__(self, url_banco):
         super().__init__(url_banco)
+    
+    def inicializar_banco_sqlite(self, url_script_sql: str):
+        pass
         
     def __insert(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
@@ -43,9 +46,6 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
         
     def executar_query_insercao_multipla(self, multiplas_queries: list, multiplos_dados: list):
         return self.__insert_multiplo(self, multiplas_queries, multiplos_dados)
-    
-    def inicializar_banco_sqlite(self, url_script_sql: str):
-        pass
             
     def __update(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
