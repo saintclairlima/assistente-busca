@@ -178,7 +178,9 @@ Obs: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos re
 
 ### Arquivos opcionais inclusos no projeto
 Há dois arquivos contidos no projeto que contém dados que podem ser utilizados.
-`api/dados/bancos_vetores/bancos_vetores.zip` possui um conjunto de bancos vetoriais já prontos para uso -- dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. O que obteve melhores resultados foi a coleção `sem_instrucao` do banco vetorial `resultados_testes` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
+`api/dados/bancos_vetores/bancos_vetores.zip` possui um conjunto de bancos vetoriais já prontos para uso -- dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. O que obteve melhores resultados foi a coleção `documentos_rh` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
+
+Dentro do mesmo banco vetorial `banco_assistente` tem a coleção `documentos_rh`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial). Sua performance, até o momento, não foi testada.
 
 Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`, semelhantemente a:
 
