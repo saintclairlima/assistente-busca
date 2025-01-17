@@ -1,4 +1,5 @@
 import torch
+from torch import cuda
 
 from concurrent.futures import ThreadPoolExecutor
 from time import time
@@ -60,11 +61,11 @@ class GeradorDeRespostas:
         return [
             {
                 'id': documentos['ids'][0][idx],
-                 'score_distancia': 1 - documentos['distances'][0][idx], # Distância do cosseno vaia entre 1 e 0
-                 'metadados': documentos['metadatas'][0][idx],
-                 'conteudo': f"{documentos['documents'][0][idx]}"
-            }
-            for idx in range(len(documentos['ids'][0]))]
+                'score_distancia': 1 - documentos['distances'][0][idx], # Distância do cosseno varia entre 1 e 0
+                'metadados': documentos['metadatas'][0][idx],
+                'conteudo': documentos['documents'][0][idx]
+            } for idx in range(len(documentos['ids'][0]))
+        ]
 
     async def estimar_resposta(self, pergunta, texto_documento: str):
         # Optou-se por não utilizar a abordagem com pipeline por ser mais lenta
@@ -163,11 +164,16 @@ class GeradorDeRespostas:
             return
             
         marcador_tempo_fim = time()
-        tempo_consulta = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- consulta no banco concluída ({tempo_consulta} segundos)')
+        tempo_recuperacao_documentos = marcador_tempo_fim - marcador_tempo_inicio
+        if fazer_log: print(f'--- consulta no banco concluída ({tempo_recuperacao_documentos} segundos)')
 
         # Atribuindo scores usando Bert
         if fazer_log: print(f'--- aplicando scores do Bert aos documentos recuperados...')
+        yield MensagemControle(
+            descricao='Informação de Status',
+            dados={'tag':'status', 'conteudo':'Analisando resultados'}
+        ).json() + '\n'
+
         marcador_tempo_inicio = time()
         for documento in lista_documentos:
             try:
@@ -184,8 +190,16 @@ class GeradorDeRespostas:
                     mensagem='Houve erro na aplicação dos valores, mas o processo continuou. Scores atribuídos com valor nulo'
                 ).json() + '\n'
         marcador_tempo_fim = time()
-        tempo_bert = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- scores atribuídos ({tempo_bert} segundos)')
+        tempo_estimativa_bert = marcador_tempo_fim - marcador_tempo_inicio
+        if fazer_log: print(f'--- scores atribuídos ({tempo_estimativa_bert} segundos)')
+        
+        yield MensagemDados(
+            descricao='Lista de Documentos Recuperados',
+            dados={
+                'tag': 'lista-docs-recuperados',
+                'conteudo': lista_documentos
+            }
+            ).json() + '\n'
         
         # Gerando resposta utilizando o Ollama
         if fazer_log: print(f'--- gerando resposta com o cliente LLM')
@@ -214,14 +228,14 @@ class GeradorDeRespostas:
                     ).json() + '\n'
                 if not flag_tempo_resposta:
                     flag_tempo_resposta = True
-                    tempo_inicio_resposta = time() - marcador_tempo_inicio
-                    if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
+                    tempo_inicio_stream_resposta = time() - marcador_tempo_inicio
+                    if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_stream_resposta} segundos)')
 
             resposta_completa_llm = item
             resposta_completa_llm['message']['content'] = texto_resposta_llm
             marcador_tempo_fim = time()
-            tempo_llm = marcador_tempo_fim - marcador_tempo_inicio
-            if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_llm} segundos)')
+            tempo_cliente_llm = marcador_tempo_fim - marcador_tempo_inicio
+            if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_cliente_llm} segundos)')
         except Exception as excecao:
             yield MensagemErro(
                 descricao=f'Falha na Geração da Resposta (Ollama offline ou {configuracoes.modelo_llm} não disponível. {excecao.__class__.__name__})',
@@ -234,30 +248,13 @@ class GeradorDeRespostas:
         msg = MensagemDados(
                 descricao='Resposta completa',
                 dados={
-                    'tag': 'resposta-completa-llm',
-                    'conteudo': {
-                        "pergunta": pergunta,
-                        "resposta": texto_resposta_llm,
-                        "documentos": [
-                            {
-                                "metadados":{
-                                    "fonte": doc['metadados']['fonte'],
-                                    "titulo": doc['metadados']['titulo'],
-                                    "subtitulo": doc['metadados']['subtitulo']
-                                },
-                                "conteudo": doc['conteudo']} for doc in lista_documentos],
-                        #"documentos": lista_documentos,
-                        #"resposta_completa_llm": resposta_completa_llm,
-                        #"tempo_consulta": tempo_consulta,
-                        #"tempo_bert": tempo_bert,
-                        #"tempo_inicio_resposta": tempo_inicio_resposta,
-                        #"tempo_llm": tempo_llm
-                    }
+                    'tag': 'fim-resposta-llm',
+                    'conteudo': ''
                 }
             ).json()
         
         if self.tabela_log_requisicao:
-            self.tabela_log_requisicao.add_data(pergunta, texto_resposta_llm, lista_documentos, tempo_consulta, tempo_bert, resposta_completa_llm, tempo_inicio_resposta, tempo_llm)
+            self.tabela_log_requisicao.add_data(pergunta, texto_resposta_llm, lista_documentos, tempo_recuperacao_documentos, tempo_estimativa_bert, resposta_completa_llm, tempo_inicio_stream_resposta, tempo_cliente_llm)
             self.wandb_run.log({"Tabela_Requisicao": self.tabela_log_requisicao})
 
         yield msg

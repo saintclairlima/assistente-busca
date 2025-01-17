@@ -97,7 +97,8 @@ async function submitText(){
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
-            let textoAcumulado = "";
+            let respostaLLM = "";
+            let documentos = [];
 
             while (true) {
                 rolagemAutomatica();
@@ -126,14 +127,13 @@ async function submitText(){
                             continue;
                         } else if (retorno.tipo == 'dados') {
                             if (retorno.dados.tag == 'frag-resposta-llm') {
-                                textoAcumulado += retorno.dados.conteudo;
-                                divResposta.innerHTML = gerarRespostaFormatada(textoAcumulado);
-                            } else if (retorno.dados.tag == 'resposta-completa-llm') {
-                                var documentos = retorno.dados.conteudo.documentos;
-                                var resposta = retorno.dados.conteudo.resposta;
-                                divResposta.innerHTML = gerarRespostaFormatada(resposta) + gerarFontesFormatadas(documentos);
-                                historico.push([pergunta, resposta])
-                                console.log(retorno.dados.conteudo);
+                                respostaLLM += retorno.dados.conteudo;
+                                divResposta.innerHTML = gerarRespostaFormatada(respostaLLM);
+                            } else if (retorno.dados.tag == 'lista-docs-recuperados') {
+                                documentos = retorno.dados.conteudo;
+                            } else if (retorno.dados.tag == 'fim-resposta-llm') {
+                                divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos);
+                                historico.push([pergunta, respostaLLM])
                                 habilitarCampos = true;
                             }
                             continue;
