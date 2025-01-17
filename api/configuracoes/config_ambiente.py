@@ -11,6 +11,7 @@ class ConfiguracoesAmbiente:
     def __init__(self):
         self.url_llm=os.getenv('URL_LLM')
         self.url_host=os.getenv('URL_HOST')
+        self.url_banco_sql=os.getenv('URL_BANCO_SQL')
         
         self.device=os.getenv('DEVICE') # ['cpu', cuda']
         self.ambiente_execucao=os.getenv('AMBIENTE_EXECUCAO')
