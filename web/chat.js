@@ -21,8 +21,9 @@ function gerarFontesFormatadas(documentos){
     return htmlFontes;
 }
 
-function gerarCampoAvaliacaoInteracao(idsInteracao){
-    console.log(idsInteracao);
+function gerarCampoAvaliacaoInteracao(idInteracao){
+    console.log(idInteracao);
+    return `<p>${idInteracao}</p>`
 }
 
 function rolagemAutomatica(){

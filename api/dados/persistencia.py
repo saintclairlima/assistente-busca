@@ -224,8 +224,13 @@ class GerenciadorPersistenciaSQLite:
 
             multiplas_queries.append(query_inserir_doc_interacao)
             multiplos_dados.append(dados_inserir_doc_interacao)
-        
-        return banco_sqlite.executar_query_insercao_multipla(multiplas_queries=multiplas_queries, multiplos_dados=multiplos_dados)
+        try:
+            banco_sqlite.executar_query_insercao_multipla(multiplas_queries=multiplas_queries, multiplos_dados=multiplos_dados)
+            return dados_interacao['uuid_interacao']
+        except Exception as e:
+            print(f'Ocorreu um erro: {e}')
+            raise
+
 
 if __name__ == '__main__':
     print('Executando rotina de persistência')
