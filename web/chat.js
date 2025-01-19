@@ -23,7 +23,20 @@ function gerarFontesFormatadas(documentos){
 
 function gerarCampoAvaliacaoInteracao(idInteracao){
     console.log(idInteracao);
-    return `<p>${idInteracao}</p>`
+    htmlAval = `
+    <div>
+        <span id="posit_aval" class="material-icons icone-aval positivo" onclick="enviarAvaliacao('positivo', '${idInteracao}', this)">thumb_up</span>
+        <span id="negat_aval" class="material-icons icone-aval negativo" onclick="enviarAvaliacao('negativo', '${idInteracao}', this)">thumb_down</span>
+        <span id="alert_aval" class="material-icons icone-aval positivo" onclick="enviarAvaliacao('alerta', '${idInteracao}', this)">warning</span>
+        <p>${idInteracao}</p>
+    </div>`;
+    
+    return htmlAval
+}
+
+function enviarAvaliacao(elementoClicado, avaliacao, idInteracao){
+    alert(avaliacao);
+    elementoClicado.style.color = 'green';
 }
 
 function rolagemAutomatica(){
