@@ -1,3 +1,4 @@
+import os
 from typing import Tuple
 import uuid
 from chromadb import chromadb
@@ -225,3 +226,11 @@ class GerenciadorPersistenciaSQLite:
             multiplos_dados.append(dados_inserir_doc_interacao)
         
         return banco_sqlite.executar_query_insercao_multipla(multiplas_queries=multiplas_queries, multiplos_dados=multiplos_dados)
+
+if __name__ == '__main__':
+    print('Executando rotina de persistência')
+    gp = GerenciadorPersistenciaSQLite()
+    gp.inicializar_banco_SQLite()
+    url_descritor = os.path.join(configuracoes.url_banco_vetores, 'descritor.json')
+    gp.persistir_dados_colecao(url_descritor_banco_vetorial=url_descritor)
+    gp.persistir_documentos(url_descritor_banco_vetorial=url_descritor)
