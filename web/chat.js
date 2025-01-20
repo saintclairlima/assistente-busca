@@ -22,7 +22,6 @@ function gerarFontesFormatadas(documentos){
 }
 
 function gerarCampoAvaliacaoInteracao(idInteracao){
-    console.log(idInteracao);
     htmlAval = `
     <div class="area-aval">
         <span id="posit_aval" class="material-icons icone-aval positivo" onclick="avaliarInteracao(this, '${idInteracao}', 'positivo')">thumb_up</span>
@@ -76,7 +75,7 @@ async function enviarPergunta(){
         
         var divResposta = document.createElement("div");
         divResposta.className = "text-box";
-        divResposta.innerHTML = "<span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>";
+        divResposta.innerHTML = "Processando pergunta<span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>";
         divResposta.classList.add("align-left");
         divResposta.classList.add("mensagem-recebida");
         document.getElementById("container-exibicao-mensagens").appendChild(divResposta);
@@ -172,7 +171,8 @@ async function enviarPergunta(){
             if (erro.name === "AbortError") {
                 divResposta.innerHTML = "O servidor demorou para responder. Tente novamente mais tarde.";
             } else {
-                divResposta.innerHTML = `Ocorreu um erro ao tentar se conectar ao servidor. (Tipo do erro: ${erro.name})`;
+                console.error(`Ocorreu um erro ao tentar se conectar ao servidor. Verifique sua conexão. (Tipo do erro: ${erro.name})`);
+                divResposta.innerHTML = "Ocorreu um erro ao tentar se conectar ao servidor. Verifique sua conexão.";
             }
             habilitarCampos=true;
         }
@@ -184,7 +184,15 @@ async function enviarPergunta(){
     }
 }
 
-async function enviarAvaliacao(idInteracao, avaliacao, comentario) {
+async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
+    // Alterar quando implementada a lógica de incluir comentário
+    let comentario = null;
+
+    // Se o elemento está clicado/avaliado, setar para null para remover avaliação
+    if (elementoClicado.classList.contains('clicado')) avaliacao = null;
+
+    const parent = elementoClicado.parentElement;
+
     fetch(`${url_host}/chat/avaliar-interacao/`, {
         method: "POST",
         body: JSON.stringify({
@@ -197,53 +205,46 @@ async function enviarAvaliacao(idInteracao, avaliacao, comentario) {
         },
     })
     .then(response => {
-        if (!response.ok) {
-            throw new Error(`Erro HTTP! Status: ${response.status}`);
-        }
+        if (!response.ok) throw new Error('A resposta do servidor aponta que houve um problema');
+        
         return response.json();
     })
-    .then(result => {
-        if (result.success) {
-            console.log("Avaliação enviada com sucesso:", result.data);
-        } else {
-            console.warn("Algo deu errado:", result.message);
+    .then(data => {
+        data = JSON.parse(data);
+        const sucessoAvaliacao = data.dados.conteudo.sucesso_avaliacao;
+        const mensagemRetorno = data.dados.conteudo.mensagem_retorno;
+        
+        if (! elementoClicado.classList.contains('clicado') && sucessoAvaliacao) {
+            if (elementoClicado.classList.contains('positivo'))
+                elementoClicado.style.color = 'green';
+            if (elementoClicado.classList.contains('negativo'))
+                elementoClicado.style.color = 'orange';
+            if (elementoClicado.classList.contains('alerta'))
+                elementoClicado.style.color = 'red';
+    
+            elementoClicado.classList.add('clicado');    
+            Array.from(parent.children).forEach(child => {
+                if (child !== elementoClicado) {
+                    child.style.color = 'gray';
+                    child.style.display = 'none';
+                }
+            });
+        } else if (elementoClicado.classList.contains('clicado') && sucessoAvaliacao){
+            elementoClicado.classList.remove('clicado');
+            Array.from(parent.children).forEach(child => {
+                child.style.color = 'gray';
+                child.style.display = 'inline-block';
+            }); 
+        } else if(! resultado.sucessso_avaliacao){
+            alert(mensagemRetorno);
         }
     })
-    .catch(error => {
-        console.error("Falha no envio da avaliacao:", error.message);
+    .catch((error) => {
+        if (error instanceof TypeError) {
+            console.error('Falha no fetch devido a problemas de rede ou com a URL:', error);
+            alert('Erro ao enviar avaliação. Verifique sua conexão.');
+        } else {
+            console.error('Um erro inesperado ocorreu no envio da avaliação:', error);
+        }
     });
-}
-
-async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
-    const parent = elementoClicado.parentElement;
-
-    if (! elementoClicado.classList.contains('clicado')) {
-
-        enviarAvaliacao(idInteracao, avaliacao, null);
-
-        if (elementoClicado.classList.contains('positivo'))
-            elementoClicado.style.color = 'green';
-        if (elementoClicado.classList.contains('negativo'))
-            elementoClicado.style.color = 'orange';
-        if (elementoClicado.classList.contains('alerta'))
-            elementoClicado.style.color = 'red';
-
-        elementoClicado.classList.add('clicado');  
-    
-        Array.from(parent.children).forEach(child => {
-            if (child !== elementoClicado) {
-                child.style.color = 'gray';
-                child.style.display = 'none';
-            }
-        });
-    } else {
-
-        enviarAvaliacao(idInteracao, null, null);
-
-        elementoClicado.classList.remove('clicado');
-        Array.from(parent.children).forEach(child => {
-            child.style.color = 'gray';
-            child.style.display = 'inline-block';
-        }); 
-    }
 }
