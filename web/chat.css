@@ -9,6 +9,9 @@
     --cinza-claro: #e9ecef;
     --cinza-medio: #9e9c9c;
     --cinza-escuro: #616161;
+    --verde: #008000;
+    --laranja: #e47900;
+    --vermelho-escuro: #bb0000;
 }
 body{
     margin: 0;
@@ -169,6 +172,19 @@ hr{
   font-size: medium;
   color: var(--cinza-medio);
   cursor: pointer;
+  margin-left: 5px;
+}
+.vermelho-escuro{
+    color: var(--vermelho-escuro);
+}
+.verde{
+    color: var(--verde);
+}
+.laranja{
+    color: var(--laranja);
+}
+.cinza{
+    color: var(--cinza-escuro);
 }
 .container-envio-mensagens{
     display: flex;
