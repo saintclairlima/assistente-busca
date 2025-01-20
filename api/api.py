@@ -5,8 +5,8 @@ from sentence_transformers import SentenceTransformer
 from starlette.middleware.cors import CORSMiddleware
 
 from api.configuracoes.config_gerais import configuracoes
-from api.gerador_de_respostas import GeradorDeRespostas, DadosChat
-from api.utils.utils import FuncaoEmbeddings
+from api.gerador_de_respostas import GeradorDeRespostas
+from api.utils.utils import FuncaoEmbeddings, DadosChat
 
 print('Instanciando a api (FastAPI)...')
 controller = FastAPI()
@@ -24,10 +24,6 @@ gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddi
 
 print('Definindo as rotas')
 
-@controller.post('/chat/enviar_pergunta/')
-async def gerar_resposta(dadosRecebidos: DadosChat):
-    return StreamingResponse(gerador_de_respostas.consultar(dadosRecebidos), media_type='text/plain')
-
 
 @controller.get('/chat/')
 async def pagina_chat(url_redirec: str = Query(None)):
@@ -40,6 +36,14 @@ async def pagina_chat(url_redirec: str = Query(None)):
     for tag, valor in configuracoes.tags_substituicao_html.items():
         conteudo_html = conteudo_html.replace(tag, valor)
     return HTMLResponse(content=conteudo_html, status_code=200)
+
+@controller.post('/chat/enviar-pergunta/')
+async def gerar_resposta(dadosRecebidos: DadosChat):
+    return StreamingResponse(gerador_de_respostas.consultar(dadosRecebidos), media_type='text/plain')
+
+@controller.post('/chat/avaliar-interacao/')
+async def gerar_resposta(dadosRecebidos: dict):
+    return await gerador_de_respostas.avaliar_interacao(dadosRecebidos)
 
 @controller.get('/web/img/favicon/favicon.ico')
 async def favicon(): return FileResponse('web/img/favicon/favicon.ico')

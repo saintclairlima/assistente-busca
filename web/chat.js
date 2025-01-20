@@ -25,40 +25,12 @@ function gerarCampoAvaliacaoInteracao(idInteracao){
     console.log(idInteracao);
     htmlAval = `
     <div>
-        <span id="posit_aval" class="material-icons icone-aval positivo" onclick="enviarAvaliacao(this, 'positivo', '${idInteracao}')">thumb_up</span>
-        <span id="negat_aval" class="material-icons icone-aval negativo" onclick="enviarAvaliacao(this, 'negativo', '${idInteracao}')">thumb_down</span>
-        <span id="alert_aval" class="material-icons icone-aval alerta" onclick="enviarAvaliacao(this, 'alerta', '${idInteracao}')">warning</span>
+        <span id="posit_aval" class="material-icons icone-aval positivo" onclick="avaliarInteracao(this, '${idInteracao}', 'positivo')">thumb_up</span>
+        <span id="negat_aval" class="material-icons icone-aval negativo" onclick="avaliarInteracao(this, '${idInteracao}', 'negativo')">thumb_down</span>
+        <span id="alert_aval" class="material-icons icone-aval alerta" onclick="avaliarInteracao(this, '${idInteracao}', 'alerta')">warning</span>
     </div>`;
     
     return htmlAval
-}
-
-function enviarAvaliacao(elementoClicado, avaliacao, idInteracao){
-    const parent = elementoClicado.parentElement;
-
-    if (! elementoClicado.classList.contains('clicado')) {
-        if (elementoClicado.classList.contains('positivo'))
-            elementoClicado.style.color = 'green';
-        if (elementoClicado.classList.contains('negativo'))
-            elementoClicado.style.color = 'orange';
-        if (elementoClicado.classList.contains('alerta'))
-            elementoClicado.style.color = 'red';
-
-        elementoClicado.classList.add('clicado');  
-    
-        Array.from(parent.children).forEach(child => {
-            if (child !== elementoClicado) {
-                child.style.color = 'gray';
-                child.style.display = 'none';
-            }
-        });
-    } else {
-        elementoClicado.classList.remove('clicado');
-        Array.from(parent.children).forEach(child => {
-            child.style.color = 'gray';
-            child.style.display = 'inline-block';
-        }); 
-    }
 }
 
 function rolagemAutomatica(){
@@ -87,7 +59,7 @@ function toggleFontes(elemento) {
     }
 }
 
-async function submitText(){
+async function enviarPergunta(){
     // Só executa se houver valor digitado no campo de pergunta
     if (document.getElementById("text-input").value){
         document.getElementById("botao-enviar").disabled = true;
@@ -119,7 +91,7 @@ async function submitText(){
         const timeoutId = setTimeout(() => controller.abort(), 120000);
 
         try {
-            const response = await fetch(`${url_host}/chat/enviar_pergunta/`, {
+            const response = await fetch(`${url_host}/chat/enviar-pergunta/`, {
                 method: "POST",
                 body: JSON.stringify({
                     pergunta: pergunta,
@@ -209,5 +181,69 @@ async function submitText(){
             document.getElementById("text-input").removeAttribute("disabled");
             document.getElementById("text-input").focus();
         }
+    }
+}
+
+async function enviarAvaliacao(idInteracao, avaliacao, comentario) {
+    fetch(`${url_host}/chat/avaliar-interacao/`, {
+        method: "POST",
+        body: JSON.stringify({
+            uuid_interacao: idInteracao,
+            avaliacao: avaliacao,
+            comentario: comentario
+        }),
+        headers: {
+            "Content-type": "application/json; charset=UTF-8"
+        },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`Erro HTTP! Status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(result => {
+        if (result.success) {
+            console.log("Avaliação enviada com sucesso:", result.data);
+        } else {
+            console.warn("Algo deu errado:", result.message);
+        }
+    })
+    .catch(error => {
+        console.error("Falha no envio da avaliacao:", error.message);
+    });
+}
+
+async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
+    const parent = elementoClicado.parentElement;
+
+    if (! elementoClicado.classList.contains('clicado')) {
+
+        enviarAvaliacao(idInteracao, avaliacao, null);
+
+        if (elementoClicado.classList.contains('positivo'))
+            elementoClicado.style.color = 'green';
+        if (elementoClicado.classList.contains('negativo'))
+            elementoClicado.style.color = 'orange';
+        if (elementoClicado.classList.contains('alerta'))
+            elementoClicado.style.color = 'red';
+
+        elementoClicado.classList.add('clicado');  
+    
+        Array.from(parent.children).forEach(child => {
+            if (child !== elementoClicado) {
+                child.style.color = 'gray';
+                child.style.display = 'none';
+            }
+        });
+    } else {
+
+        enviarAvaliacao(idInteracao, null, null);
+
+        elementoClicado.classList.remove('clicado');
+        Array.from(parent.children).forEach(child => {
+            child.style.color = 'gray';
+            child.style.display = 'inline-block';
+        }); 
     }
 }

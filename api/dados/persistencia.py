@@ -238,31 +238,32 @@ class GerenciadorPersistenciaSQLite:
             raise
 
     def persistir_avaliacao(self, dados_avaliacao: dict):
-
         banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
 
         # AFAZER: implementar select com where na interface de persistência SQLite
-        query = f'''SELECT * FROM Avaliacao WHERE UUID_Interacao == ?;'''
+        query = f'''SELECT * FROM Avaliacao_Interacao WHERE UUID_Interacao == ?;'''
+        dados = (dados_avaliacao['uuid_interacao'],)
         with sqlite3.connect(self.url_arquivo_sqlite) as conexao:
             conexao.execute("PRAGMA foreign_keys = ON;")
             cursor  = conexao.cursor()
-            cursor.execute(query)
+            cursor.execute(query, dados)
             conexao.commit()
             resultados = cursor.fetchall()
 
         if len(resultados) == 0:
-            query_inserir_avaliacao = 'INSERT INTO Avaliacao ' + \
+            query_inserir_avaliacao = 'INSERT INTO Avaliacao_Interacao ' + \
                                       '(UUID_Interacao, Avaliacao, Comentario) ' + \
                                       'VALUES (?,?,?);'
             
             dados_inserir_avaliacao = (dados_avaliacao['uuid_interacao'], dados_avaliacao['avaliacao'], dados_avaliacao['comentario'])
+
             try:
                 return banco_sqlite.executar_query_insercao(query=query_inserir_avaliacao, dados=dados_inserir_avaliacao)
             except Exception as e:
                 print(f'Ocorreu um erro: {e}')
                 raise
         else:
-            query_atualizar_avaliacao = 'UPDATE Avaliacao ' + \
+            query_atualizar_avaliacao = 'UPDATE Avaliacao_Interacao ' + \
                                         'SET Avaliacao=?, Comentario=? ' + \
                                         'WHERE UUID_Interacao = ?;'
             

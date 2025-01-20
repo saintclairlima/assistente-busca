@@ -283,46 +283,25 @@ class GeradorDeRespostas:
         yield msg
         print('Concluído')
 
+    async def avaliar_interacao(self, dados_avaliacao: dict):
+        try:
+            resultado = self.gerenciador_persistencia.persistir_avaliacao(dados_avaliacao=dados_avaliacao)
+            if resultado == 1:
+                dados_avaliacao['sucesso_avaliacao'] = True
+                dados_avaliacao['mensagem_retorno'] = 'Avaliação registrada'
+            elif resultado == 0:
+                dados_avaliacao['sucesso_avaliacao'] = False
+                dados_avaliacao['mensagem_retorno'] = 'Query executada, mas dados não registrados'
+            else:
+                raise Exception('Mais de uma avaliação registrada?!')
+        except Exception as e:
+            dados_avaliacao['sucesso_avaliacao'] = False
+            dados_avaliacao['mensagem_retorno'] = f'Ocorreu um erro. {e}'
 
-        # marcador_tempo_inicio = time()
-        # texto_resposta_llm = ''
-        # flag_tempo_resposta = False
-        # for palavra in ['Resposta ', 'mockada ', 'só ', 'para ', 'testar']:
-        #     item={'message': {'content': palavra}}
-        #     texto_resposta_llm += item['message']['content']
-        #     yield MensagemDados(
-        #         descricao='Fragmento de Resposta do LLM',
-        #         dados={
-        #             'tag': 'frag-resposta-llm',
-        #             'conteudo': item['message']['content']
-        #         }
-        #         ).json() + '\n'
-        #     if not flag_tempo_resposta:
-        #         flag_tempo_resposta = True
-        #         tempo_inicio_resposta = time() - marcador_tempo_inicio
-        #         if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_resposta} segundos)')
-        #     print(texto_resposta_llm)
-
-        # item['message']['content'] = texto_resposta_llm
-        # marcador_tempo_fim = time()
-        # tempo_ollama = marcador_tempo_fim - marcador_tempo_inicio
-        # if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_ollama} segundos)')
-        
-        # # Retornando dados compilados
-        # yield MensagemDados(
-        #         descricao='Resposta completa',
-        #         dados={
-        #             'tag': 'resposta-completa-llm',
-        #             'conteudo': {
-        #                 "pergunta": pergunta,
-        #                 "documentos": lista_documentos,
-        #                 "resposta_ollama": {'dados_mockados': 'Dados Mockados'},
-        #                 "resposta": texto_resposta_llm,
-        #                 "tempo_consulta": tempo_consulta,
-        #                 "tempo_bert": tempo_bert,
-        #                 "tempo_inicio_resposta": tempo_inicio_resposta,
-        #                 "tempo_ollama_total": tempo_ollama
-        #             }
-        #         }
-        #     ).json()
-        # print('Concluído')
+        return MensagemDados(
+            descricao='Resultado da requisição de avaliação',
+            dados={
+                'tag': 'persistencia-avaliacao',
+                'conteudo': dados_avaliacao
+            }
+        ).json()
