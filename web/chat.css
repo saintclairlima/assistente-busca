@@ -160,6 +160,16 @@ hr{
 .documento-conteudo{
     
 }
+.area-aval{
+  /* background: green; */
+  display: flex;
+  justify-content: flex-end;
+}
+.icone-aval{
+  font-size: medium;
+  color: var(--cinza-medio);
+  cursor: pointer;
+}
 .container-envio-mensagens{
     display: flex;
     flex-direction: row;

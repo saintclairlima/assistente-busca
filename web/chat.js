@@ -25,18 +25,40 @@ function gerarCampoAvaliacaoInteracao(idInteracao){
     console.log(idInteracao);
     htmlAval = `
     <div>
-        <span id="posit_aval" class="material-icons icone-aval positivo" onclick="enviarAvaliacao('positivo', '${idInteracao}', this)">thumb_up</span>
-        <span id="negat_aval" class="material-icons icone-aval negativo" onclick="enviarAvaliacao('negativo', '${idInteracao}', this)">thumb_down</span>
-        <span id="alert_aval" class="material-icons icone-aval positivo" onclick="enviarAvaliacao('alerta', '${idInteracao}', this)">warning</span>
-        <p>${idInteracao}</p>
+        <span id="posit_aval" class="material-icons icone-aval positivo" onclick="enviarAvaliacao(this, 'positivo', '${idInteracao}')">thumb_up</span>
+        <span id="negat_aval" class="material-icons icone-aval negativo" onclick="enviarAvaliacao(this, 'negativo', '${idInteracao}')">thumb_down</span>
+        <span id="alert_aval" class="material-icons icone-aval alerta" onclick="enviarAvaliacao(this, 'alerta', '${idInteracao}')">warning</span>
     </div>`;
     
     return htmlAval
 }
 
 function enviarAvaliacao(elementoClicado, avaliacao, idInteracao){
-    alert(avaliacao);
-    elementoClicado.style.color = 'green';
+    const parent = elementoClicado.parentElement;
+
+    if (! elementoClicado.classList.contains('clicado')) {
+        if (elementoClicado.classList.contains('positivo'))
+            elementoClicado.style.color = 'green';
+        if (elementoClicado.classList.contains('negativo'))
+            elementoClicado.style.color = 'orange';
+        if (elementoClicado.classList.contains('alerta'))
+            elementoClicado.style.color = 'red';
+
+        elementoClicado.classList.add('clicado');  
+    
+        Array.from(parent.children).forEach(child => {
+            if (child !== elementoClicado) {
+                child.style.color = 'gray';
+                child.style.display = 'none';
+            }
+        });
+    } else {
+        elementoClicado.classList.remove('clicado');
+        Array.from(parent.children).forEach(child => {
+            child.style.color = 'gray';
+            child.style.display = 'inline-block';
+        }); 
+    }
 }
 
 function rolagemAutomatica(){
