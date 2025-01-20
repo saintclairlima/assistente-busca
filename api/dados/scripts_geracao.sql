@@ -41,8 +41,7 @@ CREATE TABLE Interacao (
     LLM_Resposta VARCHAR(MAX),
     LLM_Tipo_Conclusao VARCHAR(50),
     JSON_Interacao VARCHAR(MAX),
-    CONSTRAINT Pk_Interacao PRIMARY KEY (UUID_Interacao)
-);
+    CONSTRAINT Pk_Interacao PRIMARY KEY (UUID_Interacao));
 
 CREATE TABLE Documento_em_Interacao (
     UUID_Documento VARCHAR(40) NOT NULL,
@@ -53,6 +52,13 @@ CREATE TABLE Documento_em_Interacao (
     Score_Ponderado NUMERIC,
     CONSTRAINT Pk_Documento_em_Interacao PRIMARY KEY (UUID_Documento, UUID_Interacao));
 
+CREATE TABLE Avaliacao_Interacao (
+    UUID_Interacao VARCHAR(40) NOT NULL,
+    Avaliacao VARCHAR(40),
+    Comentario VARCHAR(MAX),
+    CONSTRAINT Pk_Avaliacao_Interacao PRIMARY KEY (UUID_Interacao));
+
 ALTER TABLE Documento ADD CONSTRAINT Fk_Documento_Colecao FOREIGN KEY(Id_Colecao) REFERENCES Colecao (Id_Colecao);
 ALTER TABLE Documento_em_Interacao ADD CONSTRAINT Fk_Documento_em_Interacao_Documento FOREIGN KEY(UUID_Documento) REFERENCES Documento (UUID_Documento);
-ALTER TABLE Documento_em_Interacao ADD CONSTRAINT Fk_Documento_em_Interacao_Interacao FOREIGN KEY(UUID_Interacao) REFERENCES Interacao (Id_Interacao);
+ALTER TABLE Documento_em_Interacao ADD CONSTRAINT Fk_Documento_em_Interacao_Interacao FOREIGN KEY(UUID_Interacao) REFERENCES Interacao (UUID_Interacao);
+ALTER TABLE Avaliacao_Interacao ADD CONSTRAINT Fk_Avaliacao_Interacao FOREIGN KEY (Avaliacao_Interacao) REFERENCES Interacao (UUID_Interacao);

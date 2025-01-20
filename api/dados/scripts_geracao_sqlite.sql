@@ -58,3 +58,11 @@ CREATE TABLE Documento_em_Interacao (
     FOREIGN KEY (UUID_Documento) REFERENCES Documento (UUID_Documento),
     FOREIGN KEY (UUID_Interacao) REFERENCES Interacao (UUID_Interacao)
 );
+
+CREATE TABLE Avaliacao_Interacao (
+    UUID_Interacao TEXT NOT NULL,
+    Avaliacao TEXT, 
+    Comentario TEXT,
+    PRIMARY KEY (UUID_Interacao),
+    FOREIGN KEY (UUID_Interacao) REFERENCES Interacao (UUID_Interacao)
+);

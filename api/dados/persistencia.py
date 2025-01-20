@@ -20,7 +20,7 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             try:
                 cursor  = conexao.cursor()
                 cursor.executescript(script)
-                print(f'Tabelas criadas em {self.url_banco}')
+                print(f'Dados persistidos em {self.url_banco}')
                 conexao.commit()
             except sqlite3.Error as e:
                 print(f"Ocorreu um erro: {e}")
@@ -28,10 +28,11 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
         
     def __insert(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
+            conexao.execute("PRAGMA foreign_keys = ON;")
             cursor  = conexao.cursor()
             cursor.execute(query, dados)
             conexao.commit()
-            return cursor.lastrowid
+            return cursor.rowcount
         
     def executar_query_insercao(self, query: str, dados: tuple):
         return self.__insert(query, dados)
@@ -39,6 +40,7 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
     def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
         ids_insercoes = {}
         with sqlite3.connect(self.url_banco) as conexao:
+            conexao.execute("PRAGMA foreign_keys = ON;")
             try:
                 cursor = conexao.cursor()
                 parametros = list(zip(multiplas_queries, multiplos_dados))
@@ -58,10 +60,14 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             
     def __update(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
+            conexao.execute("PRAGMA foreign_keys = ON;")
             cursor  = conexao.cursor()
             cursor.execute(query, dados)
             conexao.commit()
             return cursor.rowcount
+    
+    def executar_query_update(self, query: str, dados: tuple):
+        return self.__update(query, dados)
             
     def __select(self, tabela: str, colunas: tuple):
         query = f'''SELECT {','.join(colunas)} FROM {tabela}'''
@@ -93,11 +99,11 @@ class GerenciadorPersistenciaSQLite:
         
         banco_sqlite.executar_script(script=script)
 
-    def persistir_dados_colecao(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
+    def persistir_dados_colecao(self, url_descritor_banco_vetorial: str,):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
             
-        banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
+        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
         ids_colecoes_salvas={}
         for colecao in desc_banco_vetorial['colecoes']:
             uuid_colecao=colecao['uuid']
@@ -114,16 +120,16 @@ class GerenciadorPersistenciaSQLite:
                 'VALUES(?,?,?,?,?,?,?,?);'
             valores=(uuid_colecao, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras, metrica_similaridade)
             id_colecao_salva = banco_sqlite.executar_query_insercao(query, valores)
-            print(f'Coleção {nome} salva em {url_arquivo_sqlite} com id {id_colecao_salva}')
+            print(f'Coleção {nome} salva em {self.url_arquivo_sqlite} com id {id_colecao_salva}')
             ids_colecoes_salvas[colecao['nome']]=id_colecao_salva
         
         return ids_colecoes_salvas
     
-    def persistir_documentos(self, url_descritor_banco_vetorial: str, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
+    def persistir_documentos(self, url_descritor_banco_vetorial: str):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
             
-        banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
+        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
         colecoes_uuids = {
             resultado[1]: resultado[0]
             for resultado in banco_sqlite.executar_query_select('colecao', ['uuid_colecao', 'nome'])
@@ -167,12 +173,12 @@ class GerenciadorPersistenciaSQLite:
         
         return docs_inseridos
     
-    def persistir_interacao(self, dados_interacao: dict, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
+    def persistir_interacao(self, dados_interacao: dict):
 
         multiplas_queries = []
         multiplos_dados = []
 
-        banco_sqlite = InterfacePersistenciaSQLite(url_arquivo_sqlite)
+        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
         query_inserir_interacao = 'INSERT INTO Interacao ' + \
                                   '(UUID_Interacao, Pergunta, Tipo_Dispositivo_Aplicacao, Tipo_Dispositivo_LLM, Tempo_Recuperacao_Documentos, ' + \
                                   'Tempo_Estimativa_Bert, LLM_Template_System, LLM_Historico, LLM_Cliente, LLM_Nome_Modelo, ' + \
@@ -230,6 +236,42 @@ class GerenciadorPersistenciaSQLite:
         except Exception as e:
             print(f'Ocorreu um erro: {e}')
             raise
+
+    def persistir_avaliacao(self, dados_avaliacao: dict):
+
+        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
+
+        # AFAZER: implementar select com where na interface de persistência SQLite
+        query = f'''SELECT * FROM Avaliacao WHERE UUID_Interacao == ?;'''
+        with sqlite3.connect(self.url_arquivo_sqlite) as conexao:
+            conexao.execute("PRAGMA foreign_keys = ON;")
+            cursor  = conexao.cursor()
+            cursor.execute(query)
+            conexao.commit()
+            resultados = cursor.fetchall()
+
+        if len(resultados) == 0:
+            query_inserir_avaliacao = 'INSERT INTO Avaliacao ' + \
+                                      '(UUID_Interacao, Avaliacao, Comentario) ' + \
+                                      'VALUES (?,?,?);'
+            
+            dados_inserir_avaliacao = (dados_avaliacao['uuid_interacao'], dados_avaliacao['avaliacao'], dados_avaliacao['comentario'])
+            try:
+                return banco_sqlite.executar_query_insercao(query=query_inserir_avaliacao, dados=dados_inserir_avaliacao)
+            except Exception as e:
+                print(f'Ocorreu um erro: {e}')
+                raise
+        else:
+            query_atualizar_avaliacao = 'UPDATE Avaliacao ' + \
+                                        'SET Avaliacao=?, Comentario=? ' + \
+                                        'WHERE UUID_Interacao = ?;'
+            
+            dados_atualizar_avaliacao =  (dados_avaliacao['avaliacao'], dados_avaliacao['comentario'], dados_avaliacao['uuid_interacao'])
+            try:
+                return banco_sqlite.executar_query_update(query=query_atualizar_avaliacao, dados=dados_atualizar_avaliacao)
+            except Exception as e:
+                print(f'Ocorreu um erro: {e}')
+                raise
 
 
 if __name__ == '__main__':
