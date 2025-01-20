@@ -7,6 +7,7 @@ CREATE TABLE Colecao (
     Instrucao TEXT,
     Qtd_Max_Palavras INTEGER,
     Metrica_Similaridade TEXT,
+    Data_Criacao DATETIME DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (UUID_Colecao)
 );
 
@@ -19,6 +20,7 @@ CREATE TABLE Documento (
     Autor TEXT,
     Fonte TEXT,
     UUID_Colecao TEXT,
+    Data_Criacao DATETIME DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (UUID_Documento),
     FOREIGN KEY (UUID_Colecao) REFERENCES Colecao (UUID_Colecao)
 );
@@ -44,6 +46,7 @@ CREATE TABLE Interacao (
     LLM_Resposta TEXT,
     LLM_Tipo_Conclusao TEXT,
     JSON_Interacao TEXT,
+    Data_Criacao DATETIME DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (UUID_Interacao)
 );
 
@@ -54,6 +57,7 @@ CREATE TABLE Documento_em_Interacao (
     Score_Bert REAL,
     Score_Distancia REAL,
     Score_Ponderado REAL,
+    Data_Criacao DATETIME DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (UUID_Documento, UUID_Interacao),
     FOREIGN KEY (UUID_Documento) REFERENCES Documento (UUID_Documento),
     FOREIGN KEY (UUID_Interacao) REFERENCES Interacao (UUID_Interacao)
@@ -63,6 +67,7 @@ CREATE TABLE Avaliacao_Interacao (
     UUID_Interacao TEXT NOT NULL,
     Avaliacao TEXT, 
     Comentario TEXT,
+    Data_Criacao DATETIME DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (UUID_Interacao),
     FOREIGN KEY (UUID_Interacao) REFERENCES Interacao (UUID_Interacao)
 );

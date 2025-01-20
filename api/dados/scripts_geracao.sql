@@ -7,6 +7,7 @@ CREATE TABLE Colecao (
     Instrucao VARCHAR(MAX),
     Qtd_Max_Palavras INT,
     Metrica_Similaridade VARCHAR(50),
+    Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Colecao PRIMARY KEY (UUID_Colecao));
 
 CREATE TABLE Documento (
@@ -18,6 +19,7 @@ CREATE TABLE Documento (
     Autor VARCHAR(2000),
     Fonte VARCHAR(2000),
     UUID_Colecao VARCHAR(40),
+    Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Documento PRIMARY KEY (UUID_Documento));
 
 CREATE TABLE Interacao (
@@ -41,6 +43,7 @@ CREATE TABLE Interacao (
     LLM_Resposta VARCHAR(MAX),
     LLM_Tipo_Conclusao VARCHAR(50),
     JSON_Interacao VARCHAR(MAX),
+    Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Interacao PRIMARY KEY (UUID_Interacao));
 
 CREATE TABLE Documento_em_Interacao (
@@ -50,12 +53,14 @@ CREATE TABLE Documento_em_Interacao (
     Score_Bert NUMERIC,
     Score_Distancia NUMERIC,
     Score_Ponderado NUMERIC,
+    Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Documento_em_Interacao PRIMARY KEY (UUID_Documento, UUID_Interacao));
 
 CREATE TABLE Avaliacao_Interacao (
     UUID_Interacao VARCHAR(40) NOT NULL,
     Avaliacao VARCHAR(40),
     Comentario VARCHAR(MAX),
+    Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Avaliacao_Interacao PRIMARY KEY (UUID_Interacao));
 
 ALTER TABLE Documento ADD CONSTRAINT Fk_Documento_Colecao FOREIGN KEY(Id_Colecao) REFERENCES Colecao (Id_Colecao);
