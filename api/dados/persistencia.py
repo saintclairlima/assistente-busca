@@ -4,12 +4,131 @@ import uuid
 from chromadb import chromadb
 import json
 import sqlite3
+import pyodbc
 from api.configuracoes.config_gerais import configuracoes
 
 
 class InterfacePersistencia:
     def __init__(self, url_banco):
         self.url_banco = url_banco
+    
+    def executar_script(self, script: str):
+        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        
+    def __insert(self, query: str, dados: tuple):
+        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+    
+    def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
+        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+            
+    def __update(self, query: str, dados: tuple):
+        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+            
+    def __select(self, tabela: str, colunas: tuple):
+        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+    
+
+
+class InterfacePersistenciaSQL(InterfacePersistencia):
+    def __init__(
+            self,
+            url_banco=configuracoes.url_banco_sql,
+            porta=configuracoes.porta_banco_sql,
+            database=configuracoes.database_banco_sql,
+            user=configuracoes.usuario_banco_sql,
+            password=configuracoes.senha_banco_sql):
+        
+        super().__init__(url_banco)
+        self.url_banco=url_banco
+        self.porta=porta
+        self.database=database
+        self.user=user
+        self.password=password
+        # self.TDS_Version
+        # self.server
+        # self.driver
+    
+    def executar_script(self, script: str):
+        with pyodbc.connect(self.url_banco) as conexao:
+            try:
+                conexao.executescript(script)
+                print(f'Dados persistidos em {self.url_banco}')
+                conexao.commit()
+            except pyodbc.Error as e:
+                print(f"Ocorreu um erro: {e}")
+                raise
+        
+    def __insert(self, query: str, dados: tuple):
+        with pyodbc.connect(self.url_banco) as conexao:
+            try:
+                conexao.execute("PRAGMA foreign_keys = ON;")
+                cursor = conexao.execute(query, dados)
+                conexao.commit()
+                return cursor.rowcount
+            finally:
+                cursor.close()
+        
+    def executar_query_insercao(self, query: str, dados: tuple):
+        return self.__insert(query, dados)
+    
+    def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
+        ids_insercoes = {}
+        with pyodbc.connect(self.url_banco) as conexao:
+            conexao.execute("PRAGMA foreign_keys = ON;")
+            try:
+                cursor = conexao.cursor()
+                parametros = list(zip(multiplas_queries, multiplos_dados))
+                for idx in range(len(parametros)):
+                    query, dados = parametros[idx]
+                    cursor.execute(query, dados)
+                    ids_insercoes[idx] = cursor.lastrowid
+                conexao.commit()
+                return ids_insercoes
+            except pyodbc.Error as e:
+                # Rollback the transaction if any error occurs
+                conexao.rollback()
+                raise
+            finally:
+                cursor.close()
+        
+    def executar_query_insercao_multipla(self, multiplas_queries: list, multiplos_dados: list):
+        return self.__insert_multiplo(multiplas_queries, multiplos_dados)
+            
+    def __update(self, query: str, dados: tuple):
+        with pyodbc.connect(self.url_banco) as conexao:
+            try:
+                conexao.execute("PRAGMA foreign_keys = ON;")
+                cursor = conexao.execute(query, dados)
+                conexao.commit()
+                return cursor.rowcount
+            finally:
+                cursor.close()
+    
+    def executar_query_update(self, query: str, dados: tuple):
+        return self.__update(query, dados)
+            
+    def __select(self, tabela: str, colunas: tuple):
+        query = f'''SELECT {','.join(colunas)} FROM {tabela}'''
+        with pyodbc.connect(self.url_banco) as conexao:
+            try:
+                cursor  = conexao.cursor()
+                cursor.execute(query)
+                conexao.commit()
+                return cursor.fetchall()
+            finally:
+                cursor.close()
+    
+    def executar_query_select(self, tabela: str, colunas: Tuple[str], query_select: str=None):
+        if query_select:
+            with pyodbc.connect(self.url_banco) as conexao:
+                try:
+                    cursor  = conexao.cursor()
+                    cursor.execute(query_select)
+                    conexao.commit()
+                    return cursor.fetchall()
+                finally:
+                    cursor.close()
+        return self.__select(tabela, colunas)
 
 class InterfacePersistenciaSQLite(InterfacePersistencia):
     def __init__(self, url_banco):
@@ -18,8 +137,7 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
     def executar_script(self, script: str):
         with sqlite3.connect(self.url_banco) as conexao:
             try:
-                cursor  = conexao.cursor()
-                cursor.executescript(script)
+                conexao.executescript(script)
                 print(f'Dados persistidos em {self.url_banco}')
                 conexao.commit()
             except sqlite3.Error as e:
@@ -28,11 +146,13 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
         
     def __insert(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
-            conexao.execute("PRAGMA foreign_keys = ON;")
-            cursor  = conexao.cursor()
-            cursor.execute(query, dados)
-            conexao.commit()
-            return cursor.rowcount
+            try:
+                conexao.execute("PRAGMA foreign_keys = ON;")
+                cursor = conexao.execute(query, dados)
+                conexao.commit()
+                return cursor.rowcount
+            finally:
+                cursor.close()
         
     def executar_query_insercao(self, query: str, dados: tuple):
         return self.__insert(query, dados)
@@ -54,17 +174,21 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
                 # Rollback the transaction if any error occurs
                 conexao.rollback()
                 raise
+            finally:
+                cursor.close()
         
     def executar_query_insercao_multipla(self, multiplas_queries: list, multiplos_dados: list):
         return self.__insert_multiplo(multiplas_queries, multiplos_dados)
             
     def __update(self, query: str, dados: tuple):
         with sqlite3.connect(self.url_banco) as conexao:
-            conexao.execute("PRAGMA foreign_keys = ON;")
-            cursor  = conexao.cursor()
-            cursor.execute(query, dados)
-            conexao.commit()
-            return cursor.rowcount
+            try:
+                conexao.execute("PRAGMA foreign_keys = ON;")
+                cursor = conexao.execute(query, dados)
+                conexao.commit()
+                return cursor.rowcount
+            finally:
+                cursor.close()
     
     def executar_query_update(self, query: str, dados: tuple):
         return self.__update(query, dados)
@@ -72,18 +196,24 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
     def __select(self, tabela: str, colunas: tuple):
         query = f'''SELECT {','.join(colunas)} FROM {tabela}'''
         with sqlite3.connect(self.url_banco) as conexao:
-            cursor  = conexao.cursor()
-            cursor.execute(query)
-            conexao.commit()
-            return cursor.fetchall()
+            try:
+                cursor  = conexao.cursor()
+                cursor.execute(query)
+                conexao.commit()
+                return cursor.fetchall()
+            finally:
+                cursor.close()
     
     def executar_query_select(self, tabela: str, colunas: Tuple[str], query_select: str=None):
         if query_select:
             with sqlite3.connect(self.url_banco) as conexao:
-                cursor  = conexao.cursor()
-                cursor.execute(query_select)
-                conexao.commit()
-                return cursor.fetchall()
+                try:
+                    cursor  = conexao.cursor()
+                    cursor.execute(query_select)
+                    conexao.commit()
+                    return cursor.fetchall()
+                finally:
+                    cursor.close()
         return self.__select(tabela, colunas)
         
 class GerenciadorPersistenciaSQLite:
