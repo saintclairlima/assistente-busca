@@ -4,13 +4,13 @@ import uuid
 from chromadb import chromadb
 import json
 import sqlite3
-import pyodbc
+import pymssql
 from api.configuracoes.config_gerais import configuracoes
 
 
 class InterfacePersistencia:
-    def __init__(self, url_banco):
-        self.url_banco = url_banco
+    def __init__(self):
+        pass
     
     def executar_script(self, script: str):
         raise NotImplementedError('Método stream() não foi implantado para esta classe')
@@ -26,40 +26,33 @@ class InterfacePersistencia:
             
     def __select(self, tabela: str, colunas: tuple):
         raise NotImplementedError('Método stream() não foi implantado para esta classe')
-    
 
 
 class InterfacePersistenciaSQL(InterfacePersistencia):
-    def __init__(
-            self,
-            url_banco=configuracoes.url_banco_sql,
-            porta=configuracoes.porta_banco_sql,
-            database=configuracoes.database_banco_sql,
-            user=configuracoes.usuario_banco_sql,
-            password=configuracoes.senha_banco_sql):
+    def __init__(self, url_banco, encryption, porta, usuario, senha, database):
         
-        super().__init__(url_banco)
-        self.url_banco=url_banco
-        self.porta=porta
-        self.database=database
-        self.user=user
-        self.password=password
-        # self.TDS_Version
-        # self.server
-        # self.driver
+        super().__init__()
+        self.parametros = {
+            'host': url_banco,
+            'encryption': encryption, 
+            'port': porta,
+            'user': usuario,
+            'password': senha,
+            'database': database
+        }
     
     def executar_script(self, script: str):
-        with pyodbc.connect(self.url_banco) as conexao:
+        with pymssql.connect(**self.parametros) as conexao:
             try:
                 conexao.executescript(script)
                 print(f'Dados persistidos em {self.url_banco}')
                 conexao.commit()
-            except pyodbc.Error as e:
+            except pymssql.Error as e:
                 print(f"Ocorreu um erro: {e}")
                 raise
         
     def __insert(self, query: str, dados: tuple):
-        with pyodbc.connect(self.url_banco) as conexao:
+        with pymssql.connect(**self.parametros) as conexao:
             try:
                 conexao.execute("PRAGMA foreign_keys = ON;")
                 cursor = conexao.execute(query, dados)
@@ -73,7 +66,7 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
     
     def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
         ids_insercoes = {}
-        with pyodbc.connect(self.url_banco) as conexao:
+        with pymssql.connect(**self.parametros) as conexao:
             conexao.execute("PRAGMA foreign_keys = ON;")
             try:
                 cursor = conexao.cursor()
@@ -84,7 +77,7 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
                     ids_insercoes[idx] = cursor.lastrowid
                 conexao.commit()
                 return ids_insercoes
-            except pyodbc.Error as e:
+            except pymssql.Error as e:
                 # Rollback the transaction if any error occurs
                 conexao.rollback()
                 raise
@@ -95,7 +88,7 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
         return self.__insert_multiplo(multiplas_queries, multiplos_dados)
             
     def __update(self, query: str, dados: tuple):
-        with pyodbc.connect(self.url_banco) as conexao:
+        with pymssql.connect(**self.parametros) as conexao:
             try:
                 conexao.execute("PRAGMA foreign_keys = ON;")
                 cursor = conexao.execute(query, dados)
@@ -109,30 +102,35 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
             
     def __select(self, tabela: str, colunas: tuple):
         query = f'''SELECT {','.join(colunas)} FROM {tabela}'''
-        with pyodbc.connect(self.url_banco) as conexao:
+        with pymssql.connect(**self.parametros) as conexao:
             try:
-                cursor  = conexao.cursor()
+                cursor = conexao.cursor()
                 cursor.execute(query)
                 conexao.commit()
                 return cursor.fetchall()
             finally:
                 cursor.close()
     
-    def executar_query_select(self, tabela: str, colunas: Tuple[str], query_select: str=None):
-        if query_select:
-            with pyodbc.connect(self.url_banco) as conexao:
+    def executar_query_select(self, tabela: str=None, colunas: Tuple[str]=None, query: str=None, dados: Tuple[str]=None):
+        if query and dados:
+            with pymssql.connect(**self.parametros) as conexao:
                 try:
                     cursor  = conexao.cursor()
-                    cursor.execute(query_select)
+                    cursor.execute(query, dados)
                     conexao.commit()
                     return cursor.fetchall()
                 finally:
                     cursor.close()
+        elif tabela == None == colunas:
+            raise ValueError("Valores não fornecidos para a tabela e as colunas")
+            
         return self.__select(tabela, colunas)
+
 
 class InterfacePersistenciaSQLite(InterfacePersistencia):
     def __init__(self, url_banco):
-        super().__init__(url_banco)
+        super().__init__()
+        self.url_banco=url_banco
     
     def executar_script(self, script: str):
         with sqlite3.connect(self.url_banco) as conexao:
@@ -197,43 +195,50 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
         query = f'''SELECT {','.join(colunas)} FROM {tabela}'''
         with sqlite3.connect(self.url_banco) as conexao:
             try:
-                cursor  = conexao.cursor()
+                cursor = conexao.cursor()
                 cursor.execute(query)
                 conexao.commit()
                 return cursor.fetchall()
             finally:
                 cursor.close()
     
-    def executar_query_select(self, tabela: str, colunas: Tuple[str], query_select: str=None):
-        if query_select:
+    def executar_query_select(self, tabela: str=None, colunas: Tuple[str]=None, query: str=None, dados: Tuple[str]=None):
+        if query and dados:
             with sqlite3.connect(self.url_banco) as conexao:
                 try:
                     cursor  = conexao.cursor()
-                    cursor.execute(query_select)
+                    cursor.execute(query, dados)
                     conexao.commit()
                     return cursor.fetchall()
                 finally:
                     cursor.close()
+        elif tabela == None == colunas:
+            raise ValueError("Valores não fornecidos para a tabela e as colunas")
+            
         return self.__select(tabela, colunas)
-        
-class GerenciadorPersistenciaSQLite:
 
-    def __init__(self, url_arquivo_sqlite: str=configuracoes.url_banco_sql):
-        self.url_arquivo_sqlite = url_arquivo_sqlite
 
-    def inicializar_banco_SQLite(self, url_script_sql: str=configuracoes.url_script_geracao_banco_sqlite):
-        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
-        print(f"Inicializando banco {self.url_arquivo_sqlite} usando {url_script_sql}")
+class GerenciadorPersistencia:
+
+    def __init__(self, info_banco: dict, classeInterface: type):
+        self.info_banco = info_banco
+        self.classeInterface = classeInterface
+
+    def inicializar_banco(self, url_script_sql: str=configuracoes.url_script_geracao_banco_sqlite):
+
+        banco_dados = self.classeInterface(**self.info_banco['parametros'])
+
+        print(f"Inicializando banco ({self.info_banco['tipo_persistencia']}) {self.info_banco['nome_banco']} usando {url_script_sql}")
         with open(url_script_sql, 'r') as arq:
             script = arq.read()
         
-        banco_sqlite.executar_script(script=script)
+        banco_dados.executar_script(script=script)
 
     def persistir_dados_colecao(self, url_descritor_banco_vetorial: str,):
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
             
-        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
+        banco_dados = self.classeInterface(**self.info_banco['parametros'])
         ids_colecoes_salvas={}
         for colecao in desc_banco_vetorial['colecoes']:
             uuid_colecao=colecao['uuid']
@@ -249,8 +254,8 @@ class GerenciadorPersistenciaSQLite:
                 '(UUID_Colecao, Nome, Banco_Vetores, Nome_Modelo_Fn_Embeddings, Tipo_Modelo_Fn_Embeddings, Instrucao, Qtd_Max_Palavras, Metrica_Similaridade) ' +\
                 'VALUES(?,?,?,?,?,?,?,?);'
             valores=(uuid_colecao, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras, metrica_similaridade)
-            id_colecao_salva = banco_sqlite.executar_query_insercao(query, valores)
-            print(f'Coleção {nome} salva em {self.url_arquivo_sqlite} com id {id_colecao_salva}')
+            id_colecao_salva = banco_dados.executar_query_insercao(query, valores)
+            print(f'Coleção {nome} salva em {self.info_banco['nome_banco']} com id {id_colecao_salva}')
             ids_colecoes_salvas[colecao['nome']]=id_colecao_salva
         
         return ids_colecoes_salvas
@@ -259,10 +264,10 @@ class GerenciadorPersistenciaSQLite:
         with open(url_descritor_banco_vetorial, 'r', encoding='utf-8') as arq:
             desc_banco_vetorial = json.load(arq)
             
-        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
+        banco_dados = self.classeInterface(**self.info_banco['parametros'])
         colecoes_uuids = {
             resultado[1]: resultado[0]
-            for resultado in banco_sqlite.executar_query_select('colecao', ['uuid_colecao', 'nome'])
+            for resultado in banco_dados.executar_query_select('colecao', ['uuid_colecao', 'nome'])
         }
         
         query_inserir_doc = 'INSERT INTO Documento ' + \
@@ -296,7 +301,7 @@ class GerenciadorPersistenciaSQLite:
                 
                 dados = [uuid_documento, tag_fragmento, conteudo, titulo, subtitulo, autor, fonte, uuid_colecao]
                 
-                id_doc_inserido = banco_sqlite.executar_query_insercao(query=query_inserir_doc, dados=dados)
+                id_doc_inserido = banco_dados.executar_query_insercao(query=query_inserir_doc, dados=dados)
                 docs_inseridos[uuid_documento] = id_doc_inserido
                 
         client._system.stop()
@@ -308,7 +313,7 @@ class GerenciadorPersistenciaSQLite:
         multiplas_queries = []
         multiplos_dados = []
 
-        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
+        banco_dados = self.classeInterface(**self.info_banco['parametros'])
         query_inserir_interacao = 'INSERT INTO Interacao ' + \
                                   '(UUID_Interacao, Pergunta, Tipo_Dispositivo_Aplicacao, Tipo_Dispositivo_LLM, Tempo_Recuperacao_Documentos, ' + \
                                   'Tempo_Estimativa_Bert, LLM_Template_System, LLM_Historico, LLM_Cliente, LLM_Nome_Modelo, ' + \
@@ -361,24 +366,20 @@ class GerenciadorPersistenciaSQLite:
             multiplas_queries.append(query_inserir_doc_interacao)
             multiplos_dados.append(dados_inserir_doc_interacao)
         try:
-            banco_sqlite.executar_query_insercao_multipla(multiplas_queries=multiplas_queries, multiplos_dados=multiplos_dados)
+            banco_dados.executar_query_insercao_multipla(multiplas_queries=multiplas_queries, multiplos_dados=multiplos_dados)
             return dados_interacao['uuid_interacao']
         except Exception as e:
             print(f'Ocorreu um erro: {e}')
             raise
 
     def persistir_avaliacao(self, dados_avaliacao: dict):
-        banco_sqlite = InterfacePersistenciaSQLite(self.url_arquivo_sqlite)
+        banco_dados = self.classeInterface(**self.info_banco['parametros'])
 
         # AFAZER: implementar select com where na interface de persistência SQLite
         query = f'''SELECT * FROM Avaliacao_Interacao WHERE UUID_Interacao == ?;'''
         dados = (dados_avaliacao['uuid_interacao'],)
-        with sqlite3.connect(self.url_arquivo_sqlite) as conexao:
-            conexao.execute("PRAGMA foreign_keys = ON;")
-            cursor  = conexao.cursor()
-            cursor.execute(query, dados)
-            conexao.commit()
-            resultados = cursor.fetchall()
+
+        resultados = banco_dados.executar_query_select(query=query, dados=dados)
 
         if len(resultados) == 0:
             query_inserir_avaliacao = 'INSERT INTO Avaliacao_Interacao ' + \
@@ -388,7 +389,7 @@ class GerenciadorPersistenciaSQLite:
             dados_inserir_avaliacao = (dados_avaliacao['uuid_interacao'], dados_avaliacao['avaliacao'], dados_avaliacao['comentario'])
 
             try:
-                return banco_sqlite.executar_query_insercao(query=query_inserir_avaliacao, dados=dados_inserir_avaliacao)
+                return banco_dados.executar_query_insercao(query=query_inserir_avaliacao, dados=dados_inserir_avaliacao)
             except Exception as e:
                 print(f'Ocorreu um erro: {e}')
                 raise
@@ -399,16 +400,30 @@ class GerenciadorPersistenciaSQLite:
             
             dados_atualizar_avaliacao =  (dados_avaliacao['avaliacao'], dados_avaliacao['comentario'], dados_avaliacao['uuid_interacao'])
             try:
-                return banco_sqlite.executar_query_update(query=query_atualizar_avaliacao, dados=dados_atualizar_avaliacao)
+                return banco_dados.executar_query_update(query=query_atualizar_avaliacao, dados=dados_atualizar_avaliacao)
             except Exception as e:
                 print(f'Ocorreu um erro: {e}')
                 raise
 
 
+class GerenciadorPersistenciaSQLite(GerenciadorPersistencia):
+    def __init__(self, info_banco: dict=configuracoes.configuracoes_banco_sqlite()):
+        super().__init__(
+            info_banco=info_banco,
+            classeInterface=InterfacePersistenciaSQLite)
+
+
+class GerenciadorPersistenciaSQL(GerenciadorPersistencia):
+    def __init__(self, info_banco: dict=configuracoes.configuracoes_banco_sql()):
+        super().__init__(
+            info_banco=info_banco,
+            classeInterface=InterfacePersistenciaSQL)
+
+
 if __name__ == '__main__':
     print('Executando rotina de persistência')
-    gp = GerenciadorPersistenciaSQLite()
-    gp.inicializar_banco_SQLite()
+    gp = GerenciadorPersistenciaSQL()
+    gp.inicializar_banco()
     url_descritor = os.path.join(configuracoes.url_banco_vetores, 'descritor.json')
     gp.persistir_dados_colecao(url_descritor_banco_vetorial=url_descritor)
     gp.persistir_documentos(url_descritor_banco_vetorial=url_descritor)

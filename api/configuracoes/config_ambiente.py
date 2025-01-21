@@ -11,6 +11,7 @@ class ConfiguracoesAmbiente:
     def __init__(self):
         self.url_llm=os.getenv('URL_LLM')
         self.url_host=os.getenv('URL_HOST')
+        self.url_banco_sqlite=os.getenv('URL_BANCO_SQLITE')
         self.url_banco_sql=os.getenv('URL_BANCO_SQL')
         self.porta_banco_sql=os.getenv('PORTA_BANCO_SQL')
         self.usuario_banco_sql=os.getenv('USER_BANCO_SQL')
@@ -24,4 +25,27 @@ class ConfiguracoesAmbiente:
         return {
             'device': self.device,
             'ambiente_execucao': self.ambiente_execucao
+        }
+    
+    def configuracoes_banco_sql(self):
+        return {
+            'nome_banco': f'{self.url_banco_sql}:{self.porta_banco_sql}/{self.database_banco_sql}',
+            'tipo_persistencia': 'sql',
+            'parametros': {
+                'url_banco': self.url_banco_sql,
+                'encryption': None, 
+                'porta': self.porta_banco_sql,
+                'usuario': self.usuario_banco_sql,
+                'senha': self.senha_banco_sql,
+                'database': self.database_banco_sql
+            }
+        }
+    
+    def configuracoes_banco_sqlite(self):
+        return {
+            'nome_banco': self.url_banco_sqlite,
+            'tipo_persistencia': 'sqlite',
+            'parametros': {
+                'url_banco': self.url_banco_sqlite,
+            }
         }
