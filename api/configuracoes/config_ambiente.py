@@ -1,5 +1,4 @@
 import os
-import json
 from dotenv import load_dotenv
 
 
@@ -31,6 +30,7 @@ class ConfiguracoesAmbiente:
         return {
             'nome_banco': f'{self.url_banco_sql}:{self.porta_banco_sql}/{self.database_banco_sql}',
             'tipo_persistencia': 'sql',
+            'schema': f'{self.database_banco_sql}.dbo',
             'parametros': {
                 'url_banco': self.url_banco_sql,
                 'encryption': None, 

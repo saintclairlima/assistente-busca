@@ -1,5 +1,5 @@
 CREATE TABLE Colecao (
-    UUID_Colecao VARCHAR(40) NOT NULL,
+    UUID_Colecao UNIQUEIDENTIFIER NOT NULL,
     Nome VARCHAR(500),
     Banco_Vetores VARCHAR(500),
     Nome_Modelo_Fn_Embeddings VARCHAR(500),
@@ -11,19 +11,19 @@ CREATE TABLE Colecao (
     CONSTRAINT Pk_Colecao PRIMARY KEY (UUID_Colecao));
 
 CREATE TABLE Documento (
-    UUID_Documento VARCHAR(40) NOT NULL,
+    UUID_Documento UNIQUEIDENTIFIER NOT NULL,
     Tag_Fragmento VARCHAR(500),
     Conteudo VARCHAR(MAX),
     Titulo VARCHAR(500),
     Subtitulo VARCHAR(2000),
     Autor VARCHAR(2000),
     Fonte VARCHAR(2000),
-    UUID_Colecao VARCHAR(40),
+    UUID_Colecao UNIQUEIDENTIFIER,
     Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Documento PRIMARY KEY (UUID_Documento));
 
 CREATE TABLE Interacao (
-    UUID_Interacao VARCHAR(40) NOT NULL,
+    UUID_Interacao UNIQUEIDENTIFIER NOT NULL,
     Pergunta VARCHAR(MAX),
     Tipo_Dispositivo_Aplicacao VARCHAR(500),
     Tipo_Dispositivo_LLM VARCHAR(500),
@@ -47,8 +47,8 @@ CREATE TABLE Interacao (
     CONSTRAINT Pk_Interacao PRIMARY KEY (UUID_Interacao));
 
 CREATE TABLE Documento_em_Interacao (
-    UUID_Documento VARCHAR(40) NOT NULL,
-    UUID_Interacao VARCHAR(40) NOT NULL,
+    UUID_Documento UNIQUEIDENTIFIER NOT NULL,
+    UUID_Interacao UNIQUEIDENTIFIER NOT NULL,
     Resposta_Bert VARCHAR(MAX), 
     Score_Bert NUMERIC,
     Score_Distancia NUMERIC,
@@ -57,13 +57,13 @@ CREATE TABLE Documento_em_Interacao (
     CONSTRAINT Pk_Documento_em_Interacao PRIMARY KEY (UUID_Documento, UUID_Interacao));
 
 CREATE TABLE Avaliacao_Interacao (
-    UUID_Interacao VARCHAR(40) NOT NULL,
+    UUID_Interacao UNIQUEIDENTIFIER NOT NULL,
     Avaliacao VARCHAR(40),
     Comentario VARCHAR(MAX),
     Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Avaliacao_Interacao PRIMARY KEY (UUID_Interacao));
 
-ALTER TABLE Documento ADD CONSTRAINT Fk_Documento_Colecao FOREIGN KEY(Id_Colecao) REFERENCES Colecao (Id_Colecao);
+ALTER TABLE Documento ADD CONSTRAINT Fk_Documento_Colecao FOREIGN KEY(UUID_Colecao) REFERENCES Colecao (UUID_Colecao);
 ALTER TABLE Documento_em_Interacao ADD CONSTRAINT Fk_Documento_em_Interacao_Documento FOREIGN KEY(UUID_Documento) REFERENCES Documento (UUID_Documento);
 ALTER TABLE Documento_em_Interacao ADD CONSTRAINT Fk_Documento_em_Interacao_Interacao FOREIGN KEY(UUID_Interacao) REFERENCES Interacao (UUID_Interacao);
-ALTER TABLE Avaliacao_Interacao ADD CONSTRAINT Fk_Avaliacao_Interacao FOREIGN KEY (Avaliacao_Interacao) REFERENCES Interacao (UUID_Interacao);
+ALTER TABLE Avaliacao_Interacao ADD CONSTRAINT Fk_Avaliacao_Interacao FOREIGN KEY (UUID_Interacao) REFERENCES Interacao (UUID_Interacao);

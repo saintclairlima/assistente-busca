@@ -44,20 +44,31 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
     def executar_script(self, script: str):
         with pymssql.connect(**self.parametros) as conexao:
             try:
-                conexao.executescript(script)
-                print(f'Dados persistidos em {self.url_banco}')
+                cursor = conexao.cursor()
+                for statement in script.split(';'):
+                    # Executa statements não vazios
+                    if statement.strip():
+                        cursor.execute(statement)
+                print(f'Dados persistidos em {self.parametros['host']}:{self.parametros['port']}/{self.parametros['database']}')
                 conexao.commit()
             except pymssql.Error as e:
-                print(f"Ocorreu um erro: {e}")
+                print(f"Ocorreu um erro na escrita das tabelas: {e}")
                 raise
+            except Exception as e:
+                print(f"Ocorreu um erro inesperado: {e}")
+                raise
+            finally:
+                cursor.close()
         
     def __insert(self, query: str, dados: tuple):
         with pymssql.connect(**self.parametros) as conexao:
+            query = query.replace('?', '%s')
             try:
-                conexao.execute("PRAGMA foreign_keys = ON;")
-                cursor = conexao.execute(query, dados)
+                cursor = conexao.cursor()
+                cursor.execute(query, dados)
+                num_linhas = cursor.rowcount
                 conexao.commit()
-                return cursor.rowcount
+                return num_linhas
             finally:
                 cursor.close()
         
@@ -67,11 +78,11 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
     def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
         ids_insercoes = {}
         with pymssql.connect(**self.parametros) as conexao:
-            conexao.execute("PRAGMA foreign_keys = ON;")
             try:
                 cursor = conexao.cursor()
                 parametros = list(zip(multiplas_queries, multiplos_dados))
                 for idx in range(len(parametros)):
+                    query = query.replace('?', '%s')
                     query, dados = parametros[idx]
                     cursor.execute(query, dados)
                     ids_insercoes[idx] = cursor.lastrowid
@@ -90,10 +101,12 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
     def __update(self, query: str, dados: tuple):
         with pymssql.connect(**self.parametros) as conexao:
             try:
-                conexao.execute("PRAGMA foreign_keys = ON;")
-                cursor = conexao.execute(query, dados)
+                query = query.replace('?', '%s')
+                cursor = conexao.cursor()
+                cursor.execute(query, dados)
+                num_linhas = cursor.rowcount
                 conexao.commit()
-                return cursor.rowcount
+                return num_linhas
             finally:
                 cursor.close()
     
@@ -101,24 +114,28 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
         return self.__update(query, dados)
             
     def __select(self, tabela: str, colunas: tuple):
-        query = f'''SELECT {','.join(colunas)} FROM {tabela}'''
+        query = f'''SELECT {', '.join(colunas)} FROM {configuracoes.configuracoes_banco_sql()['schema']}.{tabela}'''
         with pymssql.connect(**self.parametros) as conexao:
             try:
                 cursor = conexao.cursor()
+                cursor.execute('SET TRANSACTION ISOLATION LEVEL READ UNCOMMITTED')
                 cursor.execute(query)
+                resultado = cursor.fetchall()
                 conexao.commit()
-                return cursor.fetchall()
+                return resultado
             finally:
                 cursor.close()
     
-    def executar_query_select(self, tabela: str=None, colunas: Tuple[str]=None, query: str=None, dados: Tuple[str]=None):
-        if query and dados:
+    def executar_query_select(self, tabela: str=None, colunas: Tuple[str]=None, query: str=None, resultado: Tuple[str]=None):
+        if query and resultado:
             with pymssql.connect(**self.parametros) as conexao:
                 try:
+                    query = query.replace('?', '%s')
                     cursor  = conexao.cursor()
-                    cursor.execute(query, dados)
+                    cursor.execute(query, resultado)
+                    resultado = cursor.fetchall()
                     conexao.commit()
-                    return cursor.fetchall()
+                    return resultado
                 finally:
                     cursor.close()
         elif tabela == None == colunas:
@@ -147,8 +164,9 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             try:
                 conexao.execute("PRAGMA foreign_keys = ON;")
                 cursor = conexao.execute(query, dados)
+                num_linhas = cursor.rowcount
                 conexao.commit()
-                return cursor.rowcount
+                return num_linhas
             finally:
                 cursor.close()
         
@@ -183,8 +201,9 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             try:
                 conexao.execute("PRAGMA foreign_keys = ON;")
                 cursor = conexao.execute(query, dados)
+                num_linhas = cursor.rowcount
                 conexao.commit()
-                return cursor.rowcount
+                return num_linhas
             finally:
                 cursor.close()
     
@@ -197,8 +216,9 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
             try:
                 cursor = conexao.cursor()
                 cursor.execute(query)
+                resultado = cursor.fetchall()
                 conexao.commit()
-                return cursor.fetchall()
+                return resultado
             finally:
                 cursor.close()
     
@@ -208,8 +228,9 @@ class InterfacePersistenciaSQLite(InterfacePersistencia):
                 try:
                     cursor  = conexao.cursor()
                     cursor.execute(query, dados)
+                    resultado = cursor.fetchall()
                     conexao.commit()
-                    return cursor.fetchall()
+                    return resultado
                 finally:
                     cursor.close()
         elif tabela == None == colunas:
@@ -267,7 +288,7 @@ class GerenciadorPersistencia:
         banco_dados = self.classeInterface(**self.info_banco['parametros'])
         colecoes_uuids = {
             resultado[1]: resultado[0]
-            for resultado in banco_dados.executar_query_select('colecao', ['uuid_colecao', 'nome'])
+            for resultado in banco_dados.executar_query_select(tabela='colecao', colunas=['uuid_colecao', 'nome'])
         }
         
         query_inserir_doc = 'INSERT INTO Documento ' + \
@@ -411,6 +432,9 @@ class GerenciadorPersistenciaSQLite(GerenciadorPersistencia):
         super().__init__(
             info_banco=info_banco,
             classeInterface=InterfacePersistenciaSQLite)
+        
+    def inicializar_banco(self, url_script_sql = configuracoes.url_script_geracao_banco_sqlite):
+        return super().inicializar_banco(url_script_sql)
 
 
 class GerenciadorPersistenciaSQL(GerenciadorPersistencia):
@@ -418,12 +442,19 @@ class GerenciadorPersistenciaSQL(GerenciadorPersistencia):
         super().__init__(
             info_banco=info_banco,
             classeInterface=InterfacePersistenciaSQL)
+        
+    def inicializar_banco(self, url_script_sql = configuracoes.url_script_geracao_banco_sql):
+        return super().inicializar_banco(url_script_sql)
 
 
 if __name__ == '__main__':
-    print('Executando rotina de persistência')
+    print(f'Criando banco SQL com documentos do banco vetorial ({configuracoes.url_banco_vetores})')
     gp = GerenciadorPersistenciaSQL()
+    print('-- criando tabelas')
     gp.inicializar_banco()
     url_descritor = os.path.join(configuracoes.url_banco_vetores, 'descritor.json')
+    print('-- salvando coleções')
     gp.persistir_dados_colecao(url_descritor_banco_vetorial=url_descritor)
+    print('-- salvando documentos')
     gp.persistir_documentos(url_descritor_banco_vetorial=url_descritor)
+    print('Banco SQL concluído.\n\n')
