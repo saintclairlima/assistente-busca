@@ -169,7 +169,6 @@ async function enviarPergunta(){
 
             divResposta.classList.remove("mensagem-recebida");
             divResposta.classList.add("mensagem-erro");
-            // AFAZER: Verificar essas mensagens
             let msg_erro = ''
             if (erro.name === "AbortError") {
                 msg_erro = "O servidor demorou para responder. Tente novamente mais tarde.";

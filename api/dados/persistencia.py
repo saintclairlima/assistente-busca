@@ -375,7 +375,6 @@ class GerenciadorPersistencia:
 
         for doc in dados_interacao['documentos']:
             dados_inserir_doc_interacao = (
-                # AFAZER: Ajustar quando remover a dupla estimativa do BERT
                 doc['id'],
                 dados_interacao['uuid_interacao'],
                 doc['resposta_bert'],
@@ -396,7 +395,7 @@ class GerenciadorPersistencia:
     def persistir_avaliacao(self, dados_avaliacao: dict):
         banco_dados = self.classeInterface(**self.info_banco['parametros'])
 
-        # AFAZER: implementar select com where na interface de persistência SQLite
+        # AFAZER: implementar select com where nas interfaces de persistência
         query = f'''SELECT * FROM Avaliacao_Interacao WHERE UUID_Interacao = ?;'''
         dados = (dados_avaliacao['uuid_interacao'],)
 
