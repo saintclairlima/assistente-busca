@@ -159,6 +159,12 @@ torch==2.5.0
 
 Em ambientes com placa de vídeo com suporte a CUDA, deve-se alterar para buscar a versão adequada to `torch` com o suporte à versão do CUDA que a placa utiliza.
 
+Por meio do comando
+```
+ nvidia-smi
+ ```
+ é possível identificar as características da placa de vídeo persente na máquina, normalemtne sob o rótulo `CUDA Version`.
+
 É possível acessar https://pytorch.org/get-started/locally/ e se obter o link adequado, dependendo da versão.
 
 No caso da versão 12.4 do CUDA, é necessaário alterar para:
