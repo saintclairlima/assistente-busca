@@ -11,6 +11,7 @@ class ConfiguracoesAmbiente:
         self.url_llm=os.getenv('URL_LLM')
         self.url_host=os.getenv('URL_HOST')
         self.url_banco_sqlite=os.getenv('URL_BANCO_SQLITE')
+        self.tipo_persistencia=os.getenv('TIPO_PERSISTENCIA')
         self.url_banco_sql=os.getenv('URL_BANCO_SQL')
         self.porta_banco_sql=os.getenv('PORTA_BANCO_SQL')
         self.usuario_banco_sql=os.getenv('USER_BANCO_SQL')
@@ -23,13 +24,13 @@ class ConfiguracoesAmbiente:
     def configuracoes_ambiente(self) -> dict:
         return {
             'device': self.device,
+            'tipo_persistencia': self.tipo_persistencia,
             'ambiente_execucao': self.ambiente_execucao
         }
     
     def configuracoes_banco_sql(self):
         return {
             'nome_banco': f'{self.url_banco_sql}:{self.porta_banco_sql}/{self.database_banco_sql}',
-            'tipo_persistencia': 'sql',
             'schema': f'{self.database_banco_sql}.dbo',
             'parametros': {
                 'url_banco': self.url_banco_sql,
