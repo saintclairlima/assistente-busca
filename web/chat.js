@@ -173,11 +173,11 @@ async function enviarPergunta(){
             if (erro.name === "AbortError") {
                 msg_erro = "O servidor demorou para responder. Tente novamente mais tarde.";
             } else {
-                msg_erro = "Ocorreu um erro ao tentar se conectar ao servidor. Verifique sua conexão.";
+                msg_erro = "Ocorreu um erro na comunicação com o servidor.";
                 console.error(`${msg_erro} (Tipo do erro: ${erro.name})`);
             }
 
-            if (respostaLLM != '') msg_erro = gerarRespostaFormatada(respostaLLM) + `\n<p>${msg_erro}</p>`
+            if (respostaLLM != '') msg_erro = gerarRespostaFormatada(respostaLLM) + `\n<hr><p>${msg_erro}</p>`
 
             divResposta.innerHTML = msg_erro
             habilitarCampos=true;
