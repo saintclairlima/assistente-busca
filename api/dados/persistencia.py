@@ -82,8 +82,8 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
                 cursor = conexao.cursor()
                 parametros = list(zip(multiplas_queries, multiplos_dados))
                 for idx in range(len(parametros)):
-                    query = query.replace('?', '%s')
                     query, dados = parametros[idx]
+                    query = query.replace('?', '%s')
                     cursor.execute(query, dados)
                     ids_insercoes[idx] = cursor.lastrowid
                 conexao.commit()
@@ -126,16 +126,16 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
             finally:
                 cursor.close()
     
-    def executar_query_select(self, tabela: str=None, colunas: Tuple[str]=None, query: str=None, resultado: Tuple[str]=None):
-        if query and resultado:
+    def executar_query_select(self, tabela: str=None, colunas: Tuple[str]=None, query: str=None, dados: Tuple[str]=None):
+        if query and dados:
             with pymssql.connect(**self.parametros) as conexao:
                 try:
                     query = query.replace('?', '%s')
                     cursor  = conexao.cursor()
-                    cursor.execute(query, resultado)
-                    resultado = cursor.fetchall()
+                    cursor.execute(query, dados)
+                    dados = cursor.fetchall()
                     conexao.commit()
-                    return resultado
+                    return dados
                 finally:
                     cursor.close()
         elif tabela == None == colunas:
@@ -363,7 +363,7 @@ class GerenciadorPersistencia:
             dados_interacao['tempo_total_llm'],
             dados_interacao['resposta'],
             dados_interacao['resposta_completa_llm']['done_reason'],                           # tipo_conclusao_llm
-            json.dumps(dados_interacao)                                                        # conteúdo completo da interação em json-string
+            json.dumps(dados_interacao, ensure_ascii=False)                                    # conteúdo completo da interação em json-string
         )
 
         multiplas_queries.append(query_inserir_interacao)
@@ -378,8 +378,8 @@ class GerenciadorPersistencia:
                 # AFAZER: Ajustar quando remover a dupla estimativa do BERT
                 doc['id'],
                 dados_interacao['uuid_interacao'],
-                doc['resposta_bert'][0],
-                doc['score_bert'][2],
+                doc['resposta_bert'],
+                doc['score_bert'][0],
                 doc['score_distancia'],
                 doc['score_ponderado']
             )
@@ -397,7 +397,7 @@ class GerenciadorPersistencia:
         banco_dados = self.classeInterface(**self.info_banco['parametros'])
 
         # AFAZER: implementar select com where na interface de persistência SQLite
-        query = f'''SELECT * FROM Avaliacao_Interacao WHERE UUID_Interacao == ?;'''
+        query = f'''SELECT * FROM Avaliacao_Interacao WHERE UUID_Interacao = ?;'''
         dados = (dados_avaliacao['uuid_interacao'],)
 
         resultados = banco_dados.executar_query_select(query=query, dados=dados)
