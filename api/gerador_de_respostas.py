@@ -3,7 +3,7 @@ from torch import cuda
 
 from concurrent.futures import ThreadPoolExecutor
 from time import time
-from transformers import BertTokenizer, BertForQuestionAnswering, pipeline
+from transformers import BertTokenizer, BertForQuestionAnswering
 from typing import Callable
 
 import wandb
@@ -11,7 +11,7 @@ import wandb
 from api.configuracoes.config_gerais import configuracoes
 from api.utils.utils import InterfaceChroma, InterfaceOllama, DadosChat
 from api.utils.mensagem import MensagemControle, MensagemDados, MensagemErro, MensagemInfo
-from api.dados.persistencia import GerenciadorPersistenciaSQLite
+from api.dados.persistencia import GerenciadorPersistenciaSQLite, GerenciadorPersistenciaSQL
     
 
 class GeradorDeRespostas:
@@ -49,13 +49,14 @@ class GeradorDeRespostas:
         if fazer_log: print(f'--- preparando modelo e tokenizador do Bert (usando {configuracoes.embedding_squad_portuguese})...')
         self.modelo_bert_qa = BertForQuestionAnswering.from_pretrained(configuracoes.embedding_squad_portuguese).to(self.device)
         self.tokenizador_bert = BertTokenizer.from_pretrained(configuracoes.embedding_squad_portuguese, device=self.device)
-        
-        self.modelo_bert_qa_pipeline = pipeline("question-answering", configuracoes.embedding_squad_portuguese, device=self.device)
 
         if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
         self.interface_ollama = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
 
-        self.gerenciador_persistencia = GerenciadorPersistenciaSQLite()
+        tipo_persistencia = configuracoes.configuracoes_ambiente()['tipo_persistencia']
+        if fazer_log: print(f'--- configurando persistência de dados de interação (usando {tipo_persistencia})...')
+        if tipo_persistencia == 'sqlite': self.gerenciador_persistencia = GerenciadorPersistenciaSQLite()
+        elif tipo_persistencia == 'mssql': self.gerenciador_persistencia = GerenciadorPersistenciaSQL()
 
     async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=configuracoes.num_documentos_retornados):
         return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
@@ -71,8 +72,6 @@ class GeradorDeRespostas:
         ]
 
     async def estimar_resposta(self, pergunta, texto_documento: str):
-        # Optou-se por não utilizar a abordagem com pipeline por ser mais lenta
-        res = self.modelo_bert_qa_pipeline(question=pergunta, context=texto_documento)
         inputs = self.tokenizador_bert.encode_plus(
             pergunta,
             texto_documento,
@@ -110,8 +109,8 @@ class GeradorDeRespostas:
         media_logits_positivos = (media_logits_inicio_positivos + media_logits_fim_positivos) / 2
 
         # scores em formato float para serialização com JSON
-        score = float(melhor_logit_inicio + melhor_logit_fim)
-        score_ponderado = float(score * media_logits_positivos)
+        score_soma_logits = float(melhor_logit_inicio + melhor_logit_fim)
+        score_ponderado = float(score_soma_logits * media_logits_positivos)
 
         # calculando score estimado
         start_logits_softmax = torch.softmax(logits_inicio, dim=-1)
@@ -128,8 +127,8 @@ class GeradorDeRespostas:
         resposta = self.tokenizador_bert.decode(tokens_resposta, skip_special_tokens=True)
         
         return {
-            'resposta': (resposta, res['answer']),
-            'score': (score, res['score'], score_estimado),
+            'resposta': resposta,
+            'score': (score_estimado, score_soma_logits),
             'score_ponderado': score_ponderado
         }
 
@@ -170,8 +169,8 @@ class GeradorDeRespostas:
         tempo_recuperacao_documentos = marcador_tempo_fim - marcador_tempo_inicio
         if fazer_log: print(f'--- consulta no banco concluída ({tempo_recuperacao_documentos} segundos)')
 
-        # Atribuindo scores usando Bert
-        if fazer_log: print(f'--- aplicando scores do Bert aos documentos recuperados...')
+        # Fazendo re-ranking dos documentos utilizando Bert
+        if fazer_log: print(f'--- aplicando re-ranking nos documentos utilizando Bert...')
         yield MensagemControle(
             descricao='Informação de Status',
             dados={'tag':'status', 'conteudo':'Analisando resultados'}
@@ -185,13 +184,16 @@ class GeradorDeRespostas:
                 documento['score_ponderado'] = resposta_estimada['score_ponderado']
                 documento['resposta_bert'] = resposta_estimada['resposta']
             except Exception as excecao:
-                documento['score_bert'] = None
-                documento['score_ponderado'] = None
-                documento['resposta_bert'] = None
+                documento['score_bert'] = float('-inf')
+                documento['score_ponderado'] = float('-inf')
+                documento['resposta_bert'] = 'Resposta não estimada'
                 yield MensagemInfo(
                     descricao='Falha na aplicação do BERT',
-                    mensagem='Houve erro na aplicação dos valores, mas o processo continuou. Scores atribuídos com valor nulo'
+                    mensagem='Houve erro na aplicação dos valores, mas o processo continuou. Scores atribuídos com menor valor possível'
                 ).json() + '\n'
+
+        # reordenando lista com base no score atribuído pelo Bert
+        lista_documentos = sorted(lista_documentos, key=lambda x: x['score_bert'][0], reverse=True)
         marcador_tempo_fim = time()
         tempo_estimativa_bert = marcador_tempo_fim - marcador_tempo_inicio
         if fazer_log: print(f'--- scores atribuídos ({tempo_estimativa_bert} segundos)')

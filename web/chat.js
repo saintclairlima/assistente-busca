@@ -89,6 +89,10 @@ async function enviarPergunta(){
         //AFAZER: Ajustar Timeout. levar em consideração demora do Ollama em responder
         const timeoutId = setTimeout(() => controller.abort(), 120000);
 
+        
+        let respostaLLM = "";
+        let documentos = [];
+
         try {
             const response = await fetch(`${url_host}/chat/enviar-pergunta/`, {
                 method: "POST",
@@ -108,8 +112,6 @@ async function enviarPergunta(){
 
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
-            let respostaLLM = "";
-            let documentos = [];
 
             while (true) {
                 rolagemAutomatica();
@@ -168,12 +170,17 @@ async function enviarPergunta(){
             divResposta.classList.remove("mensagem-recebida");
             divResposta.classList.add("mensagem-erro");
             // AFAZER: Verificar essas mensagens
+            let msg_erro = ''
             if (erro.name === "AbortError") {
-                divResposta.innerHTML = "O servidor demorou para responder. Tente novamente mais tarde.";
+                msg_erro = "O servidor demorou para responder. Tente novamente mais tarde.";
             } else {
-                console.error(`Ocorreu um erro ao tentar se conectar ao servidor. Verifique sua conexão. (Tipo do erro: ${erro.name})`);
-                divResposta.innerHTML = "Ocorreu um erro ao tentar se conectar ao servidor. Verifique sua conexão.";
+                msg_erro = "Ocorreu um erro ao tentar se conectar ao servidor. Verifique sua conexão.";
+                console.error(`${msg_erro} (Tipo do erro: ${erro.name})`);
             }
+
+            if (respostaLLM != '') msg_erro = gerarRespostaFormatada(respostaLLM) + `\n<p>${msg_erro}</p>`
+
+            divResposta.innerHTML = msg_erro
             habilitarCampos=true;
         }
         if (habilitarCampos){
