@@ -113,16 +113,18 @@ async function enviarPergunta(){
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
 
+            let valores_decodificados = "";
             while (true) {
                 rolagemAutomatica();
                 const { done, value } = await reader.read();
                 if (done) break;
-                valores_decodificados = decoder.decode(value)
+                valores_decodificados += decoder.decode(value)
 
                 for (let linha of valores_decodificados.split('\n')){
                     if (linha.trim() === '') continue;
                     try {
                         var retorno = JSON.parse(linha.trim());
+                        valores_decodificados = '';
                         if (retorno.tipo == 'erro') {
                             console.error(`${retorno.descricao}: ${retorno.mensagem}`);
                             divResposta.classList.remove("mensagem-recebida");
