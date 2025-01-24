@@ -1,4 +1,5 @@
 from chromadb import chromadb, Documents, EmbeddingFunction, Embeddings
+import requests
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 from torch import cuda
@@ -42,6 +43,9 @@ class ClienteLLM:
     
     async def stream(self, mensagens: List[dict]):
         raise NotImplementedError('Método stream() não foi implantado para esta classe')
+    
+    def health(self):
+        raise NotImplementedError('Método health() não foi implantado para esta classe')
         
     
 class ClienteOllama(ClienteLLM):
@@ -50,6 +54,12 @@ class ClienteOllama(ClienteLLM):
             nome_modelo=nome_modelo,
             url_llm=url_llm,
             temperature=temperature)
+        
+    def health(self):
+        url_llm = f"{self.url_llm}/"
+        response_llm = requests.get(url_llm)
+        
+        return response_llm.status_code
 
     async def stream(self, mensagens: List[dict]):
         url = f"{self.url_llm}/api/chat"
@@ -107,6 +117,9 @@ class InterfaceLLM:
     def __init__(self):
         self.papel_do_LLM = configuracoes.papel_llm
         self.diretrizes = configuracoes.diretrizes_llm
+        
+    def health(self):
+        raise NotImplementedError('Método health() não foi implantado para esta classe')
 
     def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]):
         return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
@@ -131,6 +144,9 @@ class InterfaceOllama(InterfaceLLM):
     def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=configuracoes.temperature):
         super().__init__()
         self.cliente_ollama = ClienteOllama(url_llm=url_ollama, nome_modelo=nome_modelo, temperature=temperature)
+        
+    def health(self):
+        return self.cliente_ollama.health()
         
     async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[Tuple[str, str]]):
         prompt_usuario = self.formatar_prompt_usuario(pergunta, documentos)

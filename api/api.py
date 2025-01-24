@@ -24,6 +24,9 @@ gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddi
 
 print('Definindo as rotas')
 
+@controller.get('/chat/health')
+async def pagina_chat():
+    return gerador_de_respostas.health()
 
 @controller.get('/chat/')
 async def pagina_chat(url_redirec: str = Query(None)):

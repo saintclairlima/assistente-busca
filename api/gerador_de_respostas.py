@@ -1,3 +1,4 @@
+import json
 import torch
 from torch import cuda
 
@@ -57,6 +58,13 @@ class GeradorDeRespostas:
         if fazer_log: print(f'--- configurando persistência de dados de interação (usando {tipo_persistencia})...')
         if tipo_persistencia == 'sqlite': self.gerenciador_persistencia = GerenciadorPersistenciaSQLite()
         elif tipo_persistencia == 'mssql': self.gerenciador_persistencia = GerenciadorPersistenciaSQL()
+        
+    def health(self):
+        status_code_llm = self.interface_ollama.health()
+        return json.dumps({
+            'status_api': 'Ativo',
+            'status_cliente_llm': 'Ativo' if status_code_llm == 200 else 'Inativo'
+        })
 
     async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=configuracoes.num_documentos_retornados):
         return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
