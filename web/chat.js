@@ -24,9 +24,9 @@ function gerarFontesFormatadas(documentos){
 function gerarCampoAvaliacaoInteracao(idInteracao){
     htmlAval = `
     <div class="area-aval">
-        <span id="posit_aval" class="material-icons icone-aval positivo" onclick="avaliarInteracao(this, '${idInteracao}', 'positivo')">thumb_up</span>
-        <span id="negat_aval" class="material-icons icone-aval negativo" onclick="avaliarInteracao(this, '${idInteracao}', 'negativo')">thumb_down</span>
-        <span id="alert_aval" class="material-icons icone-aval alerta" onclick="avaliarInteracao(this, '${idInteracao}', 'alerta')">warning</span>
+        <span class="material-icons icone-aval positivo" onclick="avaliarInteracao(this, '${idInteracao}', 'positivo')">thumb_up<span class="tooltip">Resposta Adequada</span></span>
+        <span class="material-icons icone-aval negativo" onclick="avaliarInteracao(this, '${idInteracao}', 'negativo')">thumb_down<span class="tooltip">Resposta Inadequada</span></span>
+        <span class="material-icons icone-aval alerta" onclick="avaliarInteracao(this, '${idInteracao}', 'alerta')">warning<span class="tooltip">Problemão</span></span>
     </div>`;
     
     return htmlAval
@@ -223,24 +223,37 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
         const mensagemRetorno = data.dados.conteudo.mensagem_retorno;
         
         if (! elementoClicado.classList.contains('clicado') && sucessoAvaliacao) {
-            if (elementoClicado.classList.contains('positivo'))
-                elementoClicado.style.color = 'green';
-            if (elementoClicado.classList.contains('negativo'))
-                elementoClicado.style.color = 'orange';
-            if (elementoClicado.classList.contains('alerta'))
-                elementoClicado.style.color = 'red';
+            console.log(elementoClicado.classList);
+            if (elementoClicado.classList.contains('positivo')) {
+                elementoClicado.classList.remove('cinza');
+                elementoClicado.classList.add('verde');
+            }
+            if (elementoClicado.classList.contains('negativo')) {
+                elementoClicado.classList.remove('cinza');
+                elementoClicado.classList.add('laranja');
+            }
+            if (elementoClicado.classList.contains('alerta')) {
+                elementoClicado.classList.remove('cinza');
+                elementoClicado.classList.add('vermelho');
+            }
     
             elementoClicado.classList.add('clicado');    
             Array.from(parent.children).forEach(child => {
                 if (child !== elementoClicado) {
-                    child.style.color = 'gray';
+                    child.classList.remove('verde');
+                    child.classList.remove('vermelho');
+                    child.classList.remove('laranja');
+                    child.classList.add('cinza');
                     child.style.display = 'none';
                 }
             });
         } else if (elementoClicado.classList.contains('clicado') && sucessoAvaliacao){
             elementoClicado.classList.remove('clicado');
             Array.from(parent.children).forEach(child => {
-                child.style.color = 'gray';
+                child.classList.remove('verde');
+                child.classList.remove('vermelho');
+                child.classList.remove('laranja');
+                child.classList.add('cinza');
                 child.style.display = 'inline-block';
             }); 
         } else if(! resultado.sucessso_avaliacao){

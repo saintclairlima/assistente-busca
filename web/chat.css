@@ -9,9 +9,19 @@
     --cinza-claro: #e9ecef;
     --cinza-medio: #9e9c9c;
     --cinza-escuro: #616161;
-    --verde: #008000;
-    --laranja: #e47900;
-    --vermelho-escuro: #bb0000;
+    --verde-escuro: #0f5132;
+    --verde-medio: #badbcc;
+    --verde-claro: #d1e7dd;
+    --laranja-escuro: #664d03;
+    --laranja-medio: #ffecb5;
+    --laranja-claro: #fff3cd;
+    --vermelho-escuro: #842029;
+    --vermelho-medio: #f5c2c7;
+    --vermelho-claro: #f8d7da;
+
+    --verde: green;
+    --laranja: orange;
+    --vermelho: rgb(196, 0, 0);
 }
 body{
     margin: 0;
@@ -173,9 +183,42 @@ hr{
   color: var(--cinza-medio);
   cursor: pointer;
   margin-left: 5px;
+  position: relative;
 }
-.vermelho-escuro{
+
+.icone-aval:hover .tooltip {
+    display:block;
+}
+.tooltip {
+    display: none;
+    text-align: center;
+    font-size: small;
+    font-family:Arial, Helvetica, sans-serif;
+    padding: 10px;
+    position: absolute;
+    bottom: 20px;
+    right: 16px;
+    z-index: 1000;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
+.positivo .tooltip{
+    color: var(--verde-escuro);
+    border-color: var(--verde-medio);
+    background-color: var(--verde-claro);
+}
+.negativo .tooltip{
+    color: var(--laranja-escuro);
+    border-color: var(--laranja-medio);
+    background-color: var(--laranja-claro);
+}
+.alerta .tooltip{
     color: var(--vermelho-escuro);
+    border-color: var(--vermelho-medio);
+    background-color: var(--vermelho-claro);
+}
+.vermelho{
+    color: var(--vermelho);
 }
 .verde{
     color: var(--verde);
@@ -184,7 +227,7 @@ hr{
     color: var(--laranja);
 }
 .cinza{
-    color: var(--cinza-escuro);
+    color: var(--cinza-medio);
 }
 .container-envio-mensagens{
     display: flex;
