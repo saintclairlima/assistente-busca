@@ -24,9 +24,9 @@ function gerarFontesFormatadas(documentos){
 function gerarCampoAvaliacaoInteracao(idInteracao){
     htmlAval = `
     <div class="area-aval">
-        <span class="material-icons icone-aval positivo" onclick="avaliarInteracao(this, '${idInteracao}', 'positivo')">thumb_up<span class="tooltip">Resposta Adequada</span></span>
-        <span class="material-icons icone-aval negativo" onclick="avaliarInteracao(this, '${idInteracao}', 'negativo')">thumb_down<span class="tooltip">Resposta Inadequada</span></span>
-        <span class="material-icons icone-aval alerta" onclick="avaliarInteracao(this, '${idInteracao}', 'alerta')">warning<span class="tooltip">Reportar Problema</span></span>
+        <span class="material-icons icone-aval positivo" onclick="avaliarInteracao(this, '${idInteracao}', 'positivo')">thumb_up<span class="tooltip">Resposta adequada</span></span>
+        <span class="material-icons icone-aval negativo" onclick="avaliarInteracao(this, '${idInteracao}', 'negativo')">thumb_down<span class="tooltip">Resposta inadequada</span></span>
+        <span class="material-icons icone-aval alerta" onclick="avaliarInteracao(this, '${idInteracao}', 'alerta')">warning<span class="tooltip">Erro grave</span></span>
     </div>`;
     
     return htmlAval
