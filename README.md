@@ -149,14 +149,11 @@ Na pasta raiz do projeto, crie um arquivo `.env`, salvando nele o conteúdo do .
 
 ### Instalando as dependências
 
-Dependendo do dispositivo de processamento (CPU/GPU) a ser utilizado, é necessário instalar uma versão específica do `torch`.
+Dependendo do dispositivo de processamento (CPU/GPU) a ser utilizado, é necessário instalar uma versão específica do `torch`. Para utilização com CPUs, recomenda-se utilizar o comando seguinte para instalação:
 
-Em ambientes que dispõem somente de CPU, nos requirements deve se manter as linhas abaixo:
 ```
---find-links https://download.pytorch.org/whl/cpu
-torch==2.5.0
+pip install torch --index-url https://download.pytorch.org/whl/cpu
 ```
-
 Em ambientes com placa de vídeo com suporte a CUDA, deve-se alterar para buscar a versão adequada to `torch` com o suporte à versão do CUDA que a placa utiliza.
 
 Por meio do comando
@@ -165,16 +162,15 @@ Por meio do comando
  ```
  é possível identificar as características da placa de vídeo persente na máquina, normalemtne sob o rótulo `CUDA Version`.
 
-É possível acessar https://pytorch.org/get-started/locally/ e se obter o link adequado, dependendo da versão.
+É possível acessar https://pytorch.org/get-started/locally/ e se obter o comando de instalação adequado, dependendo da versão do CUDA da placa de vídeo.
 
-No caso da versão 12.4 do CUDA, é necessaário alterar para:
+No caso da versão 12.6 do CUDA, a página resulta em:
 
 ```
---find-links https://download.pytorch.org/whl/cu124
-torch==2.5.0
+pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu126
 ```
 
-Após esses ajustes, basta instalar os requisitos com:
+Após esses ajustes, basta instalar os requisitos gerais com:
 
 ```
 pip install -r requirements.txt
