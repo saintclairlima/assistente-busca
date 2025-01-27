@@ -18,6 +18,7 @@ class ConfiguracoesAplicacao:
         self.embedding_instructor = 'hkunlp/instructor-xl'
         self.embedding_squad_portuguese = 'pierreguillou/bert-base-cased-squad-v1.1-portuguese'
         self.embedding_openai = 'text-embedding-ada-002'
+        self.url_cache_modelos = '/var/modelos_ia/cache'
         self.num_documentos_retornados = 5
         
         self.url_script_geracao_banco_sqlite=os.path.normpath('api/dados/scripts_geracao_sqlite.sql')
