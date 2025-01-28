@@ -22,7 +22,7 @@ class FuncaoEmbeddings(EmbeddingFunction):
             self.device = 'cuda' if cuda.is_available() else 'cpu'
 
         # Carrega o modelo pre-treinado a partir do tipo de modelo escolhido
-        self.model = tipo_modelo(nome_modelo, device=self.device, cache_folder=configuracoes.url_cache_modelos)
+        self.model = tipo_modelo(nome_modelo, device=self.device, cache_folder=configuracoes.url_cache_modelos, trust_remote_code=True)
         self.model.to(self.device)
         self.instrucao = instrucao
 
