@@ -21,9 +21,12 @@ class ConfiguracoesAplicacao:
         self.embedding_squad_portuguese = 'pierreguillou/bert-base-cased-squad-v1.1-portuguese'
         self.embedding_alibaba_gte = 'Alibaba-NLP/gte-multilingual-base'
         self.embedding_openai = 'text-embedding-ada-002'
-        self.url_cache_modelos = '/var/modelos_ia/cache'
+        self.url_cache_modelos = os.path.abspath('/var/cache/assistente-busca')
         os.environ['HF_HOME'] = self.url_cache_modelos
-        os.environ['TRANSFORMERS_CACHE'] = self.url_cache_modelos 
+        os.environ['HF_HUB_CACHE'] = self.url_cache_modelos
+        os.environ['HF_ASSETS_CACHE'] = self.url_cache_modelos
+        os.environ['TRANSFORMERS_CACHE'] = self.url_cache_modelos
+
         self.num_documentos_retornados = 5
         
         self.url_script_geracao_banco_sqlite=os.path.normpath('api/dados/scripts_geracao_sqlite.sql')
@@ -39,7 +42,7 @@ class ConfiguracoesAplicacao:
 
         self.papel_llm = self.mensagens['papel_llm']
         self.diretrizes_llm = self.mensagens['diretrizes_llm']
-        self.template_mensagem_system = f'''PAPEL: {self.papel_llm}. DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes_llm}'''
+        self.template_mensagem_system = f'''PAPEL: {self.papel_llm} DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes_llm}'''
         self.template_prompt_usuario = 'DOCUMENTOS:\n{}\nPERGUNTA: {}'
 
         self.mensagens_retorno = self.mensagens['mensagens_retorno']
