@@ -17,8 +17,11 @@ class ConfiguracoesAplicacao:
         self.hnsw_space = 'cosine' # métrica a ser utilizada pelo banco vetorial para medir similaridade de vetores
         self.embedding_instructor = 'hkunlp/instructor-xl'
         self.embedding_squad_portuguese = 'pierreguillou/bert-base-cased-squad-v1.1-portuguese'
+        self.embedding_alibaba_gte = 'Alibaba-NLP/gte-multilingual-base'
         self.embedding_openai = 'text-embedding-ada-002'
         self.url_cache_modelos = '/var/modelos_ia/cache'
+        os.environ['HF_HOME'] = self.url_cache_modelos
+        os.environ['TRANSFORMERS_CACHE'] = self.url_cache_modelos 
         self.num_documentos_retornados = 5
         
         self.url_script_geracao_banco_sqlite=os.path.normpath('api/dados/scripts_geracao_sqlite.sql')

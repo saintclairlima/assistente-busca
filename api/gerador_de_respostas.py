@@ -48,8 +48,8 @@ class GeradorDeRespostas:
         # Carregando modelo e tokenizador pre-treinados
         # optou-se por não usar pipeline, por ser mais lento que usar o modelo diretamente
         if fazer_log: print(f'--- preparando modelo e tokenizador do Bert (usando {configuracoes.embedding_squad_portuguese})...')
-        self.modelo_bert_qa = BertForQuestionAnswering.from_pretrained(configuracoes.embedding_squad_portuguese).to(self.device)
-        self.tokenizador_bert = BertTokenizer.from_pretrained(configuracoes.embedding_squad_portuguese, device=self.device)
+        self.modelo_bert_qa = BertForQuestionAnswering.from_pretrained(configuracoes.embedding_squad_portuguese, cache_dir=configuracoes.url_cache_modelos).to(self.device)
+        self.tokenizador_bert = BertTokenizer.from_pretrained(configuracoes.embedding_squad_portuguese, device=self.device, cache_dir=configuracoes.url_cache_modelos)
 
         if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
         self.interface_ollama = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
