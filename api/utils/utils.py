@@ -115,19 +115,16 @@ class ClienteOpenAi(ClienteLLM):
 class InterfaceLLM:
     
     def __init__(self):
-        self.papel_do_LLM = configuracoes.papel_llm
-        self.diretrizes = configuracoes.diretrizes_llm
+        self.definicoes_sistema = configuracoes.template_mensagem_system
         
     def health(self):
         raise NotImplementedError('Método health() não foi implantado para esta classe')
 
     def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]):
-        return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
+        return configuracoes.template_prompt_usuario.format('\n'.join(documentos), pergunta)
 
     def formatar_mensagens_chat(self, prompt_usuario: str, historico:List[Tuple[str, str]]):
-        definicoes_sistema = f'''PAPEL: {self.papel_do_LLM}. DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes}'''
-
-        mensagens = [{'role': 'system', 'content': definicoes_sistema}]
+        mensagens = [{'role': 'system', 'content': self.definicoes_sistema}]
 
         for pergunta, resposta in historico:
             mensagens.append({'role': 'user', 'content': pergunta})
