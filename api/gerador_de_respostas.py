@@ -157,7 +157,7 @@ class GeradorDeRespostas:
         if fazer_log: print(f'Gerador de respostas: realizando consulta para "{pergunta}"...')
         yield MensagemControle(
             descricao='Informação de Status',
-            dados={'tag':'status', 'conteudo':'Consultando fontes'}
+            dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['consulta']}
         ).json() + '\n'
         
         # Recuperando documentos usando o ChromaDB
@@ -181,7 +181,7 @@ class GeradorDeRespostas:
         if fazer_log: print(f'--- aplicando re-ranking nos documentos utilizando Bert...')
         yield MensagemControle(
             descricao='Informação de Status',
-            dados={'tag':'status', 'conteudo':'Analisando resultados'}
+            dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['reranking']}
         ).json() + '\n'
 
         marcador_tempo_inicio = time()
@@ -218,7 +218,7 @@ class GeradorDeRespostas:
         if fazer_log: print(f'--- gerando resposta com o cliente LLM')
         yield MensagemControle(
             descricao='Informação de Status',
-            dados={'tag':'status', 'conteudo':'Gerando resposta'}
+            dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['geracao_resposta']}
             ).json() + '\n'
         
         try:
