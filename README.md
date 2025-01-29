@@ -184,10 +184,16 @@ Há dois arquivos contidos no projeto que contém dados que podem ser utilizados
 
 Dentro do mesmo banco vetorial `banco_assistente` tem a coleção `documentos_rh`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial). Sua performance, até o momento, não foi testada.
 
-Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`, semelhantemente a:
+Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`. Em um ambiente Linux executa-se:
 
 ```bash
 unzip api/dados/bancos_vetores/bancos_vetores.zip -d api/dados/bancos_vetores
+```
+
+Em um ambiente Windows:
+
+```bash
+tar -xf .\api\dados\bancos_vetores\bancos_vetores.zip -C .\api\dados\bancos_vetores
 ```
 
 `api/testes/resultados/testes_automatizados.json.zip` contém os resultados de testes automatizados extensivos feitos sobre o sistema como um todo.
@@ -196,6 +202,7 @@ Se for de sua conveniência, a exclusão dos documentos pode ser realizada, dado
 
 ### Iniciando o projeto
 Na pasta raiz do projeto, executar:
+
 ```
 uvicorn api.api:controller --reload
 ```
