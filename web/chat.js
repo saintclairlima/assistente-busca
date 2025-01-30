@@ -124,21 +124,23 @@ async function enviarPergunta(){
                     if (linha.trim() === '') continue;
                     try {
                         var retorno = JSON.parse(linha.trim());
-                        valores_decodificados = '';
                         if (retorno.tipo == 'erro') {
                             console.error(`${retorno.descricao}: ${retorno.mensagem}`);
                             divResposta.classList.remove("mensagem-recebida");
                             divResposta.classList.add("mensagem-erro");
                             divResposta.innerHTML = retorno.mensagem;
                             habilitarCampos = true;
+                            valores_decodificados = '';
                             break;
                         } else if (retorno.tipo == 'info') {
                             console.info(`${retorno.descricao}: ${retorno.mensagem? retorno.mensagem : '<sem conteúdo>'}`);
+                            valores_decodificados = '';
                             continue;
                         } else if (retorno.tipo == 'controle') {
                             if (retorno.dados.tag == 'status') {
                                 divResposta.innerHTML = `<i>${retorno.dados.conteudo}</i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>`;
                             }
+                            valores_decodificados = '';
                             continue;
                         } else if (retorno.tipo == 'dados') {
                             if (retorno.dados.tag == 'frag-resposta-llm') {
@@ -151,9 +153,11 @@ async function enviarPergunta(){
                                 historico.push([pergunta, respostaLLM])
                                 habilitarCampos = true;
                             }
+                            valores_decodificados = '';
                             continue;
                         } else {
                             console.info(retorno);
+                            valores_decodificados = '';
                             continue;
                         }
                     } catch (erro) {
