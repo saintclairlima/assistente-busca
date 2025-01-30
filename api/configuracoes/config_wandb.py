@@ -15,5 +15,7 @@ class ConfiguracoesWeightsAndBiases:
         self.wandb_uri_artefato_banco_vetorial = f'{self.wandb_equipe}/{self.wandb_nome_projeto}/banco-vetorial-chroma:latest'
         self.wandb_uri_artefato_prompt_mensagens = f'{self.wandb_equipe}/{self.wandb_nome_projeto}/prompts-mensagens:latest'
 
-        os.environ['OPENAI_API_KEY'] = configs['openai_api_key']
-        os.environ['WANDB_API_KEY'] = configs['wandb_api_key']
+        if configs['openai_api_key']:
+            os.environ['OPENAI_API_KEY'] = configs['openai_api_key']
+        if configs['wandb_api_key']:
+            os.environ['WANDB_API_KEY'] = configs['wandb_api_key']
