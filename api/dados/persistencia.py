@@ -276,7 +276,7 @@ class GerenciadorPersistencia:
                 'VALUES(?,?,?,?,?,?,?,?);'
             valores=(uuid_colecao, nome, nome_banco_vetores, modelo_fn_embd, tipo_modelo_fn_embd, instrucao, qtd_max_palavras, metrica_similaridade)
             id_colecao_salva = banco_dados.executar_query_insercao(query, valores)
-            print(f'Coleção {nome} salva em {self.info_banco['nome_banco']} com id {id_colecao_salva}')
+            print(f'''Coleção {nome} salva em {self.info_banco['nome_banco']} com id {id_colecao_salva}''')
             ids_colecoes_salvas[colecao['nome']]=id_colecao_salva
         
         return ids_colecoes_salvas
