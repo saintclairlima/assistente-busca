@@ -448,7 +448,10 @@ class GerenciadorPersistenciaSQL(GerenciadorPersistencia):
 
 if __name__ == '__main__':
     print(f'Criando banco SQL com documentos do banco vetorial ({configuracoes.url_banco_vetores})')
-    gp = GerenciadorPersistenciaSQL()
+    if configuracoes.tipo_persistencia == 'mssql':
+        gp = GerenciadorPersistenciaSQL()
+    elif configuracoes.tipo_persistencia == 'sqlite':
+        gp = GerenciadorPersistenciaSQLite()
     print('-- criando tabelas')
     gp.inicializar_banco()
     url_descritor = os.path.join(configuracoes.url_banco_vetores, 'descritor.json')
