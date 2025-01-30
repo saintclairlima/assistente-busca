@@ -200,6 +200,23 @@ tar -xf .\api\dados\bancos_vetores\bancos_vetores.zip -C .\api\dados\bancos_veto
 
 Se for de sua conveniência, a exclusão dos documentos pode ser realizada, dado que são dispensáveis.
 
+### Arquivos de ambiente e configuração
+Antes da execução, é necessário criar um arquivo `.env`, na pasta `api`, com um conteúdo conforme o arquivo `.env_TEMPALTE`.
+
+Igualmente, criar um arquivo de configurações `arq_conf.json`, com conteúdo conforme arquivo `arq_conf_template.json` na pasta `api/configurações`. A ação pode se executada utilizando os comandos:
+
+```bash
+# máquinas Linux
+cp api/.env.TEMPLATE api/.env
+cp api/configuracoes/arq_conf_template.json api/configuracoes/arq_conf.json
+```
+
+```bash
+# máquinas Windows
+copy api\.env.TEMPLATE api\.env
+copy api\configuracoes\arq_conf_template.json api\configuracoes\arq_conf.json
+```
+
 ### Iniciando o projeto
 Na pasta raiz do projeto, executar:
 
