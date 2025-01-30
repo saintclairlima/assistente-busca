@@ -30,7 +30,7 @@ class GeradorDeRespostas:
         if configuracoes.usar_wandb:
             self.wandb_run = wandb.init(
                 project=configuracoes.wandb_nome_projeto,
-                entity=None, # AFAZER: entender o que isso faz
+                entity=configuracoes.wandb_equipe,
                 job_type=configuracoes.wandb_tipo_execucao,
                 config=configuracoes.sumarizar_configuracoes(),
             )
