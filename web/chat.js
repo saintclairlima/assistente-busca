@@ -223,7 +223,6 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
         const mensagemRetorno = data.dados.conteudo.mensagem_retorno;
         
         if (! elementoClicado.classList.contains('clicado') && sucessoAvaliacao) {
-            console.log(elementoClicado.classList);
             if (elementoClicado.classList.contains('positivo')) {
                 elementoClicado.classList.remove('cinza');
                 elementoClicado.classList.add('verde');
