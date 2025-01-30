@@ -49,7 +49,7 @@ class InterfacePersistenciaSQL(InterfacePersistencia):
                     # Executa statements não vazios
                     if statement.strip():
                         cursor.execute(statement)
-                print(f'Tabelas criadas em {self.parametros['host']}:{self.parametros['port']}/{self.parametros['database']}')
+                print(f'''Tabelas criadas em {self.parametros['host']}:{self.parametros['port']}/{self.parametros['database']}''')
                 conexao.commit()
             except pymssql.Error as e:
                 print(f"Ocorreu um erro na escrita das tabelas: {e}")
