@@ -75,7 +75,7 @@ async function enviarPergunta(){
         
         var divResposta = document.createElement("div");
         divResposta.className = "text-box";
-        divResposta.innerHTML = "Processando pergunta<span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>";
+        divResposta.innerHTML = "<i>Processando pergunta</i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>";
         divResposta.classList.add("align-left");
         divResposta.classList.add("mensagem-recebida");
         document.getElementById("container-exibicao-mensagens").appendChild(divResposta);
@@ -137,7 +137,7 @@ async function enviarPergunta(){
                             continue;
                         } else if (retorno.tipo == 'controle') {
                             if (retorno.dados.tag == 'status') {
-                                divResposta.innerHTML = `<i>${retorno.dados.conteudo}<i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>`;
+                                divResposta.innerHTML = `<i>${retorno.dados.conteudo}</i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>`;
                             }
                             continue;
                         } else if (retorno.tipo == 'dados') {
