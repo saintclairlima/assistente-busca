@@ -1,5 +1,6 @@
 echo "Preparando os arquivos necessários..."
 cp api/.env.TEMPLATE api/.env
+cp api/configuracoes/arq_conf_template.json api/configuracoes/arq_conf.json
 unzip api/dados/bancos_vetores/bancos_vetores.zip -d api/dados/bancos_vetores
 rm -R api/dados/bancos_vetores/banco_vetores_alrn
 rm -R api/dados/bancos_vetores/banco_vetores_regimento_resolucoes_rh

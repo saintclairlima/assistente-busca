@@ -1,0 +1,31 @@
+{
+    "embedding_instructor": "hkunlp/instructor-xl",
+    "embedding_squad_portuguese": "pierreguillou/bert-base-cased-squad-v1.1-portuguese",
+    "embedding_alibaba_gte": "Alibaba-NLP/gte-multilingual-base",
+    "embedding_openai": "text-embedding-ada-002",
+
+    "url_indice_documentos": "api/dados/documentos/index.json",
+    "url_arquivo_mensagens": "api/configuracoes/mensagens.json",
+    "threadpool_max_workers": 10,
+    "url_pasta_documentos": "api/dados/documentos",
+    "url_banco_vetores": "api/dados/bancos_vetores/banco_assistente",
+    "nome_colecao_de_documentos": "documentos_rh",
+    "num_maximo_palavras_por_fragmento": 300,
+    "hnsw_space": "cosine",
+    "modelo_funcao_de_embeddings": "hkunlp/instructor-xl",
+    "url_cache_modelos": "/var/cache/assistente-busca",
+    "num_documentos_retornados": 5,
+    "url_script_geracao_banco_sqlite": "api/dados/scripts_geracao_sqlite.sql",
+    "url_script_geracao_banco_sql": "api/dados/scripts_geracao.sql",
+    "cliente_llm": "ollama",
+    "modelo_llm": "llama3.1",
+    "temperature": 0,
+    "top_k": 0,
+    "top_p": 0,
+
+    "usar_wandb": false,
+    "wandb_equipe": null,
+    "wandb_nome_projeto": null,
+    "wandb_tipo_execucao": null,
+    "wandb_api_key": null
+}

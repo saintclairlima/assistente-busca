@@ -3,49 +3,53 @@ import os
 
 class ConfiguracoesAplicacao:
     def __init__(self):
-        self.url_indice_documentos='api/dados/documentos/index.json'
-        with open(self.url_indice_documentos, 'r') as arq:
+
+        with open('api/configuracoes/arq_conf.json', 'r', encoding='utf-8') as arq:
+            configs = json.load(arq)
+
+        url_indice_documentos=configs['url_indice_documentos']
+        with open(url_indice_documentos, 'r') as arq:
             self.documentos = json.load(arq)
 
-        with open('api/configuracoes/mensagens.json', 'r', encoding='utf-8') as arq:
-            self.mensagens=json.load(arq)
+        with open(configs['url_arquivo_mensagens'], 'r', encoding='utf-8') as arq:
+            mensagens = json.load(arq)
             
-        self.threadpool_max_workers=10
+        self.threadpool_max_workers=configs['threadpool_max_workers']
         
-        self.url_pasta_documentos = os.path.normpath('api/dados/documentos')
-        self.url_banco_vetores = os.path.normpath('api/dados/bancos_vetores/banco_assistente')
-        self.nome_colecao_de_documentos = 'documentos_rh'
-        self.num_maximo_palavras_por_fragmento = 300
-        self.hnsw_space = 'cosine' # métrica a ser utilizada pelo banco vetorial para medir similaridade de vetores
-        self.embedding_instructor = 'hkunlp/instructor-xl'
-        self.embedding_squad_portuguese = 'pierreguillou/bert-base-cased-squad-v1.1-portuguese'
-        self.embedding_alibaba_gte = 'Alibaba-NLP/gte-multilingual-base'
-        self.embedding_openai = 'text-embedding-ada-002'
-        self.url_cache_modelos = os.path.abspath('/var/cache/assistente-busca')
+        self.url_pasta_documentos = os.path.normpath(configs['url_pasta_documentos'])
+        self.url_banco_vetores = os.path.normpath(configs['url_banco_vetores'])
+        self.nome_colecao_de_documentos = configs['nome_colecao_de_documentos']
+        self.num_maximo_palavras_por_fragmento = configs['num_maximo_palavras_por_fragmento']
+        self.hnsw_space = configs['hnsw_space'] # métrica a ser utilizada pelo banco vetorial para medir similaridade de vetores
+        self.embedding_instructor = configs['embedding_instructor']
+        self.embedding_squad_portuguese = configs['embedding_squad_portuguese']
+        self.embedding_alibaba_gte = configs['embedding_alibaba_gte']
+        self.embedding_openai = configs['embedding_openai']
+        self.url_cache_modelos = os.path.abspath(configs['url_cache_modelos'])
         os.environ['HF_HOME'] = self.url_cache_modelos
         os.environ['HF_HUB_CACHE'] = self.url_cache_modelos
         os.environ['HF_ASSETS_CACHE'] = self.url_cache_modelos
         os.environ['TRANSFORMERS_CACHE'] = self.url_cache_modelos
 
-        self.num_documentos_retornados = 5
+        self.num_documentos_retornados = configs['num_documentos_retornados']
         
-        self.url_script_geracao_banco_sqlite=os.path.normpath('api/dados/scripts_geracao_sqlite.sql')
-        self.url_script_geracao_banco_sql=os.path.normpath('api/dados/scripts_geracao.sql')
+        self.url_script_geracao_banco_sqlite=os.path.normpath(configs['url_script_geracao_banco_sqlite'])
+        self.url_script_geracao_banco_sql=os.path.normpath(configs['url_script_geracao_banco_sql'])
 
-        self.modelo_funcao_de_embeddings = self.embedding_instructor
+        self.modelo_funcao_de_embeddings = configs['modelo_funcao_de_embeddings']
         
-        self.cliente_llm = 'ollama'
-        self.modelo_llm = 'llama3.1'
-        self.temperature = 0
-        self.top_k = 0
-        self.top_p = 0
+        self.cliente_llm = configs['cliente_llm']
+        self.modelo_llm = configs['modelo_llm']
+        self.temperature = configs['temperature']
+        self.top_k =configs['top_k']
+        self.top_p = configs['top_p']
 
-        self.papel_llm = self.mensagens['papel_llm']
-        self.diretrizes_llm = self.mensagens['diretrizes_llm']
+        self.papel_llm = mensagens['papel_llm']
+        self.diretrizes_llm = mensagens['diretrizes_llm']
         self.template_mensagem_system = f'''PAPEL: {self.papel_llm} DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes_llm}'''
         self.template_prompt_usuario = 'DOCUMENTOS:\n{}\nPERGUNTA: {}'
 
-        self.mensagens_retorno = self.mensagens['mensagens_retorno']
+        self.mensagens_retorno = mensagens['mensagens_retorno']
         
     def configuracoes_banco_vetores(self):
         return {

@@ -2,10 +2,13 @@
 
 class ConfiguracoesWeightsAndBiases:
     def __init__(self):
+
+        with open('api/configuracoes/arq_conf.json', 'r', encoding='utf-8') as arq:
+            configs = json.load(arq)
         
-        self.usar_wandb=False
-        self.wandb_equipe='cleiane-projetos' # grumpyai
-        self.wandb_nome_projeto='assistente-busca'
-        self.wandb_tipo_execucao='producao'
-        self.wandb_uri_artefato_banco_vetorial=f'{self.wandb_equipe}/{self.wandb_nome_projeto}/banco-vetorial-chroma:latest',
-        # AFAZER: colocar artefato do prompt
+        self.usar_wandb=configs['usar_wandb']
+        self.wandb_equipe=configs['wandb_equipe']
+        self.wandb_nome_projeto=configs['wandb_nome_projeto']
+        self.wandb_tipo_execucao=configs['wandb_tipo_execucao']
+        self.wandb_uri_artefato_banco_vetorial=f'{self.wandb_equipe}/{self.wandb_nome_projeto}/banco-vetorial-chroma:latest'
+        self.wandb_uri_artefato_prompt_mensagens=f'{self.wandb_equipe}/{self.wandb_nome_projeto}/prompts-mensagens:latest'
