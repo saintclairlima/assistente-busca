@@ -1,6 +1,7 @@
 
 
 function gerarRespostaFormatada(resposta){
+    // AFAZER: Buscar melhores conversores de markdown para html
     var html = `<p>${converterMarkdownHTML(resposta)}</p>\n`
     return html
 }
@@ -58,6 +59,31 @@ function toggleFontes(elemento) {
     }
 }
 
+function processarJSON(texto){
+    const resultados = [];
+    let parcial;
+    let linhas = texto.split('\n')
+    for (let linha of linhas){
+        // se a linha não for vazia
+        if(linha !== ''){
+            try {
+                //converte em JSON
+                parcial = JSON.parse(linha.trim());
+            } catch (erro) {
+                if (erro instanceof SyntaxError) {
+                    // Indica que o JSON está incompleto. Mantém para concatenar com
+                    // o restante, para criar o JSON posterior.
+                    parcial = linha;
+                } else {
+                    throw erro;
+                }
+            }
+            resultados.push(parcial);
+        }
+    }
+    return resultados;
+}
+
 async function enviarPergunta(){
     // Só executa se houver valor digitado no campo de pergunta
     if (document.getElementById("text-input").value){
@@ -113,59 +139,62 @@ async function enviarPergunta(){
             const reader = response.body.getReader();
             const decoder = new TextDecoder("utf-8");
 
-            let valores_decodificados = "";
+            let valoresDecodificados = "";
+            var limparValoresDecodificados = true;
             while (true) {
                 rolagemAutomatica();
                 const { done, value } = await reader.read();
                 if (done) break;
-                valores_decodificados += decoder.decode(value)
+                valoresDecodificados += decoder.decode(value);
 
-                for (let linha of valores_decodificados.split('\n')){
-                    if (linha.trim() === '') continue;
-                    try {
-                        var retorno = JSON.parse(linha.trim());
-                        if (retorno.tipo == 'erro') {
-                            console.error(`${retorno.descricao}: ${retorno.mensagem}`);
-                            divResposta.classList.remove("mensagem-recebida");
-                            divResposta.classList.add("mensagem-erro");
-                            divResposta.innerHTML = retorno.mensagem;
-                            habilitarCampos = true;
-                            valores_decodificados = '';
-                            break;
-                        } else if (retorno.tipo == 'info') {
-                            console.info(`${retorno.descricao}: ${retorno.mensagem? retorno.mensagem : '<sem conteúdo>'}`);
-                            valores_decodificados = '';
-                            continue;
-                        } else if (retorno.tipo == 'controle') {
-                            if (retorno.dados.tag == 'status') {
-                                divResposta.innerHTML = `<i>${retorno.dados.conteudo}</i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>`;
-                            }
-                            valores_decodificados = '';
-                            continue;
-                        } else if (retorno.tipo == 'dados') {
-                            if (retorno.dados.tag == 'frag-resposta-llm') {
-                                respostaLLM += retorno.dados.conteudo;
-                                divResposta.innerHTML = gerarRespostaFormatada(respostaLLM);
-                            } else if (retorno.dados.tag == 'lista-docs-recuperados') {
-                                documentos = retorno.dados.conteudo;
-                            } else if (retorno.dados.tag == 'persistencia-interacao') {
-                                divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos) + gerarCampoAvaliacaoInteracao(retorno.dados.conteudo);
-                                historico.push([pergunta, respostaLLM])
-                                habilitarCampos = true;
-                            }
-                            valores_decodificados = '';
-                            continue;
-                        } else {
-                            console.info(retorno);
-                            valores_decodificados = '';
-                            continue;
-                        }
-                    } catch (erro) {
-                        console.error(erro);
-                        console.info(linha);
+                console.log(valoresDecodificados, '\n\n')
+
+                let listaConteudoJSON = processarJSON(valoresDecodificados);
+
+                for (let conteudoJSON of listaConteudoJSON){
+                    if (conteudoJSON.tipo == 'erro') {
+                        console.error(`${conteudoJSON.descricao}: ${conteudoJSON.mensagem}`);
+                        divResposta.classList.remove("mensagem-recebida");
+                        divResposta.classList.add("mensagem-erro");
+                        divResposta.innerHTML = conteudoJSON.mensagem;
                         habilitarCampos = true;
                         break;
+                    } else if (conteudoJSON.tipo == 'info') {
+                        console.info(`${conteudoJSON.descricao}: ${conteudoJSON.mensagem? conteudoJSON.mensagem : '<sem conteúdo>'}`);
+                        continue;
+                    } else if (conteudoJSON.tipo == 'controle') {
+                        if (conteudoJSON.dados.tag == 'status') {
+                            divResposta.innerHTML = `<i>${conteudoJSON.dados.conteudo}</i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>`;
+                        }
+                        continue;
+                    } else if (conteudoJSON.tipo == 'dados') {
+                        if (conteudoJSON.dados.tag == 'frag-resposta-llm') {
+                            respostaLLM += conteudoJSON.dados.conteudo;
+                            divResposta.innerHTML = gerarRespostaFormatada(respostaLLM);
+                        } else if (conteudoJSON.dados.tag == 'lista-docs-recuperados') {
+                            documentos = conteudoJSON.dados.conteudo;
+                        } else if (conteudoJSON.dados.tag == 'persistencia-interacao') {
+                            divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos) + gerarCampoAvaliacaoInteracao(conteudoJSON.dados.conteudo);
+                            historico.push([pergunta, respostaLLM])
+                            habilitarCampos = true;
+                        }
+                        continue;
+                    } else if (typeof conteudoJSON === 'string') {
+                        // A função processarJSON devolve em formato de string os conteúdos que não podem ser convertidos em objetos.
+                        // Depreende-se disso que se trata de um fragmento incompleto de um JSON.
+                        // Então guarda para concatenar com o conteúdo que vai ser recebido, com a parte restante do JSON
+                        limparValoresDecodificados = false;
+                        valoresDecodificados = conteudoJSON;
+                        continue;
+                    } else {
+                        console.info(conteudoJSON);
+                        continue;
                     }
+                }
+
+                // Limpa o 'buffer' para receber novo conteúdo. Não executa caso hava um fragmento de JSON incompleto
+                if (limparValoresDecodificados){
+                    valoresDecodificados = '';
                 }
             }
         } catch (erro) {
