@@ -140,7 +140,6 @@ async function enviarPergunta(){
             const decoder = new TextDecoder("utf-8");
 
             let valoresDecodificados = "";
-            var limparValoresDecodificados = true;
             while (true) {
                 rolagemAutomatica();
                 const { done, value } = await reader.read();
@@ -148,8 +147,9 @@ async function enviarPergunta(){
                 valoresDecodificados += decoder.decode(value);
 
                 let listaConteudoJSON = processarJSON(valoresDecodificados);
-
+                let fragmentoJSONIncompleto;
                 for (let conteudoJSON of listaConteudoJSON){
+                    fragmentoJSONIncompleto = '';
                     if (conteudoJSON.tipo == 'erro') {
                         console.error(`${conteudoJSON.descricao}: ${conteudoJSON.mensagem}`);
                         divResposta.classList.remove("mensagem-recebida");
@@ -181,8 +181,7 @@ async function enviarPergunta(){
                         // A função processarJSON devolve em formato de string os conteúdos que não podem ser convertidos em objetos.
                         // Depreende-se disso que se trata de um fragmento incompleto de um JSON.
                         // Então guarda para concatenar com o conteúdo que vai ser recebido, com a parte restante do JSON
-                        limparValoresDecodificados = false;
-                        valoresDecodificados = conteudoJSON;
+                        fragmentoJSONIncompleto = conteudoJSON;
                         continue;
                     } else {
                         console.info(conteudoJSON);
@@ -191,9 +190,7 @@ async function enviarPergunta(){
                 }
 
                 // Limpa o 'buffer' para receber novo conteúdo. Não executa caso hava um fragmento de JSON incompleto
-                if (limparValoresDecodificados){
-                    valoresDecodificados = '';
-                }
+                valoresDecodificados = '' + fragmentoJSONIncompleto;
             }
         } catch (erro) {
             // Garante reset do timeout
