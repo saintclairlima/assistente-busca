@@ -147,8 +147,6 @@ async function enviarPergunta(){
                 if (done) break;
                 valoresDecodificados += decoder.decode(value);
 
-                console.log(valoresDecodificados, '\n\n')
-
                 let listaConteudoJSON = processarJSON(valoresDecodificados);
 
                 for (let conteudoJSON of listaConteudoJSON){
