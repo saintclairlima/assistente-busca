@@ -9,25 +9,27 @@ import json
 from api.configuracoes.config_gerais import configuracoes
 from typing import List, Tuple
 
-
+# Data model for chat interactions
 class DadosChat(BaseModel):
-    pergunta: str
-    historico: list
+    pergunta: str  # User's question
+    historico: list  # Chat history
 
+# Custom embedding function using a transformer model
 class FuncaoEmbeddings(EmbeddingFunction):
     def __init__(self, nome_modelo: str, tipo_modelo=SentenceTransformer, device: str=None, instrucao: str=None):
+        # Automatically select device: CUDA if available, otherwise CPU
         if device:
             self.device = device
         else:
             self.device = 'cuda' if cuda.is_available() else 'cpu'
 
-        # Carrega o modelo pre-treinado a partir do tipo de modelo escolhido
+        # Load pre-trained model with remote code trust enabled
         self.model = tipo_modelo(nome_modelo, device=self.device, cache_folder=configuracoes.url_cache_modelos, trust_remote_code=True)
         self.model.to(self.device)
         self.instrucao = instrucao
 
     def __call__(self, input: Documents) -> Embeddings:
-        # obtém os embeddings do texto
+        # Generate embeddings for input text
         if self.instrucao:
             input_instrucao = [(self.instrucao, doc) for doc in input]
             embeddings = self.model.encode(input_instrucao, convert_to_numpy=True, device=self.device)
@@ -35,6 +37,7 @@ class FuncaoEmbeddings(EmbeddingFunction):
             embeddings = self.model.encode(input, convert_to_numpy=True, device=self.device)
         return embeddings.tolist()
     
+# Base client class for LLM interactions
 class ClienteLLM:
     def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature):
         self.modelo = nome_modelo
@@ -42,12 +45,12 @@ class ClienteLLM:
         self.temperature = temperature
     
     async def stream(self, mensagens: List[dict]):
-        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        raise NotImplementedError('Method stream() is not implemented for this class')
     
     def health(self):
-        raise NotImplementedError('Método health() não foi implantado para esta classe')
+        raise NotImplementedError('Method health() is not implemented for this class')
         
-    
+# Client implementation for Ollama LLM API
 class ClienteOllama(ClienteLLM):
     def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature):
         super().__init__(
@@ -56,12 +59,13 @@ class ClienteOllama(ClienteLLM):
             temperature=temperature)
         
     def health(self):
+        # Simple health check by calling the base URL
         url_llm = f"{self.url_llm}/"
         response_llm = requests.get(url_llm)
-        
         return response_llm.status_code
 
     async def stream(self, mensagens: List[dict]):
+        # Sends messages to the LLM API in a streaming fashion
         url = f"{self.url_llm}/api/chat"
         
         payload = {
@@ -69,7 +73,7 @@ class ClienteOllama(ClienteLLM):
             "messages": mensagens,
             "temperature": self.temperature,
             "stream": True,
-            # "max_new_tokens": 4096 ## AFAZER: considerar remover esse atributo
+            # "max_new_tokens": 4096 ## TODO: Consider removing this attribute
         }
         
         async with httpx.AsyncClient() as client:
@@ -81,8 +85,9 @@ class ClienteOllama(ClienteLLM):
                         try:
                             yield json.loads(fragmento.decode())
                         except:
-                            print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
+                            print('ERROR: Failed to deserialize fragment\n' + fragmento.decode())
 
+# Client implementation for OpenAI-compatible LLM API
 class ClienteOpenAi(ClienteLLM):
     def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature):
         super().__init__(
@@ -109,21 +114,22 @@ class ClienteOpenAi(ClienteLLM):
                         try:
                             yield json.loads(fragmento.decode())
                         except:
-                            print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
-
+                            print('ERROR: Failed to deserialize fragment\n' + fragmento.decode())
     
+# Base interface class for LLM interactions
 class InterfaceLLM:
     
     def __init__(self):
         self.definicoes_sistema = configuracoes.template_mensagem_system
         
     def health(self):
-        raise NotImplementedError('Método health() não foi implantado para esta classe')
+        raise NotImplementedError('Method health() is not implemented for this class')
 
     def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]):
         return configuracoes.template_prompt_usuario.format('\n'.join(documentos), pergunta)
 
-    def formatar_mensagens_chat(self, prompt_usuario: str, historico:List[Tuple[str, str]]):
+    def formatar_mensagens_chat(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
+        # Formats chat messages with system instructions and history
         mensagens = [{'role': 'system', 'content': self.definicoes_sistema}]
 
         for pergunta, resposta in historico:
@@ -134,9 +140,10 @@ class InterfaceLLM:
         
         return mensagens
     
-    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[Tuple[str, str]]):
-        raise NotImplementedError('Método gerar_resposta_llm() não foi implantado para esta classe')
+    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico: List[Tuple[str, str]]):
+        raise NotImplementedError('Method gerar_resposta_llm() is not implemented for this class')
         
+# Implementation of the LLM interface using Ollama
 class InterfaceOllama(InterfaceLLM):
     def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=configuracoes.temperature):
         super().__init__()
@@ -145,12 +152,13 @@ class InterfaceOllama(InterfaceLLM):
     def health(self):
         return self.cliente_ollama.health()
         
-    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico:List[Tuple[str, str]]):
+    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico: List[Tuple[str, str]]):
         prompt_usuario = self.formatar_prompt_usuario(pergunta, documentos)
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
         async for fragmento_resposta in self.cliente_ollama.stream(mensagens=mensagens):
             yield fragmento_resposta
 
+# Interface for interacting with a ChromaDB-based vector database
 class InterfaceChroma:
     def __init__(self,
                  url_banco_vetores=configuracoes.url_banco_vetores,
@@ -158,16 +166,13 @@ class InterfaceChroma:
                  funcao_de_embeddings=None,
                  fazer_log=True):
     
-        if fazer_log: print('--- interface do ChromaDB em inicialização')
+        if fazer_log: print('--- Initializing ChromaDB interface')
 
         if not funcao_de_embeddings:
-            print(f'--- criando a função de embeddings do ChromaDB com {configuracoes.modelo_funcao_de_embeddings} (device={configuracoes.device})...')
+            print(f'--- Creating ChromaDB embedding function with {configuracoes.modelo_funcao_de_embeddings} (device={configuracoes.device})...')
             funcao_de_embeddings = FuncaoEmbeddings(model_name=configuracoes.modelo_funcao_de_embeddings, biblioteca=SentenceTransformer, device=configuracoes.device)
         
-        if fazer_log: print(f'--- inicializando banco de vetores (usando "{url_banco_vetores}")...')
         self.banco_de_vetores = chromadb.PersistentClient(path=url_banco_vetores)
-
-        if fazer_log: print(f'--- definindo a coleção a ser usada ({colecao_de_documentos})...')
         self.colecao_documentos = self.banco_de_vetores.get_collection(name=colecao_de_documentos, embedding_function=funcao_de_embeddings)
     
     def consultar_documentos(self, termos_de_consulta: str, num_resultados=configuracoes.num_documentos_retornados):
