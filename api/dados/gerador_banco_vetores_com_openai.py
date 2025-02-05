@@ -72,7 +72,7 @@ class GeradorBancoVetores:
                     'titulo': f'{info["titulo"]}',
                     'subtitulo': f'Art. {tit} - {titulos.count(tit)}',
                     'autor': f'{info["autor"]}',
-                    'fonte': f'{info["fonte"]}'
+                    'fonte': f'{info["fonte"]}#Art_{tit}'
                 },
             }
             fragmentos.append(fragmento)
