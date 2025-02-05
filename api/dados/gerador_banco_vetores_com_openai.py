@@ -187,6 +187,11 @@ class GeradorBancoVetores:
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE,
                 instrucao=instrucao)
+        elif tipo == configuracoes.embedding_alibaba_gte:
+            funcao = FuncaoEmbeddings(
+                nome_modelo=configuracoes.embedding_alibaba_gte,
+                tipo_modelo=SentenceTransformer,
+                device=DEVICE)
         elif tipo == configuracoes.embedding_openai:
             funcao = embedding_functions.OpenAIEmbeddingFunction(
                 api_key = os.environ.get("OPENAI_API_KEY", None),
@@ -259,7 +264,9 @@ class GeradorBancoVetores:
 
         tipos_modelos = {
             configuracoes.embedding_instructor: 'SentenceTransformer',
-            configuracoes.embedding_openai: 'OpenAI-API'
+            configuracoes.embedding_openai: 'OpenAI-API',
+            configuracoes.embedding_alibaba_gte: 'Alibaba-GTE',
+            configuracoes.embedding_squad_portuguese: 'Bert-Squad-Pt'
         }
         descritor = {
             "nome": url_banco_vetores.split('/')[-1],
