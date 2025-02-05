@@ -32,6 +32,7 @@ class ConfiguracoesAmbiente:
         return {
             'nome_banco': f'{self.url_banco_sql}:{self.porta_banco_sql}/{self.database_banco_sql}',
             'schema': f'{self.database_banco_sql}.dbo',
+            'tipo_persistencia': 'mssql',
             'parametros': {
                 'url_banco': self.url_banco_sql,
                 'encryption': None, 
