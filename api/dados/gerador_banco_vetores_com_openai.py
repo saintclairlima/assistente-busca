@@ -337,7 +337,7 @@ if __name__ == "__main__":
         instrucao=instrucao)
     
 ## Modelo de Execução
-# python -m api.dados.gerador_banco_vetores \
+# python -m api.dados.gerador_banco_vetores_com_openai \
 # --nome_banco_vetores banco_assistente \
 # --lista_colecoes "['documentos_rh', 'documentos_rh_openai']" \
 # --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002']" \
