@@ -50,6 +50,8 @@ class ConfiguracoesAplicacao:
         self.template_prompt_usuario = 'DOCUMENTOS:\n{}\nPERGUNTA: {}'
 
         self.mensagens_retorno = mensagens['mensagens_retorno']
+
+        self.permitir_comentarios = configs['permitir_comentarios']
         
     def configuracoes_banco_vetores(self):
         return {

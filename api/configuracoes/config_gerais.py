@@ -9,8 +9,9 @@ class ConfiguracoesGerais(ConfiguracoesAmbiente, ConfiguracoesAplicacao, Configu
         ConfiguracoesWeightsAndBiases.__init__(self)
         
         self.tags_substituicao_html={
-            'TAG_INSERCAO_URL_HOST': self.url_host
-            }
+            'TAG_INSERCAO_URL_HOST': self.url_host,
+            'TAG_INSERCAO_MOSTRAR_CAMPO_COMENTARIO': self.permitir_comentarios
+        }
     def sumarizar_configuracoes(self) -> dict:
         sumario = self.configuracoes_ambiente()
         sumario.update(self.configuracoes_banco_vetores())

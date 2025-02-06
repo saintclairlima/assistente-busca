@@ -17,6 +17,7 @@
     "num_documentos_retornados": 5,
     "url_script_geracao_banco_sqlite": "api/dados/scripts_geracao_sqlite.sql",
     "url_script_geracao_banco_sql": "api/dados/scripts_geracao.sql",
+    
     "cliente_llm": "ollama",
     "modelo_llm": "llama3.1",
     "temperature": 0,
@@ -29,5 +30,7 @@
     "wandb_tipo_execucao": null,
     "wandb_api_key": null,
 
-    "openai_api_key": null
+    "openai_api_key": null,
+
+    "permitir_comentarios": "true"
 }

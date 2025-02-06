@@ -29,6 +29,15 @@ function gerarCampoAvaliacaoInteracao(idInteracao){
         <span class="material-icons icone-aval negativo" onclick="avaliarInteracao(this, '${idInteracao}', 'negativo')">thumb_down<span class="tooltip">Resposta inadequada</span></span>
         <span class="material-icons icone-aval alerta" onclick="avaliarInteracao(this, '${idInteracao}', 'alerta')">warning<span class="tooltip">Erro grave</span></span>
     </div>`;
+
+    if (mostrarCampoComentario) {
+        // AFAZER: Adicionar campo de comentário
+        //htmlAval += 
+        `<div style="display: flex;align-items: center;gap: 8px;">
+            <input type="text">
+            <span class="material-icons">comment</span>
+        </div>`
+    }
     
     return htmlAval
 }
