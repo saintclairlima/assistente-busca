@@ -48,6 +48,11 @@ async def gerar_resposta(dadosRecebidos: DadosChat):
 async def gerar_resposta(dadosRecebidos: dict):
     return await gerador_de_respostas.avaliar_interacao(dadosRecebidos)
 
+@controller.get('/chat/documento')
+async def pagina_chat(url_documento: str = Query(None)):
+    with open(f'api/dados/{url_documento}', 'r', encoding='utf-8') as arquivo: conteudo_html = arquivo.read()
+    return HTMLResponse(content=conteudo_html, status_code=200)
+
 @controller.get('/web/img/favicon/favicon.ico')
 async def favicon(): return FileResponse('web/img/favicon/favicon.ico')
 

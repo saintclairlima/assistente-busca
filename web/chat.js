@@ -13,7 +13,7 @@ function gerarFontesFormatadas(documentos){
             documentos.map((documento) =>{
                 return `
                 <div class="documento">
-                    <div class="documento-titulo"><a href="${documento.metadados.fonte}" target="_blank">${documento.metadados.titulo} | ${documento.metadados.subtitulo}</a></div>` + 
+                    <div class="documento-titulo"><a href="${urlHost}/chat/documento?url_documento=${documento.metadados.fonte}" target="_blank">${documento.metadados.titulo} | ${documento.metadados.subtitulo}</a></div>` + 
                     `<div class="documento-conteudo">${documento.conteudo}</div>`+ 
                 `</div>`
             }).join("\n") + 
@@ -120,7 +120,7 @@ async function enviarPergunta(){
         let documentos = [];
 
         try {
-            const response = await fetch(`${url_host}/chat/enviar-pergunta/`, {
+            const response = await fetch(`${urlHost}/chat/enviar-pergunta/`, {
                 method: "POST",
                 body: JSON.stringify({
                     pergunta: pergunta,
@@ -229,7 +229,7 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
 
     const parent = elementoClicado.parentElement;
 
-    fetch(`${url_host}/chat/avaliar-interacao/`, {
+    fetch(`${urlHost}/chat/avaliar-interacao/`, {
         method: "POST",
         body: JSON.stringify({
             uuid_interacao: idInteracao,
