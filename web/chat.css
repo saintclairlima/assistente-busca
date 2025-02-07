@@ -173,7 +173,7 @@ hr{
 .documento-conteudo{
     
 }
-.area-aval{
+.botoes-aval{
   /* background: green; */
   display: flex;
   justify-content: flex-end;
@@ -188,6 +188,12 @@ hr{
 
 .icone-aval:hover .tooltip {
     display:block;
+}
+
+.comentario-aval {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 .tooltip {
     display: none;

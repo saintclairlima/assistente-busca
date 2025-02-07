@@ -24,7 +24,7 @@ function gerarFontesFormatadas(documentos){
 
 function gerarCampoAvaliacaoInteracao(idInteracao){
     htmlAval = `
-    <div class="area-aval">
+    <div class="botoes-aval">
         <span class="material-icons icone-aval positivo" onclick="avaliarInteracao(this, '${idInteracao}', 'positivo')">thumb_up<span class="tooltip">Resposta adequada</span></span>
         <span class="material-icons icone-aval negativo" onclick="avaliarInteracao(this, '${idInteracao}', 'negativo')">thumb_down<span class="tooltip">Resposta inadequada</span></span>
         <span class="material-icons icone-aval alerta" onclick="avaliarInteracao(this, '${idInteracao}', 'alerta')">warning<span class="tooltip">Erro grave</span></span>
@@ -33,7 +33,7 @@ function gerarCampoAvaliacaoInteracao(idInteracao){
     if (mostrarCampoComentario) {
         // AFAZER: Adicionar campo de comentário
         //htmlAval += 
-        `<div style="display: flex;align-items: center;gap: 8px;">
+        `<div class="comentario-aval">
             <input type="text">
             <span class="material-icons">comment</span>
         </div>`
@@ -236,7 +236,7 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
     // Se o elemento está clicado/avaliado, setar para null para remover avaliação
     if (elementoClicado.classList.contains('clicado')) avaliacao = null;
 
-    const parent = elementoClicado.parentElement;
+    const containerBotoesAval = elementoClicado.parentElement;
 
     fetch(`${urlHost}/chat/avaliar-interacao/`, {
         method: "POST",
@@ -274,7 +274,7 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
             }
     
             elementoClicado.classList.add('clicado');    
-            Array.from(parent.children).forEach(child => {
+            Array.from(containerBotoesAval.children).forEach(child => {
                 if (child !== elementoClicado) {
                     child.classList.remove('verde');
                     child.classList.remove('vermelho');
@@ -285,7 +285,7 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
             });
         } else if (elementoClicado.classList.contains('clicado') && sucessoAvaliacao){
             elementoClicado.classList.remove('clicado');
-            Array.from(parent.children).forEach(child => {
+            Array.from(containerBotoesAval.children).forEach(child => {
                 child.classList.remove('verde');
                 child.classList.remove('vermelho');
                 child.classList.remove('laranja');
