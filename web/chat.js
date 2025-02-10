@@ -110,7 +110,7 @@ async function enviarPergunta(){
         
         var divResposta = document.createElement("div");
         divResposta.className = "text-box";
-        divResposta.innerHTML = "<i>Processando pergunta</i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>";
+        divResposta.innerHTML = "<i>Pensando sobre a pergunta</i> <span class='dots'><span class='dot1'>.</span><span class='dot2'>.</span><span class='dot3'>.</span></span>";
         divResposta.classList.add("align-left");
         divResposta.classList.add("mensagem-recebida");
         document.getElementById("container-exibicao-mensagens").appendChild(divResposta);
