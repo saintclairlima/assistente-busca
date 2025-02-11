@@ -160,6 +160,8 @@ class ClienteOllama(ClienteLLM):
             "model": self.modelo,
             "messages": mensagens,
             "temperature": self.temperature,
+            "top_k": self.top_k,
+            "top_p": self.top_p,
             "stream": True,
             # "max_new_tokens": 4096 # AFAZER: Considerar remover este atributo
         }
