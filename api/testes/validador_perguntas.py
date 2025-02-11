@@ -7,7 +7,7 @@ from torch import cuda
 
 from sentence_transformers import SentenceTransformer
 
-from ..utils.utils import FuncaoEmbeddings
+from ..utils.interface_banco_vetores import FuncaoEmbeddings
 from ..configuracoes.config_gerais import configuracoes
 URL_LLM = 'http://localhost:11434/api/generate'
 MODELO_LLM='llama3.1'

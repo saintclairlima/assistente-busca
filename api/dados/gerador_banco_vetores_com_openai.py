@@ -4,7 +4,7 @@ import json
 import os
 import uuid
 from ..configuracoes.config_gerais import configuracoes
-from ..utils.utils import FuncaoEmbeddings
+from ..utils.interface_banco_vetores import FuncaoEmbeddings
 from torch import cuda
 import chromadb.utils.embedding_functions as embedding_functions
 from sentence_transformers import SentenceTransformer

@@ -10,7 +10,8 @@ from typing import Callable
 import wandb
 
 from api.configuracoes.config_gerais import configuracoes
-from api.utils.utils import InterfaceChroma, InterfaceOllama, DadosChat
+from api.utils.interface_llm import InterfaceOllama, DadosChat
+from api.utils.interface_banco_vetores import InterfaceChroma
 from api.utils.mensagem import MensagemControle, MensagemDados, MensagemErro, MensagemInfo
 from api.dados.persistencia import GerenciadorPersistenciaSQLite, GerenciadorPersistenciaSQL
     

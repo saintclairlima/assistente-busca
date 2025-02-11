@@ -6,7 +6,8 @@ from time import time
 from sentence_transformers import SentenceTransformer
 from chromadb import chromadb
 from ..configuracoes.config_gerais import configuracoes
-from ..utils.utils import FuncaoEmbeddings, InterfaceOllama
+from ..utils.interface_banco_vetores import FuncaoEmbeddings
+from ..utils.interface_llm import InterfaceOllama
 import asyncio
 import os
 from torch import cuda
