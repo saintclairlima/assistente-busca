@@ -5,7 +5,7 @@ import sys
 from sentence_transformers import SentenceTransformer
 from ..configuracoes.config_gerais import configuracoes
 from ..gerador_de_respostas import GeradorDeRespostas
-from ..utils.utils import FuncaoEmbeddings
+from ..utils.interface_banco_vetores import FuncaoEmbeddings
 from time import time
 import asyncio
 import os

@@ -6,7 +6,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from api.configuracoes.config_gerais import configuracoes
 from api.gerador_de_respostas import GeradorDeRespostas
-from api.utils.utils import FuncaoEmbeddings, DadosChat
+from api.utils.interface_banco_vetores import FuncaoEmbeddings
+from api.utils.interface_llm import DadosChat
 
 print('Instanciando a api (FastAPI)...')
 controller = FastAPI()
