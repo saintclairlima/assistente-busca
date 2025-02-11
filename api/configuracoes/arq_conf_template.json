@@ -21,8 +21,8 @@
     "cliente_llm": "ollama",
     "modelo_llm": "llama3.1",
     "temperature": 0,
-    "top_k": 0,
-    "top_p": 0,
+    "top_k": 40,
+    "top_p": 0.9,
 
     "usar_wandb": false,
     "wandb_equipe": null,
