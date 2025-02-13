@@ -36,7 +36,7 @@ interface_banco_vetorial = InterfaceChroma(
     funcao_de_embeddings=funcao_de_embeddings,
     fazer_log=fazer_log)
 
-reestimador_bert = ReclassificadorBert(device=configuracoes.device, fazer_log=fazer_log)
+reclassificador_bert = ReclassificadorBert(device=configuracoes.device, fazer_log=fazer_log)
 
 if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
 interface_llm = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
@@ -46,7 +46,13 @@ if fazer_log: print(f'--- configurando persistência de dados de interação (us
 if tipo_persistencia == 'sqlite': gerenciador_persistencia = GerenciadorPersistenciaSQLite()
 elif tipo_persistencia == 'mssql': gerenciador_persistencia = GerenciadorPersistenciaSQL()
 
-gerador_de_respostas = GeradorDeRespostas(interface_banco_vetorial=interface_banco_vetorial, reclassificador=reestimador_bert, interface_llm=interface_llm, gerenciador_persistencia=gerenciador_persistencia, device=configuracoes.device, fazer_log=fazer_log)
+gerador_de_respostas = GeradorDeRespostas(
+    interface_banco_vetorial=interface_banco_vetorial,
+    reclassificador=reclassificador_bert,
+    interface_llm=interface_llm,
+    gerenciador_persistencia=gerenciador_persistencia,
+    device=configuracoes.device,
+    fazer_log=fazer_log)
 
 print('Definindo as rotas')
 
