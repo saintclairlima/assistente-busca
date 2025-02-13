@@ -1,11 +1,15 @@
-## print('Para simplicidade, mover o arquivo para a pasta principal para executar')
+## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
 print('Importando bibliotecas...')
 import json
 import sys
 from sentence_transformers import SentenceTransformer
-from ..configuracoes.config_gerais import configuracoes
-from ..gerador_de_respostas import GeradorDeRespostas
-from ..utils.interface_banco_vetores import FuncaoEmbeddings
+
+from api.dados.persistencia import GerenciadorPersistenciaSQL, GerenciadorPersistenciaSQLite
+from api.utils.interface_llm import InterfaceOllama
+from api.utils.reclassificador import ReclassificadorBert
+from api.configuracoes.config_gerais import configuracoes
+from api.gerador_de_respostas import GeradorDeRespostas
+from api.utils.interface_banco_vetores import FuncaoEmbeddings, InterfaceChroma
 from time import time
 import asyncio
 import os
@@ -27,7 +31,37 @@ async def avaliar_recuperacao_documentos(
     if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada.split('.')[0] + '_recup_docs.json'
     url_banco_vetores = os.path.join(URL_LOCAL, f"../dados/bancos_vetores/{nome_banco_vetores}")
     print(f'Criando GeradorDeRespostas (usando {EMBEDDING_INSTRUCTOR} e instrução "{instrucao}")...')
-    funcao_de_embeddings = FuncaoEmbeddings(nome_modelo=EMBEDDING_INSTRUCTOR, tipo_modelo=SentenceTransformer, device=DEVICE, instrucao=instrucao)
+
+    funcao_de_embeddings = FuncaoEmbeddings(
+        nome_modelo=EMBEDDING_INSTRUCTOR,
+        tipo_modelo=SentenceTransformer,
+        device=DEVICE,
+        instrucao=instrucao)
+
+    interface_banco_vetorial = InterfaceChroma(
+        url_banco_vetores=url_banco_vetores,
+        colecao_de_documentos=nome_colecao,
+        funcao_de_embeddings=funcao_de_embeddings,
+        fazer_log=fazer_log)
+
+    reestimador_bert = ReclassificadorBert(device=DEVICE, fazer_log=fazer_log)
+
+    if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
+    interface_llm = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
+
+    tipo_persistencia = configuracoes.configuracoes_ambiente()['tipo_persistencia']
+    if fazer_log: print(f'--- configurando persistência de dados de interação (usando {tipo_persistencia})...')
+    if tipo_persistencia == 'sqlite': gerenciador_persistencia = GerenciadorPersistenciaSQLite()
+    elif tipo_persistencia == 'mssql': gerenciador_persistencia = GerenciadorPersistenciaSQL()
+
+    gerador_de_respostas = GeradorDeRespostas(
+        interface_banco_vetorial=interface_banco_vetorial,
+        reclassificador=reestimador_bert,
+        interface_llm=interface_llm,
+        gerenciador_persistencia=gerenciador_persistencia,
+        device=configuracoes.device,
+        fazer_log=fazer_log)
+    
     gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddings, url_banco_vetores=url_banco_vetores, colecao_de_documentos=nome_colecao, device=DEVICE)
 
     with open(url_arquivo_entrada, 'r') as arq:

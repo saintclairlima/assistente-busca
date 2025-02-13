@@ -1,3 +1,4 @@
+## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
 import json
 import sys
 from openai import OpenAI

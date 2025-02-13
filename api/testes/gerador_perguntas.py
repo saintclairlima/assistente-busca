@@ -1,3 +1,4 @@
+## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
 import os
 import chromadb
 import requests

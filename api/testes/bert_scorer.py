@@ -1,3 +1,4 @@
+## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
 print('Fazendo imports...')
 import argparse
 import json

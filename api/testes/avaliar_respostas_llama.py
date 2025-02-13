@@ -1,4 +1,4 @@
-## print('Para simplicidade, mover o arquivo para a pasta principal para executar')
+## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
 print('Importando bibliotecas')
 import argparse
 import json
