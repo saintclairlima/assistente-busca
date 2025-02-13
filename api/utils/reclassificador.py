@@ -12,7 +12,7 @@ class Reclassificador:
         self.modelo = modelo
         self.tokenizador = tokenizador
     
-    def estimar_resposta(self, pergunta, texto_documento: str):
+    def reclassificar_documentos(self, pergunta, texto_documento: str):
         raise NotImplementedError('Método estimar_resposta() não foi implantado para esta classe') 
 
 class ReclassificadorBert(Reclassificador):
@@ -24,7 +24,7 @@ class ReclassificadorBert(Reclassificador):
         self.modelo_bert_qa = BertForQuestionAnswering.from_pretrained(configuracoes.embedding_squad_portuguese, cache_dir=configuracoes.url_cache_modelos).to(self.device)
         self.tokenizador_bert = BertTokenizer.from_pretrained(configuracoes.embedding_squad_portuguese, device=self.device, cache_dir=configuracoes.url_cache_modelos)
     
-    def estimar_resposta(self, pergunta, texto_documento: str):
+    def reclassificar_documentos(self, pergunta, texto_documento: str):
         inputs = self.tokenizador_bert.encode_plus(
             pergunta,
             texto_documento,

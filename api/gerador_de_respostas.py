@@ -67,10 +67,10 @@ class GeradorDeRespostas:
             } for idx in range(len(documentos['ids'][0]))
         ]
 
-    async def estimar_resposta(self, pergunta, texto_documento: str):
-        return self.reestimador.estimar_resposta(pergunta=pergunta, texto_documento=texto_documento)
+    async def reclassificar_documentos(self, pergunta, texto_documento: str):
+        return self.reestimador.reclassificar_documentos(pergunta=pergunta, texto_documento=texto_documento)
 
-    async def consultar(self, dados_chat: DadosChat):
+    async def gerar_resposta(self, dados_chat: DadosChat):
         historico = dados_chat.historico
         pergunta = dados_chat.pergunta
         
@@ -94,7 +94,7 @@ class GeradorDeRespostas:
         marcador_tempo_inicio = time()
         try:
             documentos = await self.consultar_documentos_banco_vetores(pergunta)
-            lista_documentos = self.formatar_lista_documentos(documentos)
+            lista_documentos_formatados = self.formatar_lista_documentos(documentos)
         except Exception as excecao:
             print(excecao.__traceback__)
             yield MensagemErro(
@@ -115,9 +115,9 @@ class GeradorDeRespostas:
         ).json() + '\n'
 
         marcador_tempo_inicio = time()
-        for documento in lista_documentos:
+        for documento in lista_documentos_formatados:
             try:
-                resposta_estimada = await self.estimar_resposta(pergunta, documento['conteudo'])
+                resposta_estimada = await self.reclassificar_documentos(pergunta, documento['conteudo'])
                 documento['score_bert'] = resposta_estimada['score']
                 documento['score_ponderado'] = resposta_estimada['score_ponderado']
                 documento['resposta_bert'] = resposta_estimada['resposta']
@@ -131,7 +131,7 @@ class GeradorDeRespostas:
                 ).json() + '\n'
 
         # reordenando lista com base no score atribuído pelo Bert
-        lista_documentos = sorted(lista_documentos, key=lambda x: x['score_bert'][0], reverse=True)
+        lista_documentos_formatados = sorted(lista_documentos_formatados, key=lambda x: x['score_bert'][0], reverse=True)
         marcador_tempo_fim = time()
         tempo_estimativa_bert = marcador_tempo_fim - marcador_tempo_inicio
         if self.fazer_log: print(f'--- scores atribuídos ({tempo_estimativa_bert} segundos)')
@@ -140,7 +140,7 @@ class GeradorDeRespostas:
             descricao='Lista de Documentos Recuperados',
             dados={
                 'tag': 'lista-docs-recuperados',
-                'conteudo': lista_documentos
+                'conteudo': lista_documentos_formatados
             }
             ).json() + '\n'
         
@@ -191,7 +191,7 @@ class GeradorDeRespostas:
             'pergunta': pergunta,
             'tipo_dispositivo_aplicacao': configuracoes.device,
             'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
-            'documentos': lista_documentos,
+            'documentos': lista_documentos_formatados,
             'tempo_recuperacao_documentos': tempo_recuperacao_documentos,
             'tempo_estimativa_bert': tempo_estimativa_bert,
             'template_system_llm': configuracoes.template_mensagem_system,
@@ -217,7 +217,7 @@ class GeradorDeRespostas:
             ).json()
         
         if self.tabela_log_requisicao:
-            self.tabela_log_requisicao.add_data(pergunta, texto_resposta_llm, lista_documentos, tempo_recuperacao_documentos, tempo_estimativa_bert, resposta_completa_llm, tempo_inicio_stream_resposta, tempo_cliente_llm)
+            self.tabela_log_requisicao.add_data(pergunta, texto_resposta_llm, lista_documentos_formatados, tempo_recuperacao_documentos, tempo_estimativa_bert, resposta_completa_llm, tempo_inicio_stream_resposta, tempo_cliente_llm)
             self.wandb_run.log({"Tabela_Requisicao": self.tabela_log_requisicao})
 
         yield msg

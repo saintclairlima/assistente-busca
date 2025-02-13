@@ -68,7 +68,7 @@ async def pagina_chat(url_redirec: str = Query(None)):
 
 @controller.post('/chat/enviar-pergunta/')
 async def gerar_resposta(dadosRecebidos: DadosChat):
-    return StreamingResponse(gerador_de_respostas.consultar(dadosRecebidos), media_type='text/plain')
+    return StreamingResponse(gerador_de_respostas.gerar_resposta(dadosRecebidos), media_type='text/plain')
 
 @controller.post('/chat/avaliar-interacao/')
 async def gerar_resposta(dadosRecebidos: dict):

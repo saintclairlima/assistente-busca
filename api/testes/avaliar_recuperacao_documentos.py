@@ -61,7 +61,7 @@ async def avaliar_recuperacao_documentos(
         if fazer_log: print(f'--- aplicando scores do Bert aos documentos recuperados...')
         marcador_tempo_inicio = time()
         for documento in lista_documentos:
-            resposta_estimada = await gerador_de_respostas.estimar_resposta(pergunta['pergunta'], documento['conteudo'])
+            resposta_estimada = await gerador_de_respostas.reclassificar_documentos(pergunta['pergunta'], documento['conteudo'])
             documento['score_bert'] = resposta_estimada['score']
             documento['score_ponderado'] = resposta_estimada['score_ponderado']
             documento['resposta_bert'] = resposta_estimada['resposta']
