@@ -57,11 +57,19 @@ class FuncaoEmbeddings(EmbeddingFunction):
             embeddings = self.modelo.encode(input, convert_to_numpy=True, device=self.device)
         return embeddings.tolist()
     
+class InterfaceBancoVetorial:
+    # Base class for interfacing with vector stores
+    '''
+    Classe base a ser utilizada em interações vector stores/bancos vetoriais
+    '''
 
-class InterfaceChroma:
+    def consultar_documentos(self, termos_de_consulta: str, num_resultados=configuracoes.num_documentos_retornados) -> chromadb.QueryResult:
+        raise NotImplementedError('Método consultar_documentos() não foi implantado para esta classe') 
+
+class InterfaceChroma(InterfaceBancoVetorial):
     # Interface for interacting with a ChromaDB-based vector database
     '''
-    Interface para interação com o banco vetorial baseado no ChromaDB
+    Especialização de InterfaceBancoVetorial, voltada para interação com o banco vetorial baseado no ChromaDB
 
     Atributos:
         banco_de_vetores (chromadb.PersistentClient): Cliente ChromaDB com persistência

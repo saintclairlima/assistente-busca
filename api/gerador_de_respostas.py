@@ -1,19 +1,15 @@
 import json
-import torch
 from torch import cuda
-
 from concurrent.futures import ThreadPoolExecutor
 from time import time
-from transformers import BertTokenizer, BertForQuestionAnswering
-from typing import Callable
-
 import wandb
 
 from api.configuracoes.config_gerais import configuracoes
-from api.utils.interface_llm import InterfaceOllama, DadosChat
-from api.utils.interface_banco_vetores import InterfaceChroma
+from api.dados.persistencia import GerenciadorPersistencia
+from api.utils.interface_llm import InterfaceLLM, DadosChat
+from api.utils.interface_banco_vetores import InterfaceBancoVetorial
+from api.utils.reclassificador import Reclassificador
 from api.utils.mensagem import MensagemControle, MensagemDados, MensagemErro, MensagemInfo
-from api.dados.persistencia import GerenciadorPersistenciaSQLite, GerenciadorPersistenciaSQL
     
 
 class GeradorDeRespostas:
@@ -22,11 +18,12 @@ class GeradorDeRespostas:
     gera uma texto de resposta que condensa as informações resultantes da consulta.
     '''
     def __init__(self,
-                url_banco_vetores:str=configuracoes.url_banco_vetores,
-                colecao_de_documentos:str=configuracoes.nome_colecao_de_documentos,
-                funcao_de_embeddings:Callable=None,
-                fazer_log:bool=True,
-                device: str=None):
+                 interface_banco_vetorial: InterfaceBancoVetorial,
+                 interface_llm: InterfaceLLM,
+                 reclassificador: Reclassificador,
+                 gerenciador_persistencia:GerenciadorPersistencia,
+                 fazer_log:bool=True,
+                 device: str=None):
         
         if configuracoes.usar_wandb:
             self.wandb_run = wandb.init(
@@ -38,37 +35,27 @@ class GeradorDeRespostas:
             self.tabela_log_requisicao = wandb.Table(columns=['pergunta', 'resposta', 'documentos','tempo_consulta', 'tempo_bert', 'resposta_completa_llm','tempo_inicio_resposta', 'tempo_ollama_total'])
         else:
             self.tabela_log_requisicao = None
-
+        self.fazer_log = fazer_log
         self.device = device
         self.executor = ThreadPoolExecutor(max_workers=configuracoes.threadpool_max_workers)
+
+        self.interface_banco_vetorial = interface_banco_vetorial
+
+        self.reestimador = reclassificador
         
-        if fazer_log: print(f'-- Gerador de respostas em inicialização (device={self.device})...')
-
-        self.interface_chromadb = InterfaceChroma(url_banco_vetores, colecao_de_documentos, funcao_de_embeddings, fazer_log)
-
-        # Carregando modelo e tokenizador pre-treinados
-        # optou-se por não usar pipeline, por ser mais lento que usar o modelo diretamente
-        if fazer_log: print(f'--- preparando modelo e tokenizador do Bert (usando {configuracoes.embedding_squad_portuguese})...')
-        self.modelo_bert_qa = BertForQuestionAnswering.from_pretrained(configuracoes.embedding_squad_portuguese, cache_dir=configuracoes.url_cache_modelos).to(self.device)
-        self.tokenizador_bert = BertTokenizer.from_pretrained(configuracoes.embedding_squad_portuguese, device=self.device, cache_dir=configuracoes.url_cache_modelos)
-
-        if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
-        self.interface_ollama = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
-
-        tipo_persistencia = configuracoes.configuracoes_ambiente()['tipo_persistencia']
-        if fazer_log: print(f'--- configurando persistência de dados de interação (usando {tipo_persistencia})...')
-        if tipo_persistencia == 'sqlite': self.gerenciador_persistencia = GerenciadorPersistenciaSQLite()
-        elif tipo_persistencia == 'mssql': self.gerenciador_persistencia = GerenciadorPersistenciaSQL()
+        self.interface_llm = interface_llm
+        
+        self.gerenciador_persistencia = gerenciador_persistencia
         
     def health(self):
-        status_code_llm = self.interface_ollama.health()
+        status_code_llm = self.interface_llm.health()
         return json.dumps({
             'status_api': 'Ativo',
             'status_cliente_llm': 'Ativo' if status_code_llm == 200 else 'Inativo'
         })
 
     async def consultar_documentos_banco_vetores(self, pergunta: str, num_resultados:int=configuracoes.num_documentos_retornados):
-        return self.interface_chromadb.consultar_documentos(pergunta, num_resultados)
+        return self.interface_banco_vetorial.consultar_documentos(pergunta, num_resultados)
     
     def formatar_lista_documentos(self, documentos: dict):
         return [
@@ -81,67 +68,9 @@ class GeradorDeRespostas:
         ]
 
     async def estimar_resposta(self, pergunta, texto_documento: str):
-        inputs = self.tokenizador_bert.encode_plus(
-            pergunta,
-            texto_documento,
-            return_tensors="pt",
-            truncation=True,
-            max_length=512
-        )
+        return self.reestimador.estimar_resposta(pergunta=pergunta, texto_documento=texto_documento)
 
-        inputs = {key: value.to(self.device) for key, value in inputs.items()}
-        
-        with torch.no_grad():
-            outputs = self.modelo_bert_qa(**inputs)
-
-        # AFAZER: Avaliar se score ponderado faz sentido
-        # Extraindo os logits como tensores
-        logits_inicio = outputs.start_logits
-        logits_fim = outputs.end_logits
-
-        # Obtenção dos logits positivos
-        logits_inicio_positivos = logits_inicio[0][logits_inicio[0] > 0]
-        logits_fim_positivos = logits_fim[0][logits_fim[0] > 0]
-
-        # Média dos logits positivos
-        media_logits_inicio_positivos = logits_inicio_positivos.mean().item() if logits_inicio_positivos.numel() > 0 else 0
-        media_logits_fim_positivos = logits_fim_positivos.mean().item() if logits_fim_positivos.numel() > 0 else 0
-
-        # Obtendo os índices e valores dos melhores logits
-        indice_melhor_logit_inicio = logits_inicio[0].argmax().item()
-        melhor_logit_inicio = logits_inicio[0][indice_melhor_logit_inicio].item()
-
-        indice_melhor_logit_fim = logits_fim[0].argmax().item()
-        melhor_logit_fim = logits_fim[0][indice_melhor_logit_fim].item()
-
-        # Calcula media_logits_positivos
-        media_logits_positivos = (media_logits_inicio_positivos + media_logits_fim_positivos) / 2
-
-        # scores em formato float para serialização com JSON
-        score_soma_logits = float(melhor_logit_inicio + melhor_logit_fim)
-        score_ponderado = float(score_soma_logits * media_logits_positivos)
-
-        # calculando score estimado
-        start_logits_softmax = torch.softmax(logits_inicio, dim=-1)
-        end_logits_softmax = torch.softmax(logits_fim, dim=-1)
-        score_estimado = float(torch.max(start_logits_softmax).item() * torch.max(end_logits_softmax).item())
-
-        # score: soma do melhor Logit inicial com o melhor logit final
-        # score_estimado: multiplicação do softmax dos logits de inicio pelo dos logits de fim
-        # -- (manter somente se a performance do score do Bert pelo pipeline ficar lenta)
-        # score_ponderado: score ponderado pela média dos logits de inicio e fim, só quando positivos 
-        # -- (quanto mais logits positivos, mais o documento tem melhor avaliação)
-
-        tokens_resposta = inputs['input_ids'][0][indice_melhor_logit_inicio:indice_melhor_logit_fim + 1]
-        resposta = self.tokenizador_bert.decode(tokens_resposta, skip_special_tokens=True)
-        
-        return {
-            'resposta': resposta,
-            'score': (score_estimado, score_soma_logits),
-            'score_ponderado': score_ponderado
-        }
-
-    async def consultar(self, dados_chat: DadosChat, fazer_log:bool=True):
+    async def consultar(self, dados_chat: DadosChat):
         historico = dados_chat.historico
         pergunta = dados_chat.pergunta
         
@@ -155,7 +84,7 @@ class GeradorDeRespostas:
             print('CONCLUÍDO POR ERRO: pergunta com mais de 300 palavras.')
             return
 
-        if fazer_log: print(f'Gerador de respostas: realizando consulta para "{pergunta}"...')
+        if self.fazer_log: print(f'Gerador de respostas: realizando consulta para "{pergunta}"...')
         yield MensagemControle(
             descricao='Informação de Status',
             dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['consulta']}
@@ -176,10 +105,10 @@ class GeradorDeRespostas:
             
         marcador_tempo_fim = time()
         tempo_recuperacao_documentos = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- consulta no banco concluída ({tempo_recuperacao_documentos} segundos)')
+        if self.fazer_log: print(f'--- consulta no banco concluída ({tempo_recuperacao_documentos} segundos)')
 
         # Fazendo re-ranking dos documentos utilizando Bert
-        if fazer_log: print(f'--- aplicando re-ranking nos documentos utilizando Bert...')
+        if self.fazer_log: print(f'--- aplicando re-ranking nos documentos utilizando Bert...')
         yield MensagemControle(
             descricao='Informação de Status',
             dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['reranking']}
@@ -205,7 +134,7 @@ class GeradorDeRespostas:
         lista_documentos = sorted(lista_documentos, key=lambda x: x['score_bert'][0], reverse=True)
         marcador_tempo_fim = time()
         tempo_estimativa_bert = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- scores atribuídos ({tempo_estimativa_bert} segundos)')
+        if self.fazer_log: print(f'--- scores atribuídos ({tempo_estimativa_bert} segundos)')
         
         yield MensagemDados(
             descricao='Lista de Documentos Recuperados',
@@ -216,7 +145,7 @@ class GeradorDeRespostas:
             ).json() + '\n'
         
         # Gerando resposta utilizando o Ollama
-        if fazer_log: print(f'--- gerando resposta com o cliente LLM')
+        if self.fazer_log: print(f'--- gerando resposta com o cliente LLM')
         yield MensagemControle(
             descricao='Informação de Status',
             dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['geracao_resposta']}
@@ -226,7 +155,7 @@ class GeradorDeRespostas:
             marcador_tempo_inicio = time()
             texto_resposta_llm = ''
             flag_tempo_resposta = False
-            async for item in self.interface_ollama.gerar_resposta_llm(
+            async for item in self.interface_llm.gerar_resposta_llm(
                         pergunta=pergunta,
                         # Inclui o título dos documentos no prompt do LLM
                         documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])],
@@ -243,13 +172,13 @@ class GeradorDeRespostas:
                 if not flag_tempo_resposta:
                     flag_tempo_resposta = True
                     tempo_inicio_stream_resposta = time() - marcador_tempo_inicio
-                    if fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_stream_resposta} segundos)')
+                    if self.fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_stream_resposta} segundos)')
 
             resposta_completa_llm = item
             resposta_completa_llm['message']['content'] = texto_resposta_llm
             marcador_tempo_fim = time()
             tempo_cliente_llm = marcador_tempo_fim - marcador_tempo_inicio
-            if fazer_log: print(f'--- resposta do Ollama concluída ({tempo_cliente_llm} segundos)')
+            if self.fazer_log: print(f'--- resposta do Ollama concluída ({tempo_cliente_llm} segundos)')
         except Exception as excecao:
             yield MensagemErro(
                 descricao=f'Falha na Geração da Resposta (Ollama offline ou {configuracoes.modelo_llm} não disponível. {excecao.__class__.__name__})',
@@ -292,7 +221,7 @@ class GeradorDeRespostas:
             self.wandb_run.log({"Tabela_Requisicao": self.tabela_log_requisicao})
 
         yield msg
-        print('Concluído')
+        if self.fazer_log: print('Concluído')
 
     async def avaliar_interacao(self, dados_avaliacao: dict):
         try:

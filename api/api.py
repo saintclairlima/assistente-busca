@@ -6,8 +6,10 @@ from starlette.middleware.cors import CORSMiddleware
 
 from api.configuracoes.config_gerais import configuracoes
 from api.gerador_de_respostas import GeradorDeRespostas
-from api.utils.interface_banco_vetores import FuncaoEmbeddings
-from api.utils.interface_llm import DadosChat
+from api.utils.interface_banco_vetores import FuncaoEmbeddings, InterfaceChroma
+from api.utils.interface_llm import DadosChat, InterfaceOllama
+from api.dados.persistencia import GerenciadorPersistenciaSQL, GerenciadorPersistenciaSQLite
+from api.utils.reclassificador import ReclassificadorBert
 
 print('Instanciando a api (FastAPI)...')
 controller = FastAPI()
@@ -19,9 +21,32 @@ controller.add_middleware(
     allow_headers=['*'],  # Allow all headers
 )
 
+fazer_log = True
+
 print(f'Criando GeradorDeRespostas (usando {configuracoes.modelo_funcao_de_embeddings} - device={configuracoes.device})...')
-funcao_de_embeddings = FuncaoEmbeddings(nome_modelo=configuracoes.modelo_funcao_de_embeddings, tipo_modelo=SentenceTransformer, device=configuracoes.device)
-gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddings, url_banco_vetores=configuracoes.url_banco_vetores, device=configuracoes.device)
+print(f'--- criando a função de embeddings do ChromaDB com {configuracoes.modelo_funcao_de_embeddings} (device={configuracoes.device})...')
+funcao_de_embeddings = FuncaoEmbeddings(
+    nome_modelo=configuracoes.modelo_funcao_de_embeddings,
+    tipo_modelo=SentenceTransformer,
+    device=configuracoes.device)
+
+interface_banco_vetorial = InterfaceChroma(
+    url_banco_vetores=configuracoes.url_banco_vetores,
+    colecao_de_documentos=configuracoes.nome_colecao_de_documentos,
+    funcao_de_embeddings=funcao_de_embeddings,
+    fazer_log=fazer_log)
+
+reestimador_bert = ReclassificadorBert(device=configuracoes.device, fazer_log=fazer_log)
+
+if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
+interface_llm = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
+
+tipo_persistencia = configuracoes.configuracoes_ambiente()['tipo_persistencia']
+if fazer_log: print(f'--- configurando persistência de dados de interação (usando {tipo_persistencia})...')
+if tipo_persistencia == 'sqlite': gerenciador_persistencia = GerenciadorPersistenciaSQLite()
+elif tipo_persistencia == 'mssql': gerenciador_persistencia = GerenciadorPersistenciaSQL()
+
+gerador_de_respostas = GeradorDeRespostas(interface_banco_vetorial=interface_banco_vetorial, reclassificador=reestimador_bert, interface_llm=interface_llm, gerenciador_persistencia=gerenciador_persistencia, device=configuracoes.device, fazer_log=fazer_log)
 
 print('Definindo as rotas')
 

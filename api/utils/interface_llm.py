@@ -245,11 +245,11 @@ class InterfaceOllama(InterfaceLLM):
         gerar_resposta_llm: invoca o cliente LLM para fazer a requisição à API do LLM por uma resposta
     '''
 
-    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=configuracoes.temperature):
+    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=configuracoes.temperature, top_k: float=configuracoes.top_k, top_p: float=configuracoes.top_p):
         '''Inicializa interface, criando o ClienteLLM'''
 
         super().__init__()
-        self.cliente_ollama = ClienteOllama(url_llm=url_ollama, nome_modelo=nome_modelo, temperature=temperature)
+        self.cliente_ollama = ClienteOllama(url_llm=url_ollama, nome_modelo=nome_modelo, temperature=temperature, top_k=top_k, top_p=top_p)
         
     def health(self) -> int:
         '''Teste simples de verificação se a API está ativa'''
