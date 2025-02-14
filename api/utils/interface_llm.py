@@ -181,27 +181,12 @@ class InterfaceLLM:
         gerar_resposta_llm: invoca o cliente LLM para fazer a requisição à API do LLM por uma resposta
     '''
     
-    def __init__(self):
+    def __init__(self, definicoes_sistema: str=configuracoes.template_mensagem_system):
         '''Inicializa interface LLM utilizando configurações definidas no arquivo de configurações'''
-        self.definicoes_sistema = configuracoes.template_mensagem_system
+        self.definicoes_sistema = definicoes_sistema
         
     def health(self) -> int:
         raise NotImplementedError('Método health() não foi implantado para esta classe')
-
-    def formatar_prompt_usuario(self, pergunta: str, documentos: List[str]) -> str:
-        # Creates formatted user prompt to be sent to the LLM API
-        '''
-        Gera prompt de usuário formatado para envio à API do LLM
-
-        Parâmetros:
-            pergunta (str): pergunta feita pelo usuário
-            documentos (List[str]): lista de textos a serem utilizados como contexto para geração da resposta
-
-        Retorna:
-            (str) Prompt formatado conforme template contido no arquivo de configurações
-        '''
-
-        return configuracoes.template_prompt_usuario.format('\n'.join(documentos), pergunta)
 
     def formatar_mensagens_chat(self, prompt_usuario: str, historico: List[Tuple[str, str]]) -> List[Dict[str, str]]:
         # Formats chat messages with system instructions and history
@@ -245,30 +230,36 @@ class InterfaceOllama(InterfaceLLM):
         gerar_resposta_llm: invoca o cliente LLM para fazer a requisição à API do LLM por uma resposta
     '''
 
-    def __init__(self, nome_modelo: str, url_ollama: str, temperature: float=configuracoes.temperature, top_k: float=configuracoes.top_k, top_p: float=configuracoes.top_p):
+    def __init__(self,
+                 nome_modelo: str,
+                 url_ollama: str,
+                 definicoes_sistema: str=configuracoes.template_mensagem_system,
+                 temperature: float=configuracoes.temperature,
+                 top_k: float=configuracoes.top_k,
+                 top_p: float=configuracoes.top_p):
+        
         '''Inicializa interface, criando o ClienteLLM'''
 
-        super().__init__()
+        super().__init__(definicoes_sistema=definicoes_sistema)
         self.cliente_ollama = ClienteOllama(url_llm=url_ollama, nome_modelo=nome_modelo, temperature=temperature, top_k=top_k, top_p=top_p)
         
     def health(self) -> int:
         '''Teste simples de verificação se a API está ativa'''
         return self.cliente_ollama.health()
         
-    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico: List[Tuple[str, str]]):
+    async def gerar_resposta_llm(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
         '''
         Invoca o ClienteLLM para realizar requisição à API do LLM e retorna resposta em formato de 'stream'
 
         Parâmetros:
-            pergunta (str): pergunta do usuário
-            documentos (List[str]): Lista de documentos a ser utilizada como contexto pelo LLM para responder a pergunta
+            prompt_usuario (str): prompt do usuário
             historico (List[Tuple[str, str]]): lista de tuplas representando as interações anteriores. Cada tupla contém o papel e o conteúdo da mensagem
 
         Retorna:
             Uma série de str serializáveis em formato JSON com as respostas da API
         '''
 
-        prompt_usuario = self.formatar_prompt_usuario(pergunta, documentos)
+        # AFAZER Ajeitar esse método aqui
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
         async for fragmento_resposta in self.cliente_ollama.stream(mensagens=mensagens):
             yield fragmento_resposta

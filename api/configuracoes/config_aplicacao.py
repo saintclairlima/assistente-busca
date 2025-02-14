@@ -47,7 +47,7 @@ class ConfiguracoesAplicacao:
         self.papel_llm = mensagens['papel_llm']
         self.diretrizes_llm = mensagens['diretrizes_llm']
         self.template_mensagem_system = f'''PAPEL: {self.papel_llm} DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes_llm}'''
-        self.template_prompt_usuario = 'DOCUMENTOS:\n{}\nPERGUNTA: {}'
+        self.template_prompt_rag = 'DOCUMENTOS:\n{}\nPERGUNTA: {}'
 
         self.mensagens_retorno = mensagens['mensagens_retorno']
 
@@ -70,5 +70,5 @@ class ConfiguracoesAplicacao:
             'top_k': self.top_k,
             'top_p': self.top_p,
             'template_mensagem_system': self.template_mensagem_system,
-            'template_prompt_usuario': self.template_prompt_usuario
+            'template_prompt_usuario': self.template_prompt_rag
         }

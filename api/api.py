@@ -1,5 +1,5 @@
 print('Inicializando a estrutura da API...\nImportando as bibliotecas...')
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, Query
 from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
 from sentence_transformers import SentenceTransformer
 from starlette.middleware.cors import CORSMiddleware
