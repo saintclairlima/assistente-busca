@@ -74,6 +74,7 @@ class GeradorDeRespostas:
     async def gerar_resposta(self, dados_chat: DadosChat):
         historico = dados_chat.historico
         pergunta = dados_chat.pergunta
+        id_sessao = dados_chat.id_sessao
         
         if len(pergunta.split(' ')) > 300:
             #AFAZER: decidir se mantém essa limitação. Colocada a princípio para evitar
@@ -201,7 +202,8 @@ class GeradorDeRespostas:
             'tempo_inicio_stream_resposta': tempo_inicio_stream_resposta,
             'tempo_total_llm': tempo_cliente_llm,
             'resposta': texto_resposta_llm,
-            'resposta_completa_llm': resposta_completa_llm
+            'resposta_completa_llm': resposta_completa_llm,
+            'id_sessao': id_sessao
         }
         
         # id no índice 0 é o da interação persistida

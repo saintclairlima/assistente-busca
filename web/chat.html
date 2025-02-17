@@ -18,9 +18,21 @@
     <script src="/web/markdown.js"></script>
     <script src="/web/chat.js"></script>
     <script>
+        function obterIdSessao() {
+            let cookies = document.cookie.split(";")
+                .map(cookie => cookie.split("="))
+                .reduce(function (obj, cookie) {
+                    obj[decodeURIComponent(cookie[0].trim())]= decodeURIComponent(cookie[1].trim());
+                    return obj;
+                }, {});
+            
+            return cookies["idSessao"];
+        }
+
         var historico = [];
         var urlHost = "TAG_INSERCAO_URL_HOST";
         var mostrarCampoComentario = TAG_INSERCAO_MOSTRAR_CAMPO_COMENTARIO; // true ou false
+        var idSessao = obterIdSessao();
     </script>
     <link rel="stylesheet" href="/web/chat.css">
 </head>

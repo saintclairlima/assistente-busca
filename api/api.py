@@ -68,16 +68,14 @@ async def pagina_chat(request: Request, url_redirec: str = Query(None)):
     if url_redirec:
         configuracoes.tags_substituicao_html['TAG_INSERCAO_URL_HOST'] = url_redirec
     
-    id_sessao = str(uuid.uuid4())
-    configuracoes.tags_substituicao_html['TAG_INSERCAO_ID_SESSAO'] = id_sessao
-        
     # substituindo as tags dentro do HTML, para maior controle
     for tag, valor in configuracoes.tags_substituicao_html.items():
         conteudo_html = conteudo_html.replace(tag, valor)
     
     response = HTMLResponse(content=conteudo_html, status_code=200)
-    id_sessao = request.cookies.get("idSessao")
-    if not id_sessao: response.set_cookie(key="idSessao", value=id_sessao)
+    if not request.cookies.get("idSessao"):
+        response.set_cookie(key="idSessao", value=str(uuid.uuid4()))
+    
     return response
 
 @controller.post('/chat/enviar-pergunta/')

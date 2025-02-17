@@ -339,8 +339,8 @@ class GerenciadorPersistencia:
                                   '(UUID_Interacao, Pergunta, Tipo_Dispositivo_Aplicacao, Tipo_Dispositivo_LLM, Tempo_Recuperacao_Documentos, ' + \
                                   'Tempo_Estimativa_Bert, LLM_Template_System, LLM_Historico, LLM_Cliente, LLM_Nome_Modelo, ' + \
                                   'LLM_Tempo_Carregamento, LLM_Num_Tokens_Prompt, LLM_Tempo_Processamento_Prompt, LLM_Num_Tokens_Resposta, ' + \
-                                  'LLM_Tempo_Processamento_Resposta, LLM_Tempo_Inicio_Stream, LLM_Tempo_Total, LLM_Resposta, LLM_Tipo_Conclusao, JSON_Interacao) ' + \
-                                  'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);'
+                                  'LLM_Tempo_Processamento_Resposta, LLM_Tempo_Inicio_Stream, LLM_Tempo_Total, LLM_Resposta, LLM_Tipo_Conclusao, JSON_Interacao, UUID_Sessao) ' + \
+                                  'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);'
 
         dados_interacao['uuid_interacao'] = str(uuid.uuid4())
         dados_inserir_interacao=(
@@ -363,7 +363,8 @@ class GerenciadorPersistencia:
             dados_interacao['tempo_total_llm'],
             dados_interacao['resposta'],
             dados_interacao['resposta_completa_llm']['done_reason'],                           # tipo_conclusao_llm
-            json.dumps(dados_interacao, ensure_ascii=False)                                    # conteúdo completo da interação em json-string
+            json.dumps(dados_interacao, ensure_ascii=False),                                   # conteúdo completo da interação em json-string
+            dados_interacao['id_sessao']                                                       # identificador da sessão de que a intereção faz parte
         )
 
         multiplas_queries.append(query_inserir_interacao)

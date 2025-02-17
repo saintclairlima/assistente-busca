@@ -43,6 +43,7 @@ CREATE TABLE Interacao (
     LLM_Resposta VARCHAR(MAX),
     LLM_Tipo_Conclusao VARCHAR(50),
     JSON_Interacao VARCHAR(MAX),
+    UUID_Sessao UNIQUEIDENTIFIER,
     Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Interacao PRIMARY KEY (UUID_Interacao));
 

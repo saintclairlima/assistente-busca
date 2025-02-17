@@ -13,11 +13,13 @@ class DadosChat(BaseModel):
 
     Atributos:
         pergunta (str): pergunta do usuário
-        histórico (List[str]): histórico com as últimas interações
+        historico (List[str]): histórico com as últimas interações
+        id_sessao (str): identificador da sessão, servindo para agrupar interações por usuario
     '''
 
     pergunta: str
     historico: list
+    id_sessao: str
 
 class ClienteLLM:
     # Base client class for LLM interactions
