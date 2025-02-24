@@ -85,6 +85,15 @@ class GeradorDeRespostas:
                 ).json() + '\n'
             print('CONCLUÍDO POR ERRO: pergunta com mais de 300 palavras.')
             return
+        
+        pergunta_reformulada = await GeradorPrompts.otimizar_prompt(pergunta, historico)
+        if pergunta != pergunta_reformulada:
+            if self.fazer_log: print(f'''Pergunta alterada de "{pergunta}" para "{pergunta_reformulada}".''')
+            yield MensagemInfo(
+                descricao='A pergunta foi reformulada',
+                mensagem=f'''Pergunta alterada de "{pergunta}" para "{pergunta_reformulada}".'''
+            ).json() + '\n'
+            pergunta = pergunta_reformulada
 
         if self.fazer_log: print(f'Gerador de respostas: realizando consulta para "{pergunta}"...')
         yield MensagemControle(
