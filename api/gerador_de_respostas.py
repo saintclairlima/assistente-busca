@@ -160,7 +160,7 @@ class GeradorDeRespostas:
 
             prompt_usuario = GeradorPrompts.gerar_prompt_rag(pergunta=pergunta, documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])])
 
-            async for item in self.interface_llm.gerar_resposta_llm(prompt_usuario, historico=historico):
+            async for item in self.interface_llm.gerar_resposta_llm_stream(prompt_usuario, historico=historico):
                 
                 texto_resposta_llm += item['message']['content']
                 yield MensagemDados(
