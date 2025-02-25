@@ -260,6 +260,8 @@ class GeradorBancoVetores:
             comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
             instrucao=None):
         
+        print(f"-- Geração de bancos vetoriais inicializada utilizando {DEVICE}...")
+        
         docs = self.extrair_fragmentos(
             indice_documentos=indice_documentos,
             comprimento_max_fragmento=comprimento_max_fragmento
@@ -280,6 +282,7 @@ class GeradorBancoVetores:
             configuracoes.embedding_openai: 'OpenAI-API',
             configuracoes.embedding_alibaba_gte: 'Alibaba-GTE',
             configuracoes.embedding_squad_portuguese: 'Bert-Squad-Pt',
+            configuracoes.embedding_llama: 'Llama'
         }
         descritor = {
             "nome": url_banco_vetores.split('/')[-1],
@@ -352,6 +355,6 @@ if __name__ == "__main__":
 ## Modelo de Execução
 # python -m api.dados.gerador_banco_vetores \
 # --nome_banco_vetores banco_assistente \
-# --lista_colecoes "['documentos_rh', 'documentos_rh_openai', 'documentos_rh_alibaba']" \
-# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base']" \
+# --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_bert_pt']" \
+# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
 # --comprimento_max_fragmento 300
