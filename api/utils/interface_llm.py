@@ -142,7 +142,7 @@ class ClienteOllama(ClienteLLM):
         }
 
         resposta = requests.post(url_llm, json=data)
-        embeddings = json.loads(resposta.content)['embeddings'][0]
+        embeddings = json.loads(resposta.content)['embeddings']
         return embeddings
 
 class ClienteOpenAi(ClienteLLM):
