@@ -197,7 +197,9 @@ class GeradorBancoVetores:
                 api_key = os.environ.get("OPENAI_API_KEY", None),
                 model_name=configuracoes.embedding_openai)
         elif tipo == configuracoes.embedding_llama:
-            funcao = FuncaoEmbeddingsOllama(nome_modelo=configuracoes.embedding_llama, url_api=configuracoes.url_llm)
+            funcao = FuncaoEmbeddingsOllama(
+                nome_modelo=configuracoes.embedding_llama,
+                url_api=configuracoes.url_llm)
         elif tipo == configuracoes.embedding_squad_portuguese:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_squad_portuguese,
@@ -272,10 +274,10 @@ class GeradorBancoVetores:
         )
 
         tipos_modelos = {
-            configuracoes.embedding_instructor: 'SentenceTransformer',
+            configuracoes.embedding_instructor: 'SentenceTransformer/Instructor',
             configuracoes.embedding_openai: 'OpenAI-API',
-            configuracoes.embedding_alibaba_gte: 'Alibaba-GTE',
-            configuracoes.embedding_squad_portuguese: 'Bert-Squad-Pt',
+            configuracoes.embedding_alibaba_gte: 'SentenceTransformer/Alibaba-GTE',
+            configuracoes.embedding_squad_portuguese: 'SentenceTransformer/Bert-Squad-Pt',
             configuracoes.embedding_llama: 'Llama'
         }
         descritor = {
