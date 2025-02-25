@@ -312,9 +312,9 @@ class GeradorBancoVetores:
         
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Gera resultados de busca por documentos a partir de uma lista de perguntas")
+    parser = argparse.ArgumentParser(description="Gera um banco vetorial a partir de uma lista de documentos")
     parser.add_argument('--url_indice_documentos', type=str, help="caminho para arquivo com a lista de documentos")
-    parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser criado")
     parser.add_argument('--lista_colecoes', type=str, required=True, help='''uma lista com os nomes das coleções no formato "['colecao1', 'colecao2']''')
     parser.add_argument('--lista_fn_embeddings', type=str, required=True, help='''uma lista com os tipos das funções de embeddings no formato "['openai', 'instructor']''')
     parser.add_argument('--comprimento_max_fragmento', type=int, required=True, help="número máximo de palavras por fragmento")
