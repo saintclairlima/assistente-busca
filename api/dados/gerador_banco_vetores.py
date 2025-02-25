@@ -4,7 +4,7 @@ import json
 import os
 import uuid
 from api.configuracoes.config_gerais import configuracoes
-from api.utils.interface_banco_vetores import FuncaoEmbeddings
+from api.utils.interface_banco_vetores import FuncaoEmbeddings, FuncaoEmbeddingsOllama
 from torch import cuda
 import chromadb.utils.embedding_functions as embedding_functions
 from sentence_transformers import SentenceTransformer
@@ -197,13 +197,7 @@ class GeradorBancoVetores:
                 api_key = os.environ.get("OPENAI_API_KEY", None),
                 model_name=configuracoes.embedding_openai)
         elif tipo == configuracoes.embedding_llama:
-            def funcao_ollama(input: str):
-                from api.utils.interface_llm import ClienteOllama
-                from api.configuracoes.config_gerais import configuracoes
-                llm = ClienteOllama(configuracoes.embedding_llama, configuracoes.url_llm)
-                embeddings = llm.gerar_embeddings(input)
-                return embeddings
-            funcao = funcao_ollama
+            funcao = FuncaoEmbeddingsOllama(nome_modelo=configuracoes.embedding_llama, url_api=configuracoes.url_llm)
         elif tipo == configuracoes.embedding_squad_portuguese:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_squad_portuguese,
