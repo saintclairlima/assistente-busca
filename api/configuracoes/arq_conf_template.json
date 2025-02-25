@@ -3,6 +3,7 @@
     "embedding_squad_portuguese": "pierreguillou/bert-base-cased-squad-v1.1-portuguese",
     "embedding_alibaba_gte": "Alibaba-NLP/gte-multilingual-base",
     "embedding_openai": "text-embedding-ada-002",
+    "embedding_llama": "llama3.1",
 
     "url_indice_documentos": "api/dados/documentos/index.json",
     "url_arquivo_mensagens": "api/configuracoes/mensagens.json",
