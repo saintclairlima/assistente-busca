@@ -1,11 +1,7 @@
-## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
 import argparse
-import os
 import chromadb
 import requests
 import json
-import sys
-from torch import cuda
 from api.configuracoes.config_gerais import configuracoes
 
 class GeradorPerguntas:
@@ -41,35 +37,38 @@ class GeradorPerguntas:
         Parágrafo único. Todo o poder emana do povo, que o exerce por meio de representantes eleitos ou diretamente, nos termos desta Constituição."
 
         Resposta aceitável:
-        {{
-            "pergunta1": "O que forma a República  Federativa do Brasil?",
-            "resposta1": "união indissolúvel dos Estados e Municípios e do Distrito Federal",
-            "pergunta2": "Em que se constitui a República Federativa do Brasil?",
-            "resposta2": "constitui-se em Estado Democrático de Direito",
-            "pergunta3": "Quais os fundadmentos da República Federativa do Brasil?",
-            "resposta3": "I - a soberania; II - a cidadania III - a dignidade da pessoa humana; IV - os valores sociais do trabalho e da livre iniciativa; V - o pluralismo político.",
-            "pergunta4": "De onde emana todo o poder?",
-            "resposta4": "Todo o poder emana do povo"
-        }}
+        {[
+            {
+                "pergunta1": "O que forma a República  Federativa do Brasil?",
+                "resposta1": "união indissolúvel dos Estados e Municípios e do Distrito Federal",
+            },
+            {
+                "pergunta2": "Em que se constitui a República Federativa do Brasil?",
+                "resposta2": "constitui-se em Estado Democrático de Direito",
+            },
+            {
+                "pergunta3": "Quais os fundadmentos da República Federativa do Brasil?",
+                "resposta3": "I - a soberania; II - a cidadania III - a dignidade da pessoa humana; IV - os valores sociais do trabalho e da livre iniciativa; V - o pluralismo político.",
+            },
+            {
+                "pergunta4": "De onde emana todo o poder?",
+                "resposta4": "Todo o poder emana do povo"
+            }
+        ]}
 
         TEXTO BASE: {artigo}'''
 
 
         formato = {
-            "type": "object",
-            "properties": {
-                "pergunta1": {"type": "string"},
-                "pergunta2": {"type": "string"},
-                "pergunta3": {"type": "string"},
-                "pergunta4": {"type": "string"},
-                "pergunta5": {"type": "string"},
-                "resposta1": {"type": "string"},
-                "resposta2": {"type": "string"},
-                "resposta3": {"type": "string"},
-                "resposta4": {"type": "string"},
-                "resposta5": {"type": "string"},
-            },
-            "required": ["pergunta1","resposta1","pergunta2","resposta2","pergunta3","resposta3"]
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "pergunta": {"type": "string"},
+                    "trecho_resposta": {"type": "string"}
+                },
+                "required": ["pergunta", "trecho_resposta"]
+            }
         }
 
         
