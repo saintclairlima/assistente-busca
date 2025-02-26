@@ -44,7 +44,7 @@ async def avaliar_recuperacao_documentos(
         funcao_de_embeddings=funcao_de_embeddings,
         fazer_log=fazer_log)
 
-    reestimador_bert = ReclassificadorBert(device=DEVICE, fazer_log=fazer_log)
+    reclassificador_bert = ReclassificadorBert(device=DEVICE, fazer_log=fazer_log)
 
     if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
     interface_llm = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
@@ -56,7 +56,7 @@ async def avaliar_recuperacao_documentos(
 
     gerador_de_respostas = GeradorDeRespostas(
         interface_banco_vetorial=interface_banco_vetorial,
-        reclassificador=reestimador_bert,
+        reclassificador=reclassificador_bert,
         interface_llm=interface_llm,
         gerenciador_persistencia=gerenciador_persistencia,
         device=configuracoes.device,

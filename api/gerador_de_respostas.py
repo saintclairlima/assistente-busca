@@ -69,7 +69,7 @@ class GeradorDeRespostas:
         ]
 
     async def reclassificar_documentos(self, pergunta, texto_documento: str):
-        return self.reestimador.reclassificar_documentos(pergunta=pergunta, texto_documento=texto_documento)
+        return self.reestimador.reclassificar_documento(pergunta=pergunta, texto_documento=texto_documento)
 
     async def gerar_resposta(self, dados_chat: DadosChat):
         historico = dados_chat.historico
