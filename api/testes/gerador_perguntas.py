@@ -55,7 +55,7 @@ class GeradorPerguntas:
         {[
             {
                 "pergunta": "O que forma a República  Federativa do Brasil?",
-                "trecho_resposta": "união indissolúvel dos Estados e Municípios e do Distrito Federal",
+                "resposta": "união indissolúvel dos Estados e Municípios e do Distrito Federal",
             },
             {
                 "pergunta": "Em que se constitui a República Federativa do Brasil?",
@@ -63,11 +63,11 @@ class GeradorPerguntas:
             },
             {
                 "pergunta": "Quais os fundadmentos da República Federativa do Brasil?",
-                "trecho_resposta": "I - a soberania; II - a cidadania III - a dignidade da pessoa humana; IV - os valores sociais do trabalho e da livre iniciativa; V - o pluralismo político.",
+                "resposta": "I - a soberania; II - a cidadania III - a dignidade da pessoa humana; IV - os valores sociais do trabalho e da livre iniciativa; V - o pluralismo político.",
             },
             {
                 "pergunta": "De onde emana todo o poder?",
-                "trecho_resposta": "Todo o poder emana do povo"
+                "resposta": "Todo o poder emana do povo"
             }
         ]}
 
@@ -80,9 +80,9 @@ class GeradorPerguntas:
                 "type": "object",
                 "properties": {
                     "pergunta": {"type": "string"},
-                    "trecho_resposta": {"type": "string"}
+                    "resposta": {"type": "string"}
                 },
-                "required": ["pergunta", "trecho_resposta"]
+                "required": ["pergunta", "resposta"]
             }
         }
 
