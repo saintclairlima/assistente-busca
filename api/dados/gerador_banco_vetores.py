@@ -298,8 +298,17 @@ class GeradorBancoVetores:
             ]
         }
         
-        with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
-            json.dump(descritor, arq, ensure_ascii=False, indent=4)
+        try:
+            with open(url_banco_vetores+ '/descritor.json', 'r', encoding='utf-8') as arq:
+                descritor_existente = json.load(arq)
+            descritor_existente['colecoes'] += descritor['colecoes']
+
+            with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
+                json.dump(descritor_existente, arq, ensure_ascii=False, indent=4)
+                
+        except FileNotFoundError:
+            with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
+                json.dump(descritor, arq, ensure_ascii=False, indent=4)
         
         if configuracoes.usar_wandb:    
             import wandb
@@ -351,6 +360,6 @@ if __name__ == "__main__":
 ## Modelo de Execução
 # python -m api.dados.gerador_banco_vetores \
 # --nome_banco_vetores banco_assistente \
-# --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_bert_pt']" \
-# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
+# --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt']" \
+# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
 # --comprimento_max_fragmento 300
