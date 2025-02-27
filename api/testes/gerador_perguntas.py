@@ -1,4 +1,5 @@
 import argparse
+from typing import List
 import chromadb
 import requests
 import json
@@ -10,6 +11,20 @@ class GeradorPerguntas:
         self.modelo_llm = modelo_llm
 
     def gerar_perguntas_artigo(self, artigo):
+
+        '''Gera uma lista de perguntas e respostas com base em um texto. É utilizado um LLM para realizar a geração
+
+        Parâmetros:
+            artigo (str): texto base a ser utilizado para gerar as perguntas
+
+        Retorna:
+            (List[dict]): lista de dicionários com uma pergunta e uma resposta por entrada no formato: 
+        ```python
+        [ {"pergunta": str, "trecho_resposta": str} ]
+        ```
+
+        '''
+
         prompt = f'''
         Você é uma ferramenta de geração de perguntas com base em um contexto. Seu objetivo é receber o texto de um artigo de uma lei,
         extrair as informações do artigo e gerar perguntas que possam ser respondidas com trechos do artigo, assim como detectar o trecho
@@ -39,20 +54,20 @@ class GeradorPerguntas:
         Resposta aceitável:
         {[
             {
-                "pergunta1": "O que forma a República  Federativa do Brasil?",
-                "resposta1": "união indissolúvel dos Estados e Municípios e do Distrito Federal",
+                "pergunta": "O que forma a República  Federativa do Brasil?",
+                "trecho_resposta": "união indissolúvel dos Estados e Municípios e do Distrito Federal",
             },
             {
-                "pergunta2": "Em que se constitui a República Federativa do Brasil?",
-                "resposta2": "constitui-se em Estado Democrático de Direito",
+                "pergunta": "Em que se constitui a República Federativa do Brasil?",
+                "resposta": "constitui-se em Estado Democrático de Direito",
             },
             {
-                "pergunta3": "Quais os fundadmentos da República Federativa do Brasil?",
-                "resposta3": "I - a soberania; II - a cidadania III - a dignidade da pessoa humana; IV - os valores sociais do trabalho e da livre iniciativa; V - o pluralismo político.",
+                "pergunta": "Quais os fundadmentos da República Federativa do Brasil?",
+                "trecho_resposta": "I - a soberania; II - a cidadania III - a dignidade da pessoa humana; IV - os valores sociais do trabalho e da livre iniciativa; V - o pluralismo político.",
             },
             {
-                "pergunta4": "De onde emana todo o poder?",
-                "resposta4": "Todo o poder emana do povo"
+                "pergunta": "De onde emana todo o poder?",
+                "trecho_resposta": "Todo o poder emana do povo"
             }
         ]}
 
@@ -84,11 +99,33 @@ class GeradorPerguntas:
         dados = json.loads(resposta.content)
         return dados['response']
 
-    def gerar_perguntas_banco_vetorial(self, url_banco_vetorial: str, nome_colecao: str, url_arquivo_saida: str):
+    def gerar_perguntas_banco_vetorial(self, url_banco_vetorial: str, nome_colecao: str, url_arquivo_saida: str) -> List[dict]:
+
+        '''
+        Gera uma lista de perguntas para cada um dos fragmentos em um banco vetorial
+
+        Parâmetros:
+            url_banco_vetorial (str): a url do banco de vetores a ser usado como base
+            nome_colecao (str): nome da coleção a ser usada, existente no banco
+            url_arquivo_saida (str): caminho em que será salvo o arquivo com o resultado
+
+        Retorna:
+            Retorna uma lista de documentos na coleção, acrescentados de uma lista de perguntas
+        
+        O formato da lista retornada é o seguinte:
+        [{
+            "id": str,
+            "page_content": str,
+            "metadata": dict,
+            "perguntas": [ { "pergunta": str, "trecho_resposta": str } ]
+        }]
+        '''
+
         try:
             with open(url_arquivo_saida, 'r', encoding='utf-8') as arq:
                 documentos = json.load(arq)
                 print(f'Carregados dados em {url_arquivo_saida}')
+
         except FileNotFoundError:
             print(f'Consultando documentos do banco de vetores')
             client = chromadb.PersistentClient(path=url_banco_vetorial)
@@ -119,6 +156,8 @@ class GeradorPerguntas:
                 
                 with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
                     arq.write(json.dumps(documentos, indent=4, ensure_ascii=False))
+        
+        return documentos
                 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gera um conjunto de perguntas a partir de documentos armazenados em um banco vetorial")
