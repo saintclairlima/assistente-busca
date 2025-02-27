@@ -1,3 +1,5 @@
+print('Carregando bibliotecas...')
+
 import argparse
 import json, os
 from typing import Dict, List
@@ -8,6 +10,7 @@ from api.dados.gerador_banco_vetores import GeradorBancoVetores
 from api.utils.reclassificador import ReclassificadorBert
 
 DEVICE='cuda' if cuda.is_available() else 'cpu'
+print(f'Ambiente de execução: {DEVICE}')
 
 
 def recuperar_colecoes(url_banco_vetores: str) -> Dict[str, chromadb.Collection]:
@@ -118,10 +121,12 @@ def simular_recuperacao_documentos(url_arq_fragmentos: str, url_banco_vetores: s
         fragmento = fragmentos_com_perguntas[idx]
         id_frag = fragmento['id']
         perguntas = [par['pergunta'] for par in fragmento['perguntas']]
+        print('RECUPERANDO DOCUMENTOS')
+        print(f'Processando fragmento {idx+1} de {len(fragmentos_com_perguntas)}')
 
-        print(f'processando fragmento {idx+1} de {len(fragmentos_com_perguntas)}')
-
-        for pergunta in perguntas:
+        for idx in range(len(perguntas)):
+            print(f'-- pergunta {idx+1} de {len(perguntas)}')
+            pergunta = perguntas[idx]
             relat_busca = {
                 'id_frag': id_frag,
                 'pergunta': pergunta,
@@ -129,6 +134,7 @@ def simular_recuperacao_documentos(url_arq_fragmentos: str, url_banco_vetores: s
             }
 
             for nome_colecao, colecao in colecoes.items():
+                print(f'--- recuperando da colecao {nome_colecao}...')
                 res_consulta = colecao.query(query_texts=[pergunta], n_results=num_resultados)
                 ids = res_consulta['ids'][0]
                 conteudo = res_consulta['documents'][0]
@@ -150,7 +156,12 @@ def simular_recuperacao_documentos(url_arq_fragmentos: str, url_banco_vetores: s
             resultado.append(relat_busca)
     return resultado
 
-def avaliar_recuperacao(url_arq_fragmentos: str, url_banco_vetores: str, url_arquivo_saida: str, gerar_relatorios_intermediarios_avaliacao: bool=False) -> List[dict]:
+def avaliar_recuperacao(
+    url_arq_fragmentos: str,
+    url_banco_vetores: str,
+    url_arquivo_saida: str,
+    num_resultados: int,
+    gerar_relatorios_intermediarios_avaliacao: bool=False) -> List[dict]:
 
     '''
     Utiliza uma lista de perguntas geradas para fragmentos no banco vetorial e realiza uma análise comparativa da taxa de recuperação
@@ -160,6 +171,7 @@ def avaliar_recuperacao(url_arq_fragmentos: str, url_banco_vetores: str, url_arq
         url_arq_fragmentos (str): url do arquivo com fragmentos e perguntas a ser utilizado para realizar consultas
         url_banco_vetores (str): url do banco de vetores
         url_arquivo_saida (str): caminho onde salvar o arquivo de saída
+        num_resultados (int): número de resultados de cada consulta ao banco de vetores
         gerar_relatorios_intermediarios_avaliacao (bool) OPCIONAL. Default: False
     
     Retorna:
@@ -186,7 +198,7 @@ def avaliar_recuperacao(url_arq_fragmentos: str, url_banco_vetores: str, url_arq
     '''
 
     # obtém resultados de consultas no banco vetorial
-    simulacao_recuperacao = simular_recuperacao_documentos(url_arq_fragmentos=url_arq_fragmentos, url_banco_vetores=url_banco_vetores)
+    simulacao_recuperacao = simular_recuperacao_documentos(url_arq_fragmentos=url_arq_fragmentos, url_banco_vetores=url_banco_vetores, num_resultados=num_resultados)
 
     # salva os resultados da busca
     if gerar_relatorios_intermediarios_avaliacao:
@@ -283,10 +295,14 @@ if __name__ == "__main__":
     parser.add_argument('--url_arq_fragmentos', type=str, required=True, help="caminho para arquivo com as perguntas")
     parser.add_argument('--url_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
     parser.add_argument('--url_arquivo_saida', type=str, required=True, help="caminho para salvar o arquivo com o resultado")
+    parser.add_argument('--num_resultados', type=int, required=True, help='quantidade de documentos a ser recuperada de cada consulta ao banco de vetores')
+    parser.add_argument('--gerar_relatorios_intermediarios', type=bool, help='indicador se deve ou não salvar os resultados')
     args = parser.parse_args()
 
     res = avaliar_recuperacao(
         url_arq_fragmentos = args.url_arq_fragmentos,
         url_banco_vetores = args.url_banco_vetores,
-        url_arquivo_saida = args.url_arquivo_saida
+        url_arquivo_saida = args.url_arquivo_saida,
+        num_resultados = args.num_resultados,
+        gerar_relatorios_intermediarios_avaliacao = args.gerar_relatorios_intermediarios
     )
