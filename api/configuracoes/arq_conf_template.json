@@ -4,6 +4,7 @@
     "embedding_alibaba_gte": "Alibaba-NLP/gte-multilingual-base",
     "embedding_openai": "text-embedding-ada-002",
     "embedding_llama": "llama3.1",
+    "embedding_deepseek": "deepseek-r1:14b",
 
     "url_indice_documentos": "api/dados/documentos/index.json",
     "url_arquivo_mensagens": "api/configuracoes/mensagens.json",

@@ -200,6 +200,10 @@ class GeradorBancoVetores:
             funcao = FuncaoEmbeddingsOllama(
                 nome_modelo=configuracoes.embedding_llama,
                 url_api=configuracoes.url_llm)
+        elif tipo == configuracoes.embedding_deepseek:
+            funcao = FuncaoEmbeddingsOllama(
+                nome_modelo=configuracoes.embedding_deepseek,
+                url_api=configuracoes.url_llm)
         elif tipo == configuracoes.embedding_squad_portuguese:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_squad_portuguese,
@@ -278,7 +282,8 @@ class GeradorBancoVetores:
             configuracoes.embedding_openai: 'OpenAI-API',
             configuracoes.embedding_alibaba_gte: 'SentenceTransformer/Alibaba-GTE',
             configuracoes.embedding_squad_portuguese: 'SentenceTransformer/Bert-Squad-Pt',
-            configuracoes.embedding_llama: 'Llama'
+            configuracoes.embedding_llama: 'Llama',
+            configuracoes.embedding_deepseek: 'Deepseek-r1'
         }
         descritor = {
             "nome": url_banco_vetores.split('/')[-1],

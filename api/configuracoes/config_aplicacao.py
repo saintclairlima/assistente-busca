@@ -26,6 +26,7 @@ class ConfiguracoesAplicacao:
         self.embedding_alibaba_gte = configs['embedding_alibaba_gte']
         self.embedding_openai = configs['embedding_openai']
         self.embedding_llama = configs['embedding_llama']
+        self.embedding_deepseek = configs['embedding_deepseek']
         self.url_cache_modelos = os.path.abspath(configs['url_cache_modelos'])
         os.environ['HF_HOME'] = self.url_cache_modelos
         os.environ['HF_HUB_CACHE'] = self.url_cache_modelos
