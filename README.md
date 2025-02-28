@@ -277,6 +277,8 @@ copy api\.env.TEMPLATE api\.env
 copy api\configuracoes\arq_conf_template.json api\configuracoes\arq_conf.json
 ```
 
+## Criando um banco de vetores com conteúdo customizado
+
 ### Iniciando o projeto
 Na pasta raiz do projeto, executar:
 
