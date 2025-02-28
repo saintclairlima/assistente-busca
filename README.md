@@ -1,7 +1,11 @@
 # Assistente de Busca
-Este repositório é a continuação do projeto RAG-Chat (https://github.com/saintclair-lima/RAG-Chat.git.) Foi reinicializado a partir de uma versão mais estável, após a realizaçaõ de testes.
 
-Para um histórico do processo, clone aquele repositório.
+## Introdução
+O Assistente de Busca é uma aplicação de busca de conteúdo em documentos, com sumarização automática de conteúdo. Trata-se de um projeto desenvolvido, sob a direção da Diretoria de Gestão Tecnológica e Inovação (DGTI) da Assembleia Legislativa do Rio Grande do Norte (Alern), com o intuito de ser uma ferramenta interativa de busca de conteúdo dinâmico sob demanda.
+
+A aplicação utiliza uma estrutura de Geração de Texto Aumentada por Recuperação de Documentos [Retrieval-Augmented Generation - RAG](#RAG), utilizando perguntas dos usuários como termos de busca, para recuperação de documentos (que contêm conteúdo relativo à busca) e, com base no conteúdo recuperado, geração de uma resposta ou sumário, lançando mão de um Large Language Model (LLM).
+
+A implementação de teste/demonstração - cujo conteúdo é incluso nesse repositório - utiliza um conjunto de dados cujo conteúdo é (1) O Regime Jurídico dos Servidores do RN, (2) Regimento Interno da Alern e (3) um conjunto de diversas resoluções da Alern, mais voltadas para a Gestão de Pessoal.
 
 ## Ollama: Instalação e Configuração
 ### Instalando o Ollama
@@ -19,9 +23,12 @@ Para inicializar o Ollama, basta executar
 ```
 ollama serve
 ```
+
 Caso `OLLAMA_DEBUG` esteja configurado como `true` (ver abaixo) é feito um log com as configurações de inicialização do Ollama.
 
 É necessário que o Ollama esteja executando para realizar a adição de modelos.
+
+**Obs**: No Windows, logo após a instalação do Ollama, ele inicializa em segundo plano. Se for o caso de se desejar acompanhar os *logs* da aplicação em tela, é necessário encerrar a execução de segundo plano e inicializá-la manualmente em uma sessão do prompt/Powershell.
 
 ### Adicionando os modelos ao Ollama
 No projeto, utilizamos como modelo principal o `Llama3.1`, mas outros modelos são disponíveis para download (como o `phi3.5`, por exemplo).
@@ -34,7 +41,7 @@ Em nosso caso:
 ```
 ollama pull llama3.1
 ```
-Após a inclusão do modelo no Ollama, pode-se testar se tudo ocorreu corretamente executando o modelo direto no terminal/promt/Powershell:
+Após a inclusão do modelo no Ollama, pode-se testar se tudo ocorreu corretamente executando o modelo direto no terminal/prompt/Powershell:
 ```
 ollama run <nome do modelo>
 ```
@@ -54,7 +61,7 @@ De acordo com a documentação (ver https://github.com/ollama/ollama/blob/main/d
 * `OLLAMA_NUM_PARALLEL` - O número máximo de solicitações paralelas que cada modelo processará ao mesmo tempo. O padrão irá selecionar automaticamente 4 ou 1 dependendo da memória disponível.
 * `OLLAMA_MAX_QUEUE` - O número máximo de solicitações que Ollama irá enfileirar quando estiver ocupado, antes de rejeitar solicitações adicionais. O padrão é 512.
 
-Outras variáveis de interesse podem ser `OLLAMA_DEBUG` (true para ativar debug) e  `AQUELA_OUTRA_QUE_NAO_CONSIGO_LEMBRAR`.
+Outra variável de interesse pode ser `OLLAMA_DEBUG` (true para ativar debug), que mantém um log das atividades internas do Ollama em um terminal, após sua inicialização.
 
 Assim, definimos as variáveis de ambiente semelhante ao que segue.
 
@@ -145,8 +152,6 @@ cd ./assistente-busca
 
 O `.gitignore` do repositório está configurado para ignorar a pasta com os arquivos do ambiente virtual Python, de forma a não incluí-la no controle de versão. O nome de referência da dita pasta está como `chat-env`, sendo o motivo pelo qual sugerimos nomear o ambiente virtual como `chat-env`.
 
-Na pasta raiz do projeto, crie um arquivo `.env`, salvando nele o conteúdo do .env.TEMPLATE, alterando os valores de acordo com o ambiente de execução.
-
 ### Instalando as dependências
 
 Dependendo do dispositivo de processamento (CPU/GPU) a ser utilizado, é necessário instalar uma versão específica do `torch`. Para utilização com CPUs, recomenda-se utilizar o comando seguinte para instalação:
@@ -175,14 +180,15 @@ Após esses ajustes, basta instalar os requisitos gerais com:
 ```
 pip install -r requirements.txt
 ```
+É importante instalar o `torch` isoladamente, antes da de instalar os pacotes no arquivo de requirements, de forma a evitar que durante a instalação de outros pacotes a versão do `torch` seja sobreescrita.
 
-Obs: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos requisitos (2.x) e a biblioteca `transformers`. Sendo este o caso, basta instalax uma versão 1.x do `Numpy`.
+**Obs**: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos requisitos (2.x) e a biblioteca `transformers`. Sendo este o caso, basta instalax uma versão 1.x do `Numpy`.
 
 ### Arquivos opcionais inclusos no projeto
 Há dois arquivos contidos no projeto que contém dados que podem ser utilizados.
-`api/dados/bancos_vetores/bancos_vetores.zip` possui um conjunto de bancos vetoriais já prontos para uso -- dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. O que obteve melhores resultados foi a coleção `documentos_rh` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
+`api/dados/bancos_vetores/bancos_vetores.zip` possui um conjunto de bancos vetoriais já prontos para uso - dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. O que obteve melhores resultados foi a coleção `documentos_rh` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
 
-Dentro do mesmo banco vetorial `banco_assistente` tem a coleção `documentos_rh`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial). Sua performance, até o momento, não foi testada.
+Dentro do mesmo banco vetorial `banco_assistente` há a coleção `documentos_rh_openai`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial). Sua performance, até o momento, não foi testada.
 
 Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`. Em um ambiente Linux executa-se:
 
@@ -201,9 +207,63 @@ tar -xf .\api\dados\bancos_vetores\bancos_vetores.zip -C .\api\dados\bancos_veto
 Se for de sua conveniência, a exclusão dos documentos pode ser realizada, dado que são dispensáveis.
 
 ### Arquivos de ambiente e configuração
-Antes da execução, é necessário criar um arquivo `.env`, na pasta `api`, com um conteúdo conforme o arquivo `.env_TEMPALTE`.
+Antes da execução, é necessário criar um arquivo `.env`, na pasta `/api`, com um conteúdo conforme o arquivo `.TEMPLATE`.
 
-Igualmente, criar um arquivo de configurações `arq_conf.json`, com conteúdo conforme arquivo `arq_conf_template.json` na pasta `api/configurações`. A ação pode se executada utilizando os comandos:
+Na pasta `/api` do projeto, crie um arquivo `.env`, salvando nele o conteúdo do arquivo `.env.TEMPLATE`, alterando os valores de acordo com o ambiente de execução. As variáveis nele descritas são as seguintes:
+
+* **URL_LLM**: URL base de onde está sendo executado o LLM. No caso do Ollama, o padrão é `http://localhost:11434`.
+* **URL_HOST**: URL onde a aplicação do assistente está sendo executada. É usada na página HTML que serve de interface de usuário, nessa implementação de exemplo. Por padrão, o valor é `http://localhost:8000`, pela Fast API.
+* **TIPO_PERSISTENCIA**: define o tipo de armazenamento dos dados de avaliação (valores possíveis, por ora: `'sqlite'` (padrão) e `'mssql'`). A aplicação mantém um registro das interações dos usuários e suas respostas - bem como avaliações dos usuários -, para fins de coleta de dados para eventual refinamento da aplicação. É possível salvar os resultados em um banco SQLite simples, embutido na própria aplicação ou em um banco SQL (MS-SQL, no nosso caso).
+* **URL_BANCO_SQLITE**: url do eventual arquivo SQLite a ser utilizado como persistência. Por padrão `'api/dados/persistencia.db'`.
+* **URL_BANCO_SQL**: URL do eventual banco SQL a ser utilizado como persistência.
+* **PORTA_BANCO_SQL**: porta do eventual banco SQL a ser utilizado como persistência.
+* **USER_BANCO_SQL**: usuário do eventual banco SQL a ser utilizado como persistência.
+* **SENHA_BANCO_SQL**: senha do eventual banco SQL a ser utilizado como persistência.
+* **DATABASE_BANCO_SQL**: nome do eventual banco SQL a ser utilizado como persistência.
+* **DEVICE**: tipo de dispositivo em que serão realizadas as operações dos modelos de recuperação de documentos no banco de vetores. Se for um processador padrão, utiliza-se `'cpu'` (padrão). Usa-se `'cuda'` nos casos de uma placa de vídeo que utilize a plataforma CUDA. Aplica-se somente à parte da aplicação de recuperação de documentos. O serviço que executa os LLMs (Ollama, no nosso caso), já gerenciam internamente a utilização do dispositivo deisponível.
+* **AMBIENTE_EXECUCAO**: Tag a ser utilizada em *logs* de execução (como as ferramentas do Weights and Biases, por exemplo), para identificar qual o dispositivo sendo utilizado. Pode ter qualquer valor, sem quaisquer implicações.
+
+Igualmente, criar um arquivo de configurações `arq_conf.json`, com conteúdo conforme arquivo `arq_conf_template.json` na pasta `/api/configurações`. Os campos existentes no arquivo de configuração são os seguintes:
+
+* Nomes dos modelos de embeddings possíveis de ser utilizados no Banco de Vetores (valores fixos):
+    * **embedding_instructor** (hkunlp/instructor-xl): modelo Instructor da Universidade de Hong Kong
+    * **embedding_squad_portuguese** (pierreguillou/bert-base-cased-squad-v1.1-portuguese): Versão em português do BERT
+    * **embedding_alibaba_gte** (Alibaba-NLP/gte-multilingual-base): modelo GTE do Alibaba
+    * **embedding_openai** (text-embedding-ada-002): modelo Ada002, da Open AI
+    * **embedding_llama** (llama3.1): modelo Llama3.1 da Meta
+    * **embedding_deepseek** (deepseek-r1:14b): versão destilada (usando Qwen) do Deepseek R1
+
+* Variáveis de configuração da aplicação
+    * **url_indice_documentos**: variável utilizada pela funcionalidade de geração de bancos vetoriais com conteúdo próprio (descrita melhor na [seção que descreve o processo de geração de bancos de vetores](#criando-um-banco-de-vetores-com-conteúdo-customizado))
+    * **url_pasta_documentos**: caminho da pasta em que se encontram os documentos base para criação do banco de vetores (descrita melhor na [seção que descreve o processo de geração de bancos de vetores](#criando-um-banco-de-vetores-com-conteúdo-customizado))
+    * **url_arquivo_mensagens**: arquivo com o texto base dos prompts a serem enviados ao LLM e as mensagens de retorno ao usuário
+    * **threadpool_max_workers**: número máximo de `threads` a serem utilizadas
+    * **url_banco_vetores**: caminho do banco de vetores a ser utilizado na aplicação
+    * **nome_colecao_de_documentos**: nome da coleção de documentos a ser utilizada pela aplicação
+    * **num_maximo_palavras_por_fragmento**: quantidade máxima de palavras por fragmento de documento a ser incluso em uma coleção (descrito melhor na [seção que descreve o processo de geração de bancos de vetores](#criando-um-banco-de-vetores-com-conteúdo-customizado))
+    * **hnsw_space**: métrica utilizada pelo banco vetorial para calcular a similaridade de documentos (`'cosine'` para distância do cosseno).
+    * **modelo_funcao_de_embeddings**: nome do modelo escolhido para ser utilizado na função de embeddings
+    * **url_cache_modelos**: pasta onde fazer o *cache* dos modelos utilizados
+    * **num_documentos_retornados**: quantidade de documentos retornados em uma consulta ao banco vetorial (após testes, verificou-se que, na maioria absoluta dos casos, o documento mais relevante consta entre os 5 documentos com maior similaridade calculada pelo banco de vetores)
+    * **url_script_geracao_banco_sqlite**: caminho do script utilizado para gerar o eventual banco de dados SQLite
+    * **url_script_geracao_banco_sql**: caminho do script utilizado para gerar o eventual banco SQL
+    * **cliente_llm**: nome do cliente LLM a ser utilizado (ex: ollama, openai_api). No momento utilizado somente em *logs* de execução (como as ferramentas do Weights and Biases, por exemplo), para identificar qual o cliente de LLMs está sendo utilizado. Mas eventualmente será importante para os casos em que se quiser escolher outro serviço de geração de texto, como o da Open AI, por exemplo.
+    * **modelo_llm**: nome do modelo LLM a ser utilizado na aplicação. Alterando aqui, já é possível utilizar qualquer modelo instalado no Ollama. Necessário impelmentar para outras plataformas
+    * **temperature**: temperatura do modelo. Deve ser um float. Valores altos fazem o modelo responder de forma mais criativa
+    * **top_k**: valor inteiro que controla a probabilidade de gerar alucinação. Valores altos (ex. 100) resultam em respostas com diversidade; valores baixos (ex. 10) são mais conservadores
+    * **top_p**: valor float que atua junto com top_k. Valores altos (ex. 0.95) resultam em texto mais diverso; valores baixos (ex. 0.5) geram texto mais conservador e focado
+
+* Variáveis adicionais
+    * **usar_wandb**: durante o desenvolvimento, estamos utilizando a plataforma Weights and Biases para logs e avaliação. Essa variável ativa/desativa o uso da plataforma
+    * **wandb_equipe**: nome da equipe em que o projeto foi regitrado no Weights and Biases
+    * **wandb_nome_projeto**: nome do projeto no Weights and Biases
+    * **wandb_tipo_execucao**: tag para diferenciar as execuções no Weights and Biases
+    * **wandb_api_key**: chave de autenticação no Weights and Biases
+    * **openai_api_key**: chave da API da Open AI. Utilizada, no momento, somente para uso de embeddings da Open AI nos bancos de vetores.
+    * **permitir_comentarios**: habilita o campo de comentários na seção de avaliação na interface de usuário
+
+
+A ação de criação do arquivo `.env` e do arquivo de configuração pode se executada utilizando os comandos:
 
 ```bash
 # máquinas Linux
@@ -228,3 +288,6 @@ Outras opções possíveis são definir o número de workers, para lidar com con
 ```
 uvicorn api.api:controller --reload --workers 1 --host 0.0.0.0
 ```
+## Referências
+
+LEWIS, P. et al. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. 2021. Disponível em: <a id=RAG>https://arxiv.org/pdf/2005.11401</a>
