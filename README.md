@@ -3,7 +3,7 @@
 ## Introdução
 O Assistente de Busca é uma aplicação de busca de conteúdo em documentos, com sumarização automática de conteúdo. Trata-se de um projeto desenvolvido, sob a direção da Diretoria de Gestão Tecnológica e Inovação (DGTI) da Assembleia Legislativa do Rio Grande do Norte (Alern), com o intuito de ser uma ferramenta interativa de busca de conteúdo dinâmico sob demanda.
 
-A aplicação utiliza uma estrutura de Geração de Texto Aumentada por Recuperação de Documentos [Retrieval-Augmented Generation - RAG](#RAG), utilizando perguntas dos usuários como termos de busca, para recuperação de documentos (que contêm conteúdo relativo à busca) e, com base no conteúdo recuperado, geração de uma resposta ou sumário, lançando mão de um Large Language Model (LLM).
+A aplicação utiliza uma estrutura de Geração de Texto Aumentada por Recuperação de Documentos [Retrieval-Augmented Generation - RAG](https://arxiv.org/pdf/2005.11401), utilizando perguntas dos usuários como termos de busca, para recuperação de documentos (que contêm conteúdo relativo à busca) e, com base no conteúdo recuperado, geração de uma resposta ou sumário, lançando mão de um Large Language Model (LLM).
 
 A implementação de teste/demonstração - cujo conteúdo é incluso nesse repositório - utiliza um conjunto de dados cujo conteúdo é (1) O Regime Jurídico dos Servidores do RN, (2) Regimento Interno da Alern e (3) um conjunto de diversas resoluções da Alern, mais voltadas para a Gestão de Pessoal.
 
@@ -184,31 +184,10 @@ pip install -r requirements.txt
 
 **Obs**: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos requisitos (2.x) e a biblioteca `transformers`. Sendo este o caso, basta instalax uma versão 1.x do `Numpy`.
 
-### Arquivos opcionais inclusos no projeto
-Há dois arquivos contidos no projeto que contém dados que podem ser utilizados.
-`api/dados/bancos_vetores/bancos_vetores.zip` possui um conjunto de bancos vetoriais já prontos para uso - dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. O que obteve melhores resultados foi a coleção `documentos_rh` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
-
-Dentro do mesmo banco vetorial `banco_assistente` há a coleção `documentos_rh_openai`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial). Sua performance, até o momento, não foi testada.
-
-Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`. Em um ambiente Linux executa-se:
-
-```bash
-unzip api/dados/bancos_vetores/bancos_vetores.zip -d api/dados/bancos_vetores
-```
-
-Em um ambiente Windows:
-
-```bash
-tar -xf .\api\dados\bancos_vetores\bancos_vetores.zip -C .\api\dados\bancos_vetores
-```
-
-`api/testes/resultados/testes_automatizados.json.zip` contém os resultados de testes automatizados extensivos feitos sobre o sistema como um todo.
-
-Se for de sua conveniência, a exclusão dos documentos pode ser realizada, dado que são dispensáveis.
-
 ### Arquivos de ambiente e configuração
 Antes da execução, é necessário criar um arquivo `.env`, na pasta `/api`, com um conteúdo conforme o arquivo `.TEMPLATE`.
 
+#### Arquivo `.env`
 Na pasta `/api` do projeto, crie um arquivo `.env`, salvando nele o conteúdo do arquivo `.env.TEMPLATE`, alterando os valores de acordo com o ambiente de execução. As variáveis nele descritas são as seguintes:
 
 * **URL_LLM**: URL base de onde está sendo executado o LLM. No caso do Ollama, o padrão é `http://localhost:11434`.
@@ -223,6 +202,7 @@ Na pasta `/api` do projeto, crie um arquivo `.env`, salvando nele o conteúdo do
 * **DEVICE**: tipo de dispositivo em que serão realizadas as operações dos modelos de recuperação de documentos no banco de vetores. Se for um processador padrão, utiliza-se `'cpu'` (padrão). Usa-se `'cuda'` nos casos de uma placa de vídeo que utilize a plataforma CUDA. Aplica-se somente à parte da aplicação de recuperação de documentos. O serviço que executa os LLMs (Ollama, no nosso caso), já gerenciam internamente a utilização do dispositivo deisponível.
 * **AMBIENTE_EXECUCAO**: Tag a ser utilizada em *logs* de execução (como as ferramentas do Weights and Biases, por exemplo), para identificar qual o dispositivo sendo utilizado. Pode ter qualquer valor, sem quaisquer implicações.
 
+#### Arquivo de Configuração
 Igualmente, criar um arquivo de configurações `arq_conf.json`, com conteúdo conforme arquivo `arq_conf_template.json` na pasta `/api/configurações`. Os campos existentes no arquivo de configuração são os seguintes:
 
 * Nomes dos modelos de embeddings possíveis de ser utilizados no Banco de Vetores (valores fixos):
@@ -238,6 +218,7 @@ Igualmente, criar um arquivo de configurações `arq_conf.json`, com conteúdo c
     * **url_pasta_documentos**: caminho da pasta em que se encontram os documentos base para criação do banco de vetores (descrita melhor na [seção que descreve o processo de geração de bancos de vetores](#criando-um-banco-de-vetores-com-conteúdo-customizado))
     * **url_arquivo_mensagens**: arquivo com o texto base dos prompts a serem enviados ao LLM e as mensagens de retorno ao usuário
     * **threadpool_max_workers**: número máximo de `threads` a serem utilizadas
+    * **url_pasta_bancos_vetores**: caminho da pasta em que devem ser armazenados os bancos de vetores criados
     * **url_banco_vetores**: caminho do banco de vetores a ser utilizado na aplicação
     * **nome_colecao_de_documentos**: nome da coleção de documentos a ser utilizada pela aplicação
     * **num_maximo_palavras_por_fragmento**: quantidade máxima de palavras por fragmento de documento a ser incluso em uma coleção (descrito melhor na [seção que descreve o processo de geração de bancos de vetores](#criando-um-banco-de-vetores-com-conteúdo-customizado))
@@ -277,9 +258,122 @@ copy api\.env.TEMPLATE api\.env
 copy api\configuracoes\arq_conf_template.json api\configuracoes\arq_conf.json
 ```
 
-## Criando um banco de vetores com conteúdo customizado
+## Preparando o banco de vetores
 
-### Iniciando o projeto
+### Bancos de Vetores já inclusos no projeto
+Para fins de demonstração e uso direto, neste repositório foi incluído alguns banco detoriais já prontos. O conteúdo dos bancos vetoriais disponíveis é:
+
+* Regime Jurídico dos Servidores do Rio Grande do Norte
+* Regimento Interno da Assembleia Legislativa do Rio Grande do Norte - Alern
+* Resolução Nº 089/2017 da Alern
+* Resolução Nº 106/2018 da Alern
+* Resolução Nº 2388/2019 da Alern
+* Resolução Nº 618/2022 da Alern
+* Resolução Nº 64/2022 da Alern
+* Resolução Nº 77/2024 da Alern
+* Resolução Nº 78/2024 da Alern
+
+No arquivo `api/dados/bancos_vetores/bancos_vetores.zip` há um conjunto de bancos vetoriais já prontos para uso - dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. Dentre eles, o que obteve melhores resultados foi a coleção `documentos_rh` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
+
+Dentro do mesmo banco vetorial `banco_assistente` há a coleção `documentos_rh_openai`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial). Sua performance, até o momento, não foi testada.
+
+Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`, dado que os arquivos de configurações já estão por padrão definidos para utilizar a coleção `docuemntos_rh` do banco vetorial `banco_assistente`. Em um ambiente Linux executa-se:
+
+```bash
+unzip api/dados/bancos_vetores/bancos_vetores.zip -d api/dados/bancos_vetores
+```
+
+Em um ambiente Windows:
+
+```bash
+tar -xf .\api\dados\bancos_vetores\bancos_vetores.zip -C .\api\dados\bancos_vetores
+```
+
+Se for de sua conveniência, a exclusão dos arquivos pode ser realizada, dado que são dispensáveis.
+
+### Criando um banco de vetores com conteúdo customizado
+Para se criar um banco de vetores, é necessário preparar um conjunto de documentos. Por convenção, são armazenados em `/api/dados/documentos/`. Caso sejam armazenado em outra localização, ajustar o [arquivo de configuração](#arquivo-de-configuração) para `url_pasta_documentos` apontar o caminho correto - bem como `url_indice_documentos`, que normalmente fica junto com os documentos.
+
+Atualmente, há suporte para três formatos de documentos:
+
+* txt - melhor resultado;
+* html - bons resultados, mas não tem qualidade perfeita, visto que precisa remover as tags;
+* pdf - qualidade altamente dependente da estrutura do documento.
+
+Há suporte para tratamento diferenciado para arquivos com articulação que segue o padrão definido na Lei Complementar no 95/1998. É possível, também, utilizar documentos textuais que tenham sua própria estrutura definida. No caso de PDFs com uma diagramação que impacte o fluxo do texto (muitos quadros, colunas e quebras de texto linear), o resultado pode ser muito pobre.
+
+Os documentos devem ser listados em um arquivo, convencionalmente colocado em `/api/dados/documentos/index.json`, que descreva os dados necessários à extração de seu conteúdo. A estrutura deve ser a seguinte:
+
+* **identificador_do_documento**: uma `string` que sirva para identificar o documento (ex: `lei_acesso_informacao`)
+* **url**: caminho em que o arquivo txt/pdf/html se encontra dentro da pasta de documentos
+* **titulo**: título do documento
+* **autor**: autor do documento
+* **fonte**: caminho para um arquivo html
+* **texto_articulado**: indicador se o arquivo é dividido em artigos ou não
+
+Um exemplo de como deve ficar:
+
+```json
+
+{   
+    "regime_juridico_servidores_rn" : {
+        "url": "regime_juridico_servidores_rn.txt",
+        "titulo": "Regime Jurídico dos Servidores do Rio Grande do Norte, LEI COMPLEMENTAR ESTADUAL Nº 122, DE 30 DE JUNHO DE 1994",
+        "autor": "Governo do Rio Grande do Norte",
+        "fonte": "documentos/html/regime_juridico_servidores_rn.html",
+        "texto_articulado": true
+    },
+    (...)
+}
+```
+
+Pode-se acrescentar mais campos, como `ementa` ou algo semelhante.
+
+Devidamente colocados o `index.json` e os documentos na pasta em questão, é possível utilizar o módulo `api.dados.gerador_banco_vetores` para fazer a geração do banco vetorial.
+
+Para isso, na pasta raiz, basta invocar o módulo, informando os seguintes parâmetros:
+
+* `--nome_banco_vetores`: uma string sem espaço, com o nome do banco vetorial a ser criado
+* `--lista_colecoes`: uma string com a lista de nomes das coleções a serem criadas
+* `--lista_fn_embeddings`: uma lista dos nomes de modelos de embeddings suportados (ver abaixo) na ordem correspondetes aos nomes das coleções em `--lista_colecoes`
+* `--comprimento_max_fragmento`: número máximo de palavras em cada frgmento de arquivo a ser gerado
+
+Os valores por ora aceitos em `--lista_fn_embeddings` são:
+
+* `"hkunlp/instructor-xl"`: para usar o modelo Instructor da Universidade de Hong Kong
+* `"pierreguillou/bert-base-cased-squad-v1.1-portuguese"`: para usar Versão em português do BERT
+* `"Alibaba-NLP/gte-multilingual-base"`: para usar o modelo GTE do Alibaba
+* `"text-embedding-ada-002"`: para usar o modelo Ada002, da Open AI
+* `"llama3.1"`: para usar o modelo Llama3.1 da Meta
+* `"deepseek-r1:14b"`: para usar a versão destilada (usando Qwen) do Deepseek R1
+
+Os testes feitos até o momento apontam o `hkunlp/instructor-xl` com o a melhor opção.
+
+**OBS:** Não aconselhamos valores acima de 350-400 para `--comprimento_max_fragmento`, visto que utilizamos um modelo (BERT) internamente para realizar reranking dos documentos recuperados.
+
+Exemplos de uso:
+
+```bash
+python -m api.dados.gerador_banco_vetores \
+--nome_banco_vetores banco_assistente \
+--lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt']" \
+--lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
+--comprimento_max_fragmento 300
+```
+
+```bash
+python -m api.dados.gerador_banco_vetores \
+--nome_banco_vetores banco_assistente \
+--lista_colecoes "['documentos_rh']" \
+--lista_fn_embeddings "['hkunlp/instructor-xl']" \
+--comprimento_max_fragmento 350
+```
+
+Após a criação do banco vetorial, é essencial atualizar o [arquivo de configurações](#arquivo-de-configuração) com a url do banco vetorial (`url_banco_vetores`) e a coleção de documentos (`nome_colecao_de_documentos`) a serem utilizados.
+
+## Preparando o banco de persistência das interações
+
+## Iniciando o projeto
 Na pasta raiz do projeto, executar:
 
 ```
@@ -290,6 +384,4 @@ Outras opções possíveis são definir o número de workers, para lidar com con
 ```
 uvicorn api.api:controller --reload --workers 1 --host 0.0.0.0
 ```
-## Referências
 
-LEWIS, P. et al. Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks. 2021. Disponível em: <a id=RAG>https://arxiv.org/pdf/2005.11401</a>

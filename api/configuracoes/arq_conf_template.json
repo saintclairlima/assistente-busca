@@ -10,6 +10,7 @@
     "url_pasta_documentos": "api/dados/documentos",
     "url_arquivo_mensagens": "api/configuracoes/mensagens.json",
     "threadpool_max_workers": 10,
+    "url_pasta_bancos_vetores": "api/dados/bancos_vetores",
     "url_banco_vetores": "api/dados/bancos_vetores/banco_assistente",
     "nome_colecao_de_documentos": "documentos_rh",
     "num_maximo_palavras_por_fragmento": 300,

@@ -12,7 +12,6 @@ from chromadb import chromadb
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
 
-URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class GeradorBancoVetores:
@@ -128,7 +127,7 @@ class GeradorBancoVetores:
         return fragmentos       
     
     def extrair_fragmento_txt(self, rotulo, info, comprimento_max_fragmento):
-        with open(os.path.join(URL_LOCAL,info['url']), 'r', encoding='utf-8') as arq:
+        with open(os.path.join(configuracoes.url_pasta_documentos,info['url']), 'r', encoding='utf-8') as arq:
             texto = arq.read()
         
         fragmentos = self.processar_texto(texto, info, comprimento_max_fragmento)
@@ -139,7 +138,7 @@ class GeradorBancoVetores:
     
     def extrair_fragmento_pdf(self, rotulo, info, comprimento_max_fragmento):
         fragmentos = []
-        arquivo = PdfReader(os.path.join(URL_LOCAL,info['url']))
+        arquivo = PdfReader(os.path.join(configuracoes.url_pasta_documentos,info['url']))
         for idx in range(len(arquivo.pages)):
             pagina = arquivo.pages[idx]
             texto = pagina.extract_text()
@@ -148,7 +147,7 @@ class GeradorBancoVetores:
         return fragmentos
         
     def extrair_fragmento_html(self, rotulo, info, comprimento_max_fragmento):
-        with open(os.path.join(URL_LOCAL,info['url']), 'r', encoding='utf-8') as arq:
+        with open(os.path.join(configuracoes.url_pasta_documentos,info['url']), 'r', encoding='utf-8') as arq:
             conteudo_html = arq.read()
             
         pagina_html = BeautifulSoup(conteudo_html, 'html.parser')
@@ -252,7 +251,7 @@ class GeradorBancoVetores:
 
         cliente_chroma._system.stop()
         
-    def run(self,
+    def executar(self,
             indice_documentos=None,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
@@ -343,7 +342,7 @@ if __name__ == "__main__":
     else:
         indice_documentos = None
             
-    nome_banco_vetores = os.path.join(URL_LOCAL,"bancos_vetores/" + args.nome_banco_vetores)
+    nome_banco_vetores = os.path.join(configuracoes.url_pasta_bancos_vetores, args.nome_banco_vetores)
     
     nomes_colecoes = ast.literal_eval(args.lista_colecoes)
     nomes_funcoes_embeddings = ast.literal_eval(args.lista_fn_embeddings)
@@ -354,7 +353,7 @@ if __name__ == "__main__":
     instrucao = None if not args.instrucao else args.instrucao
 
     gerador_banco_vetores = GeradorBancoVetores()
-    gerador_banco_vetores.run(
+    gerador_banco_vetores.executar(
         indice_documentos=indice_documentos,
         url_banco_vetores=nome_banco_vetores,
         nomes_colecoes=nomes_colecoes,
