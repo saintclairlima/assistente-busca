@@ -31,7 +31,7 @@ class ClienteLLM:
         url_llm (str): url onde a API do LLM se encontra
         temperature (float): temperatura do modelo. Valores altos fazem o modelo responder de forma mais criativa
         top_k (int): Reduz a probabilidade de gerar alucinação. Valores altos (ex. 100) resultam em respostas com diversidade; valores baixos (ex. 10) são mais conservadores
-        top_p (float): ATua junto com top_k. Valores altos (ex. 0.95) resultam em texto mais diverso; valores baixos (ex. 0.5) geram texto mais conservador e focado.
+        top_p (float): Atua junto com top_k. Valores altos (ex. 0.95) resultam em texto mais diverso; valores baixos (ex. 0.5) geram texto mais conservador e focado.
 
     Métodos:
         health(): teste simples de verificação se a API está ativa
