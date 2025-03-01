@@ -24,54 +24,67 @@ class GeradorPerguntas:
         ```
 
         '''
+        
+        msg_sistema = '''
+        Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte
+        a responder perguntas dos servidores e cidadãos sobre a Assembleia. Sua função é
+        ajudar a criar um banco de dados sintético com perguntas frequentes e dúvidas que
+        servidores reais do serviço público poderiam ter. Esse banco de dados será usado para
+        treinar uma aplicação que vai responder perguntas reais de servidores, portanto deve
+        ter perguntas pertinentes e o mais próximo possível de dúvidas reais relacionadas aos
+        temas de regulação de uma Assembleia Legislativa.'''
 
-        prompt = f'''
-        Você é uma ferramenta de geração de perguntas com base em um contexto. Seu objetivo é receber o texto de um artigo de uma lei,
-        extrair as informações do artigo e gerar perguntas que possam ser respondidas com trechos do artigo, assim como detectar o trecho
-        do artigo que responde cada pergunta. As perguntas e respostas serão utilizadas para treinamento e finetuning de um LLM.
-        Siga as seguintes diretrizes para gerar as perguntas:
+        msg_usuario = f'''
+        Considere o texto a seguir, que é um artigo de uma lei:
+        
+        {artigo}
+        
+        Agora extraia as informações do artigo e gere perguntas que possam ser respondidas com base no conteúdo textual do artigo. Além disso, formule a resposta com base no artigo e em nenhuma outra fonte. As perguntas e respostas serão utilizadas para treinamento e finetuning de um LLM. Siga as seguintes diretrizes para gerar as perguntas e respostas:
 
         Considere o texto recebido e identifique informações significativas;
-        Com base nas informações, crie pelo menos 3 perguntas que possam ser respondidas com fragmentos do texto;
-        Caso seja possível mais que 3 perguntas, limite a quantidade de perguntas geradas a até 5;
+        Com base nas informações, crie pelo menos 3 perguntas que possam ser respondidas com base no conteúdo do texto;
+        Caso o texto fornecido não tenha informação a partir da qual seja possível criar perguntas relevantes, deve ser retornado um objeto vazio;
         As perguntas devem ser claras, diretas, e específicas;
         As perguntas podem ter sinônimos ou termos aproximados do texto base, mas devem ser possível de ser respondidas pelo texto fornecido;
-        Para cada pergunta, identifique o trecho do texto que serve como resposta.
+        Para cada pergunta, formule uma resposta usando como base o conteúdo do artigo, sem utilizar qualquer outro conhecimento que você disponha.
+
+        Cada pergunta será aceitável somente se:
+
+        * Estiver relacionada aos assuntos pertinentes ao artigo apresentado
+        * For uma pergunta relevante, semelhante ao que seria perguntado por uma pessoa vim dúvida
+        * Puder ser respondida usando o fragmento apresentado
 
         O resultado deve ser em formato estruturado.
 
-        Um exemplo de como deve ser geradas as perguntas:
+        Um exemplo de como devem ser geradas as perguntas:
 
-        Texto de exemplo:
-        "Art. 1º A República Federativa do Brasil, formada pela união indissolúvel dos Estados e Municípios e do Distrito Federal, constitui-se em Estado Democrático de Direito e tem como fundamentos:
-        I - a soberania;
-        II - a cidadania
-        III - a dignidade da pessoa humana;
-        IV - os valores sociais do trabalho e da livre iniciativa;
-        V - o pluralismo político.
-        Parágrafo único. Todo o poder emana do povo, que o exerce por meio de representantes eleitos ou diretamente, nos termos desta Constituição."
+        Exemplo de texto base:
+        "Art. 1º A Assembleia Legislativa é composta de Deputados, representantes do povo norte-rio-grandense, eleitos, na forma da lei, para mandato de 4 (quatro) anos."
 
-        Resposta aceitável:
-        {[
-            {
-                "pergunta": "O que forma a República  Federativa do Brasil?",
-                "resposta": "união indissolúvel dos Estados e Municípios e do Distrito Federal",
-            },
-            {
-                "pergunta": "Em que se constitui a República Federativa do Brasil?",
-                "resposta": "constitui-se em Estado Democrático de Direito",
-            },
-            {
-                "pergunta": "Quais os fundadmentos da República Federativa do Brasil?",
-                "resposta": "I - a soberania; II - a cidadania III - a dignidade da pessoa humana; IV - os valores sociais do trabalho e da livre iniciativa; V - o pluralismo político.",
-            },
-            {
-                "pergunta": "De onde emana todo o poder?",
-                "resposta": "Todo o poder emana do povo"
-            }
-        ]}
+        Resultado aceitável:
+            {[
+                {
+                    "pergunta": "A Assembleia Legislativa é formada pelo que?",
+                    "resposta": "A Assembleia Legislativa é composta por Deputados, que são eleitos pelo do povo norte-rio-grandense e os representam.",
+                },
+                {
+                    "pergunta": "O que é um Deputado?",
+                    "resposta": "Um Deputado é um representante eleito do povo, possuindo mandato de quatro anos.",
+                },
+                {
+                    "pergunta": "Quanto tempo dura um mandato?",
+                    "resposta": "Um mandato dura pelo período de quatro anos.",
+                }
+            ]}
 
-        TEXTO BASE: {artigo}'''
+        Caso o texto não tenha conteúdo relevante, o resultado deve ser um objeto vazio {{}}.
+
+        Vamos começar?'''
+        
+        mensagens = [
+            {'role': 'system', 'content': msg_sistema},
+            {'role': 'user', 'content': msg_usuario}
+        ]
 
 
         formato = {
@@ -89,7 +102,7 @@ class GeradorPerguntas:
         
         payload = {
             "model": self.modelo_llm,
-            "prompt": prompt,
+            "messages": mensagens,
             "temperature": 0.0,
             "format": formato,
             "stream": False
