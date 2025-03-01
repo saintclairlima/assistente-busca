@@ -110,7 +110,7 @@ class GeradorPerguntas:
         
         resposta = requests.post(self.url_llm, json=payload)
         dados = json.loads(resposta.content)
-        return dados['response']
+        return dados['message']['content']
 
     def gerar_perguntas_banco_vetorial(self, url_banco_vetorial: str, nome_colecao: str, url_arquivo_saida: str) -> List[dict]:
 
@@ -182,7 +182,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     modelo_llm = configuracoes.modelo_llm if not args.modelo_llm else args.modelo_llm
-    url_llm = configuracoes.url_llm + '/api/generate' if not args.url_llm else args.url_llm
+    url_llm = configuracoes.url_llm + '/api/chat' if not args.url_llm else args.url_llm
     
     print(f'Iniciando gerador de perguntas (modelo: "{modelo_llm}", url: "{url_llm}")')
     gerador_banco_perguntas = GeradorPerguntas(modelo_llm=modelo_llm, url_llm=url_llm)
