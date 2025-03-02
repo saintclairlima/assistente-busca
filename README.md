@@ -3,11 +3,15 @@
 ## Introdução
 O Assistente de Busca é uma aplicação de busca de conteúdo em documentos, com sumarização automática de conteúdo. Trata-se de um projeto desenvolvido, sob a direção da Diretoria de Gestão Tecnológica e Inovação (DGTI) da Assembleia Legislativa do Rio Grande do Norte (Alern), com o intuito de ser uma ferramenta interativa de busca de conteúdo dinâmico sob demanda.
 
-A aplicação utiliza uma estrutura de Geração de Texto Aumentada por Recuperação de Documentos [Retrieval-Augmented Generation - RAG](https://arxiv.org/pdf/2005.11401), utilizando perguntas dos usuários como termos de busca, para recuperação de documentos (que contêm conteúdo relativo à busca) e, com base no conteúdo recuperado, geração de uma resposta ou sumário, lançando mão de um Large Language Model (LLM).
+A aplicação utiliza uma estrutura de Geração de Texto Aumentada por Recuperação de Documentos ([Retrieval-Augmented Generation - RAG](https://arxiv.org/pdf/2005.11401)), utilizando perguntas dos usuários como termos de busca, para recuperação de documentos (que contêm conteúdo relativo à busca) e, com base no conteúdo recuperado, geração de uma resposta ou sumário, lançando mão de um Large Language Model (LLM).
 
 A implementação de teste/demonstração - cujo conteúdo é incluso nesse repositório - utiliza um conjunto de dados cujo conteúdo é (1) O Regime Jurídico dos Servidores do RN, (2) Regimento Interno da Alern e (3) um conjunto de diversas resoluções da Alern, mais voltadas para a Gestão de Pessoal.
 
-## Ollama: Instalação e Configuração
+## Modelo LLM
+A criação da resposta final ao usuário depende da utilização de um Grande Modelo de Linguagem (LLM) para geração do conteúdo a ser apresentado. O assistente foi desenhado para ser independente de modelos específicos, de forma a ser mais flexível.
+
+Como forma de facilitar o processo de adaptação, mudanças e atualização, optamos por adotar um cliente LLM chamado Ollama. Mais informações a respeito em https://ollama.com/.
+
 ### Instalando o Ollama
 #### Linux
 * No terminal, baixe e execute o script de instalação:
@@ -372,9 +376,17 @@ python -m api.dados.gerador_banco_vetores \
 Após a criação do banco vetorial, é essencial atualizar o [arquivo de configurações](#arquivo-de-configuração) com a url do banco vetorial (`url_banco_vetores`) e a coleção de documentos (`nome_colecao_de_documentos`) a serem utilizados.
 
 ## Preparando o banco de persistência das interações
-Todos os dados das interações dos usuários com o assistente são registradas para posterior avaliação/análise, bem como para serem utilizados em algum eventual *finetuning* do modelo LLM. Os dados de interaçaõ são registrados em um banco de dados relacional - seja um banco SQL ou um arquivo SQLite, de acordo com o perfil de uso.
+Todos os dados das interações dos usuários com o assistente são registradas para posterior avaliação/análise, bem como para serem utilizados em algum eventual *finetuning* do modelo LLM. Os dados de interação são registrados em um banco de dados relacional - seja um banco SQL ou um arquivo SQLite, de acordo com o perfil de uso.
 
 Para isso, é necessário incluir no arquivo `/api/.env` a localização do arquivo SQLite ou os dados de conexão do banco SQL (MS-SQL, no nosso caso), conforme [seção que detalha a configuração do `.env`](#arquivo-env), bem como incluir a url do script de geração do banco relacional (`url_script_geracao_banco_sqlite` ou `url_script_geracao_banco_sql`) no arquivo `/api/configuracoes/arq_config.json`, conforme apontado na [seção que descreve o arquivo de configurações](#arquivo-de-configuração).
+
+Após esses ajustes, basta utilizar a aplicação de geração do banco relacional, por meio do módulo `ai.dados.persistencia`:
+
+```python
+python -m api.dados.persistencia
+```
+
+Feito isso, o projeto está pronto para inicialização.
 
 ## Iniciando o projeto
 Na pasta raiz do projeto, executar:
