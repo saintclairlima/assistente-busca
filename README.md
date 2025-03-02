@@ -192,7 +192,7 @@ Na pasta `/api` do projeto, crie um arquivo `.env`, salvando nele o conteúdo do
 
 * **URL_LLM**: URL base de onde está sendo executado o LLM. No caso do Ollama, o padrão é `http://localhost:11434`.
 * **URL_HOST**: URL onde a aplicação do assistente está sendo executada. É usada na página HTML que serve de interface de usuário, nessa implementação de exemplo. Por padrão, o valor é `http://localhost:8000`, pela Fast API.
-* **TIPO_PERSISTENCIA**: define o tipo de armazenamento dos dados de avaliação (valores possíveis, por ora: `'sqlite'` (padrão) e `'mssql'`). A aplicação mantém um registro das interações dos usuários e suas respostas - bem como avaliações dos usuários -, para fins de coleta de dados para eventual refinamento da aplicação. É possível salvar os resultados em um banco SQLite simples, embutido na própria aplicação ou em um banco SQL (MS-SQL, no nosso caso).
+* **TIPO_PERSISTENCIA**: define o tipo de armazenamento dos dados de avaliação (valores possíveis, por ora: `'sqlite'` (padrão) e `'mssql'`). A aplicação mantém um registro das interações dos usuários e suas respostas - bem como avaliações dos usuários -, para fins de coleta de dados para eventual refinamento da aplicação. É possível salvar os resultados em um banco SQLite simples, embutido na própria aplicação ou em um banco SQL (MS-SQL, no nosso caso). Para mais detalhes, ver a [seção que descreve o processo de geração do banco](#preparando-o-banco-de-persistência-das-interações).
 * **URL_BANCO_SQLITE**: url do eventual arquivo SQLite a ser utilizado como persistência. Por padrão `'api/dados/persistencia.db'`.
 * **URL_BANCO_SQL**: URL do eventual banco SQL a ser utilizado como persistência.
 * **PORTA_BANCO_SQL**: porta do eventual banco SQL a ser utilizado como persistência.
@@ -372,6 +372,9 @@ python -m api.dados.gerador_banco_vetores \
 Após a criação do banco vetorial, é essencial atualizar o [arquivo de configurações](#arquivo-de-configuração) com a url do banco vetorial (`url_banco_vetores`) e a coleção de documentos (`nome_colecao_de_documentos`) a serem utilizados.
 
 ## Preparando o banco de persistência das interações
+Todos os dados das interações dos usuários com o assistente são registradas para posterior avaliação/análise, bem como para serem utilizados em algum eventual *finetuning* do modelo LLM. Os dados de interaçaõ são registrados em um banco de dados relacional - seja um banco SQL ou um arquivo SQLite, de acordo com o perfil de uso.
+
+Para isso, é necessário incluir no arquivo `/api/.env` a localização do arquivo SQLite ou os dados de conexão do banco SQL (MS-SQL, no nosso caso), conforme [seção que detalha a configuração do `.env`](#arquivo-env), bem como incluir a url do script de geração do banco relacional (`url_script_geracao_banco_sqlite` ou `url_script_geracao_banco_sql`) no arquivo `/api/configuracoes/arq_config.json`, conforme apontado na [seção que descreve o arquivo de configurações](#arquivo-de-configuração).
 
 ## Iniciando o projeto
 Na pasta raiz do projeto, executar:
