@@ -212,7 +212,7 @@ Igualmente, criar um arquivo de configurações `arq_conf.json`, com conteúdo c
 * Nomes dos modelos de embeddings possíveis de ser utilizados no Banco de Vetores (valores fixos):
     * **embedding_instructor** (hkunlp/instructor-xl): modelo Instructor da Universidade de Hong Kong
     * **embedding_squad_portuguese** (pierreguillou/bert-base-cased-squad-v1.1-portuguese): Versão em português do BERT
-    * **embedding_alibaba_gte** (Alibaba-NLP/gte-multilingual-base): modelo GTE do Alibaba
+    * **embedding_alibaba_gte** (Alibaba-NLP/gte-multilingual-base): modelo GTE da Alibaba Cloud
     * **embedding_openai** (text-embedding-ada-002): modelo Ada002, da Open AI
     * **embedding_llama** (llama3.1): modelo Llama3.1 da Meta
     * **embedding_deepseek** (deepseek-r1:14b): versão destilada (usando Qwen) do Deepseek R1
@@ -346,7 +346,7 @@ Os valores por ora aceitos em `--lista_fn_embeddings` são:
 
 * `"hkunlp/instructor-xl"`: para usar o modelo Instructor da Universidade de Hong Kong
 * `"pierreguillou/bert-base-cased-squad-v1.1-portuguese"`: para usar Versão em português do BERT
-* `"Alibaba-NLP/gte-multilingual-base"`: para usar o modelo GTE do Alibaba
+* `"Alibaba-NLP/gte-multilingual-base"`: para usar o modelo GTE da Alibaba Cloud
 * `"text-embedding-ada-002"`: para usar o modelo Ada002, da Open AI
 * `"llama3.1"`: para usar o modelo Llama3.1 da Meta
 * `"deepseek-r1:14b"`: para usar a versão destilada (usando Qwen) do Deepseek R1
