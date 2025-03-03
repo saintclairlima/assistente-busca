@@ -244,7 +244,7 @@ def avaliar_recuperacao(
     
     sumario_resultados = {
         nome_colecao: {
-            'ranking_documento_original': [],
+            'lista_ranking_documento_original': [],
             'lista_score_cosseno': [],
             'lista_score_bert_estimado': [],
             'lista_score_bert_soma': [],
@@ -254,28 +254,29 @@ def avaliar_recuperacao(
 
     # sumariza resultados
     for item in resultados_detalhados:
-        sumario_resultados[item['colecao']]['lista_ranking_documento_original'].append([item['posicao']])
-        sumario_resultados[item['colecao']]['lista_score_cosseno'].append(item['lista_score_cosseno'])
-        sumario_resultados[item['colecao']]['lista_score_bert_estimado'].append(item['lista_score_bert_estimado'])
-        sumario_resultados[item['colecao']]['lista_score_bert_soma'].append(item['lista_score_bert_soma'])
-        sumario_resultados[item['colecao']]['lista_score_bert_ponderado'].append(item['lista_score_bert_ponderado'])
+        sumario_resultados[item['colecao']]['lista_ranking_documento_original'].append(item['posicao'])
+        sumario_resultados[item['colecao']]['lista_score_cosseno'].append(item['score_cosseno'])
+        sumario_resultados[item['colecao']]['lista_score_bert_estimado'].append(item['score_bert_estimado'])
+        sumario_resultados[item['colecao']]['lista_score_bert_soma'].append(item['score_bert_soma'])
+        sumario_resultados[item['colecao']]['lista_score_bert_ponderado'].append(item['score_bert_ponderado'])
 
-    for colecao, resultados in resultados_detalhados.items():
-        resultados['posicao_media_distribuicao'] = {posicao: resultados['posicao_media'].count(posicao) for posicao in range(10)}
-        resultados['posicao_media'] = sum(resultados['lista_ranking_documento_original']) / len(resultados['lista_ranking_documento_original'])
-        resultados['score_cosseno_media'] = sum(resultados['lista_score_cosseno']) / len(resultados['lista_score_cosseno'])
-        resultados['score_bert_estimado_media'] = sum(resultados['lista_score_bert_estimado']) / len(resultados['lista_score_bert_estimado'])
-        resultados['score_bert_soma_media'] = sum(resultados['lista_score_bert_soma']) / len(resultados['lista_score_bert_soma'])
-        resultados['score_bert_ponderado_media'] = sum(resultados['lista_score_bert_ponderado']) / len(resultados['lista_score_bert_ponderado'])
+    for colecao, resultados in sumario_resultados.items():
+        resultados['posicao_media_distribuicao'] = {posicao: resultados['lista_ranking_documento_original'].count(posicao) for posicao in [idx for idx in range(10)] + [None]}
+        resultados['posicao_media'] = sum(filter(None, resultados['lista_ranking_documento_original'])) / len([item for item in filter(None, resultados['lista_ranking_documento_original'])])
+        resultados['score_cosseno_media'] = sum(filter(None, resultados['lista_score_cosseno'])) / len([item for item in filter(None, resultados['lista_score_cosseno'])])
+        resultados['score_bert_estimado_media'] = sum(filter(None, resultados['lista_score_bert_estimado'])) / len([item for item in filter(None, resultados['lista_score_bert_estimado'])])
+        resultados['score_bert_soma_media'] = sum(filter(None, resultados['lista_score_bert_soma'])) / len([item for item in filter(None, resultados['lista_score_bert_soma'])])
+        resultados['score_bert_ponderado_media'] = sum(filter(None, resultados['lista_score_bert_ponderado'])) / len([item for item in filter(None, resultados['lista_score_bert_ponderado'])])
 
+        
     # salva resultado final, sumarizado
-    with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
-        json.dump(resultados_detalhados, arq, ensure_ascii=False, indent=4)
+    with open('resultado.json', 'w', encoding='utf-8') as arq:
+        json.dump(sumario_resultados, arq, ensure_ascii=False, indent=4)
 
     # imprime sumário em tela
     print('SUMÁRIO DOS RESULTADOS')
 
-    for colecao, resultados in resultados_detalhados.items():
+    for colecao, resultados in sumario_resultados.items():
         print(f'''
     ==== {colecao} ====
     Posicao: {resultados['posicao_media']}
@@ -283,9 +284,15 @@ def avaliar_recuperacao(
     Bert Estimado: {resultados['score_bert_estimado_media']}
     Bert Soma: {resultados['score_bert_soma_media']}
     Bert Ponderado: {resultados['score_bert_ponderado_media']}
-    
+
 
     ''')
+        
+    for colecao, resultados in sumario_resultados.items():
+        print(f'======={colecao}=========')
+        for pos, cont in resultados['posicao_media_distribuicao'].items():
+            print(f'{pos}\t{cont}')
+        print('\n')
 
     return resultados_detalhados
 
