@@ -270,7 +270,7 @@ def avaliar_recuperacao(
 
         
     # salva resultado final, sumarizado
-    with open('resultado.json', 'w', encoding='utf-8') as arq:
+    with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
         json.dump(sumario_resultados, arq, ensure_ascii=False, indent=4)
 
     # imprime sumário em tela
