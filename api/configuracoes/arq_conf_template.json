@@ -6,7 +6,7 @@
     "embedding_llama": "llama3.1",
     "embedding_deepseek": "deepseek-r1:14b",
     "embedding_bge_m3": "BAAI/bge-m3",
-    "embedding_mistral": "mistralai/Mistral-7B-Instruct-v0.3",
+    "embedding_mistral": "mistralai/Mistral-7B-v0.1",
 
     "url_indice_documentos": "api/dados/documentos/index.json",
     "url_pasta_documentos": "api/dados/documentos",
