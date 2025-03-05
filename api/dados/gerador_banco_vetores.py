@@ -196,11 +196,6 @@ class GeradorBancoVetores:
                 nome_modelo=configuracoes.embedding_bge_m3,
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE)
-        elif tipo == configuracoes.embedding_mistral:
-            funcao = FuncaoEmbeddings(
-                nome_modelo=configuracoes.embedding_mistral,
-                tipo_modelo=SentenceTransformer,
-                device=DEVICE)
         elif tipo == configuracoes.embedding_openai:
             funcao = embedding_functions.OpenAIEmbeddingFunction(
                 api_key = os.environ.get("OPENAI_API_KEY", None),
@@ -293,8 +288,7 @@ class GeradorBancoVetores:
             configuracoes.embedding_squad_portuguese: 'SentenceTransformer/Bert-Squad-Pt',
             configuracoes.embedding_llama: 'Llama',
             configuracoes.embedding_deepseek: 'Deepseek-r1',
-            configuracoes.embedding_bge_m3: 'BGE-M3',
-            configuracoes.embedding_mistral: 'Mistral 7B'
+            configuracoes.embedding_bge_m3: 'BGE-M3'
         }
         descritor = {
             "nome": url_banco_vetores.split('/')[-1],
