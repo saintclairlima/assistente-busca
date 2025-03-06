@@ -69,7 +69,7 @@ class GeradorDeRespostas:
         ]
 
     async def reclassificar_documentos(self, pergunta, texto_documento: str):
-        return self.reestimador.reclassificar_documentos(pergunta=pergunta, texto_documento=texto_documento)
+        return self.reestimador.reclassificar_documento(pergunta=pergunta, texto_documento=texto_documento)
 
     async def gerar_resposta(self, dados_chat: DadosChat):
         historico = dados_chat.historico
@@ -169,7 +169,7 @@ class GeradorDeRespostas:
 
             prompt_usuario = GeradorPrompts.gerar_prompt_rag(pergunta=pergunta, documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])])
 
-            async for item in self.interface_llm.gerar_resposta_llm(prompt_usuario, historico=historico):
+            async for item in self.interface_llm.gerar_resposta_llm_stream(prompt_usuario, historico=historico):
                 
                 texto_resposta_llm += item['message']['content']
                 yield MensagemDados(

@@ -1,66 +1,146 @@
-## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
-import os
+import argparse
+from typing import List
 import chromadb
 import requests
 import json
-import sys
-from torch import cuda
-
-from sentence_transformers import SentenceTransformer
-
-from ..utils.interface_banco_vetores import FuncaoEmbeddings
-from ..configuracoes.config_gerais import configuracoes
-URL_LLM = 'http://localhost:11434/api/generate'
-MODELO_OLLAMA='llama3.1'
-URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "../dados"))
-EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
-URL_BANCO_VETORES=os.path.join(URL_LOCAL,"bancos_vetores/banco_vetores_regimento_resolucoes_rh")
-NOME_COLECAO='regimento_resolucoes_rh'
-DEVICE='cuda' if cuda.is_available() else 'cpu'
+from api.configuracoes.config_gerais import configuracoes
 
 class GeradorPerguntas:
-    def __init__(self,
-                 url_llm=URL_LLM,
-                 modelo_llm=MODELO_OLLAMA,
-                 url_local=URL_LOCAL,
-                 nome_modelo=EMBEDDING_INSTRUCTOR,
-                 url_banco_vetores=URL_BANCO_VETORES,
-                 nome_colecao=NOME_COLECAO,
-                 device=DEVICE):
-        self.URL_LLM = url_llm
-        self.MODELO_LLM = modelo_llm
-        self.URL_LOCAL = url_local
-        self.NOME_MODELO = nome_modelo
-        self.URL_BANCO_VETORES = url_banco_vetores
-        self.NOME_COLECAO = nome_colecao
-        self.DEVICE = device
+    def __init__(self, url_llm, modelo_llm):
+        self.url_llm = url_llm
+        self.modelo_llm = modelo_llm
 
-    def gerar_perguntas(self, artigo):
-        prompt = '''Considere o artigo abaixo. Crie pelo menos 5 perguntas que possam ser respondidas com fragmentos do artigo. A saída deve ser uma lista de objetos JSON, com os atributos {{"pergunta": "Texto da pergunta Gerada", "resposta": "fragmento do artigo que responde a pergunta"}}. Não adicione nada na resposta, exceto a lista de objetos JSON, sem qualquer comentário adicional. ARTIGO: {}'''.format(artigo)
-        payload = {
-            "model": MODELO_OLLAMA,
-            "prompt": prompt,
-            "temperature": 0.0
+    def gerar_perguntas_artigo(self, artigo):
+
+        '''Gera uma lista de perguntas e respostas com base em um texto. É utilizado um LLM para realizar a geração
+
+        Parâmetros:
+            artigo (str): texto base a ser utilizado para gerar as perguntas
+
+        Retorna:
+            (List[dict]): lista de dicionários com uma pergunta e uma resposta por entrada no formato: 
+        ```python
+        [ {"pergunta": str, "trecho_resposta": str} ]
+        ```
+
+        '''
+        
+        msg_sistema = '''
+        Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte a responder perguntas dos servidores e cidadãos sobre a Assembleia. Sua função é
+        ajudar a criar um banco de dados sintético com perguntas frequentes e dúvidas que servidores reais do serviço público poderiam ter. Esse banco de dados será usado para
+        treinar uma aplicação que vai responder perguntas reais de servidores, portanto deve ter perguntas pertinentes e o mais próximo possível de dúvidas reais relacionadas aos
+        temas de regulação de uma Assembleia Legislativa.'''
+
+        msg_usuario = f'''
+        Considere o texto a seguir, que é um artigo de uma lei:
+        
+        {artigo}
+        
+        Agora extraia as informações do artigo e gere perguntas que possam ser respondidas com base no conteúdo textual do artigo.
+        Além disso, formule a resposta com base no artigo e em nenhuma outra fonte. As perguntas e respostas serão utilizadas para treinamento e finetuning de um LLM. Siga as seguintes diretrizes para gerar as perguntas e respostas:
+
+        Considere o texto recebido e identifique informações significativas;
+        Com base nas informações, crie pelo menos 3 perguntas que possam ser respondidas com base no conteúdo do texto;
+        Caso o texto fornecido não tenha informação a partir da qual seja possível criar perguntas relevantes, deve ser retornado um objeto vazio;
+        As perguntas devem ser claras, diretas, e específicas;
+        As perguntas podem ter sinônimos ou termos aproximados do texto base, mas devem ser possível de ser respondidas pelo texto fornecido;
+        Para cada pergunta, formule uma resposta usando como base o conteúdo do artigo, sem utilizar qualquer outro conhecimento que você disponha.
+
+        Cada pergunta será aceitável somente se:
+
+        * Estiver relacionada aos assuntos pertinentes ao artigo apresentado
+        * For uma pergunta relevante, semelhante ao que seria perguntado por uma pessoa vim dúvida
+        * Puder ser respondida usando o fragmento apresentado
+
+        O resultado deve ser em formato estruturado.
+
+        Um exemplo de como devem ser geradas as perguntas:
+
+        Exemplo de texto base:
+        "Art. 1º A Assembleia Legislativa é composta de Deputados, representantes do povo norte-rio-grandense, eleitos, na forma da lei, para mandato de 4 (quatro) anos."
+
+        Resultado aceitável:
+            {[
+                {
+                    "pergunta": "A Assembleia Legislativa é formada pelo que?",
+                    "resposta": "A Assembleia Legislativa é composta por Deputados, que são eleitos pelo do povo norte-rio-grandense e os representam.",
+                },
+                {
+                    "pergunta": "O que é um Deputado?",
+                    "resposta": "Um Deputado é um representante eleito do povo, possuindo mandato de quatro anos.",
+                },
+                {
+                    "pergunta": "Quanto tempo dura um mandato?",
+                    "resposta": "Um mandato dura pelo período de quatro anos.",
+                }
+            ]}
+
+        Caso o texto não tenha conteúdo relevante, o resultado deve ser um objeto vazio {{}}.
+
+        Vamos começar?'''
+        
+        mensagens = [
+            {'role': 'system', 'content': msg_sistema},
+            {'role': 'user', 'content': msg_usuario}
+        ]
+
+
+        formato = {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "pergunta": {"type": "string"},
+                    "resposta": {"type": "string"}
+                },
+                "required": ["pergunta", "resposta"]
+            }
         }
-        resposta = requests.post(self.URL_LLM, json=payload, stream=True)
-        resposta.raise_for_status()
-        texto_resposta = ''
-        for fragmento in resposta.iter_content(chunk_size=None):
-            if fragmento:
-                dados = json.loads(fragmento.decode())
-                texto_resposta += dados['response']
-        return texto_resposta
 
-    def run(self, url_arquivo_saida='documentos_perguntas.json', carregar_arquivo=False):
-        if carregar_arquivo:
-            print(f'Carregando {url_arquivo_saida}')
+        
+        payload = {
+            "model": self.modelo_llm,
+            "messages": mensagens,
+            "temperature": 0.0,
+            "format": formato,
+            "stream": False
+        }
+        
+        resposta = requests.post(self.url_llm, json=payload)
+        dados = json.loads(resposta.content)
+        return dados['message']['content']
+
+    def gerar_perguntas_banco_vetorial(self, url_banco_vetorial: str, nome_colecao: str, url_arquivo_saida: str) -> List[dict]:
+
+        '''
+        Gera uma lista de perguntas para cada um dos fragmentos em um banco vetorial
+
+        Parâmetros:
+            url_banco_vetorial (str): a url do banco de vetores a ser usado como base
+            nome_colecao (str): nome da coleção a ser usada, existente no banco
+            url_arquivo_saida (str): caminho em que será salvo o arquivo com o resultado
+
+        Retorna:
+            Retorna uma lista de documentos na coleção, acrescentados de uma lista de perguntas
+        
+        O formato da lista retornada é o seguinte:
+        [{
+            "id": str,
+            "page_content": str,
+            "metadata": dict,
+            "perguntas": [ { "pergunta": str, "trecho_resposta": str } ]
+        }]
+        '''
+
+        try:
             with open(url_arquivo_saida, 'r', encoding='utf-8') as arq:
                 documentos = json.load(arq)
-        else:
+                print(f'Carregados dados em {url_arquivo_saida}')
+
+        except FileNotFoundError:
             print(f'Consultando documentos do banco de vetores')
-            client = chromadb.PersistentClient(path=self.URL_BANCO_VETORES)
-            funcao_de_embeddings_sentence_tranformer = FuncaoEmbeddings(nome_modelo=self.NOME_MODELO, tipo_modelo=SentenceTransformer, device=self.DEVICE)
-            collection = client.get_collection(name=self.NOME_COLECAO, embedding_function=funcao_de_embeddings_sentence_tranformer)
+            client = chromadb.PersistentClient(path=url_banco_vetorial)
+            collection = client.get_collection(name=nome_colecao)
             registros = collection.get()
             registros = zip(registros['ids'], registros['documents'], registros['metadatas'])
             documentos = [ {
@@ -82,17 +162,32 @@ class GeradorPerguntas:
             print(f'\rProcessando documento {idx+1} de {qtd_docs}', end='')
             doc = documentos[idx]
             if 'perguntas' not in doc:
-                perguntas = self.gerar_perguntas(artigo=doc['page_content'])
-                doc['perguntas'] = perguntas
+                perguntas = self.gerar_perguntas_artigo(artigo=doc['page_content'])
+                doc['perguntas'] = json.loads(perguntas)
                 
                 with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
                     arq.write(json.dumps(documentos, indent=4, ensure_ascii=False))
+        
+        return documentos
                 
 if __name__ == "__main__":
-    print('Iniciando gerador de perguntas')
-    gerador_banco_perguntas = GeradorPerguntas()
-    try:
-        url_saida = sys.argv[1]
-        gerador_banco_perguntas.run(url_arquivo_saida=url_saida, carregar_arquivo=True)
-    except:
-        gerador_banco_perguntas.run()
+    parser = argparse.ArgumentParser(description="Gera um conjunto de perguntas a partir de documentos armazenados em um banco vetorial")
+    parser.add_argument('--url_banco_vetorial', type=str, required=True, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--nome_colecao', type=str, required=True, help='''nome da coleção a ser consultada''')
+    parser.add_argument('--url_arquivo_saida', type=str, required=True, help='url do arquivo em que vão ser salvos os resultados')
+    parser.add_argument('--modelo_llm', type=str, help="modelo de LLM a ser utilizado")
+    parser.add_argument('--url_llm', type=str, help="url da api em que o modelo está sendo executado")
+    args = parser.parse_args()
+
+    modelo_llm = configuracoes.modelo_llm if not args.modelo_llm else args.modelo_llm
+    url_llm = configuracoes.url_llm + '/api/chat' if not args.url_llm else args.url_llm
+    
+    print(f'Iniciando gerador de perguntas (modelo: "{modelo_llm}", url: "{url_llm}")')
+    gerador_banco_perguntas = GeradorPerguntas(modelo_llm=modelo_llm, url_llm=url_llm)
+    gerador_banco_perguntas.gerar_perguntas_banco_vetorial(
+        url_banco_vetorial=args.url_banco_vetorial,
+        nome_colecao=args.nome_colecao,
+        url_arquivo_saida=args.url_arquivo_saida)
+    
+## Modelo de execução
+#python -m api.testes.gerador_perguntas --url_banco_vetorial "api/dados/bancos_vetores/banco_assistente" --nome_colecao "documentos_rh" --url_arquivo_saida "api/testes/perguntas_documentos_rh.json" --modelo_llm "llama3.1" --url_llm "http://10.90.6.15:11434"

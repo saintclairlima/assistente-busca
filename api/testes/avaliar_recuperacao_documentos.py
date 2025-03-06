@@ -1,146 +1,315 @@
-## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
-print('Importando bibliotecas...')
-import json
-import sys
-from sentence_transformers import SentenceTransformer
+print('Carregando bibliotecas...')
 
-from api.dados.persistencia import GerenciadorPersistenciaSQL, GerenciadorPersistenciaSQLite
-from api.utils.interface_llm import InterfaceOllama
-from api.utils.reclassificador import ReclassificadorBert
-from api.configuracoes.config_gerais import configuracoes
-from api.gerador_de_respostas import GeradorDeRespostas
-from api.utils.interface_banco_vetores import FuncaoEmbeddings, InterfaceChroma
-from time import time
-import asyncio
-import os
 import argparse
+import json, os
+from typing import Dict, List
+from chromadb import chromadb
 from torch import cuda
 
-URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
-EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
+from api.dados.gerador_banco_vetores import GeradorBancoVetores
+from api.utils.reclassificador import ReclassificadorBert
+
 DEVICE='cuda' if cuda.is_available() else 'cpu'
+print(f'Ambiente de execução: {DEVICE}')
 
-async def avaliar_recuperacao_documentos(
-    url_arquivo_entrada,
-    nome_banco_vetores,
-    nome_colecao,
-    url_arquivo_saida=None,
-    instrucao=None,
-    fazer_log=False):
+
+def recuperar_colecoes(url_banco_vetores: str) -> Dict[str, chromadb.Collection]:
+    '''
+    Recupera uma lista de chromadb.Collections correspondente às coleções em um banco de vetores.
+
+    Parâmetros:
+        url_banco_vetores (str): a url do banco de vetores
+
+    Retorna:
+        (Dict[str, chromadb.Collection]) as coleções existentes no banco de vetores
+    '''
+
+    with open(os.path.abspath(os.path.join(url_banco_vetores, 'descritor.json')), 'r') as arq:
+        desc = json.load(arq)
     
-    if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada.split('.')[0] + '_recup_docs.json'
-    url_banco_vetores = os.path.join(URL_LOCAL, f"../dados/bancos_vetores/{nome_banco_vetores}")
-    print(f'Criando GeradorDeRespostas (usando {EMBEDDING_INSTRUCTOR} e instrução "{instrucao}")...')
+    colecoes = {}
+    cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
+    gb = GeradorBancoVetores()
 
-    funcao_de_embeddings = FuncaoEmbeddings(
-        nome_modelo=EMBEDDING_INSTRUCTOR,
-        tipo_modelo=SentenceTransformer,
-        device=DEVICE,
-        instrucao=instrucao)
-
-    interface_banco_vetorial = InterfaceChroma(
-        url_banco_vetores=url_banco_vetores,
-        colecao_de_documentos=nome_colecao,
-        funcao_de_embeddings=funcao_de_embeddings,
-        fazer_log=fazer_log)
-
-    reestimador_bert = ReclassificadorBert(device=DEVICE, fazer_log=fazer_log)
-
-    if fazer_log: print(f'--- preparando o Ollama (usando {configuracoes.modelo_llm})...')
-    interface_llm = InterfaceOllama(url_ollama=configuracoes.url_llm, nome_modelo=configuracoes.modelo_llm)
-
-    tipo_persistencia = configuracoes.configuracoes_ambiente()['tipo_persistencia']
-    if fazer_log: print(f'--- configurando persistência de dados de interação (usando {tipo_persistencia})...')
-    if tipo_persistencia == 'sqlite': gerenciador_persistencia = GerenciadorPersistenciaSQLite()
-    elif tipo_persistencia == 'mssql': gerenciador_persistencia = GerenciadorPersistenciaSQL()
-
-    gerador_de_respostas = GeradorDeRespostas(
-        interface_banco_vetorial=interface_banco_vetorial,
-        reclassificador=reestimador_bert,
-        interface_llm=interface_llm,
-        gerenciador_persistencia=gerenciador_persistencia,
-        device=configuracoes.device,
-        fazer_log=fazer_log)
+    for desc_colecao in desc['colecoes']:
+        funcao = gb.obter_funcao_embeddings(tipo=desc_colecao['funcao_embeddings']['nome_modelo'])
+        colecao = cliente_chroma.get_collection(name=desc_colecao['nome'], embedding_function=funcao)
+        colecoes[desc_colecao['nome']] = colecao
     
-    gerador_de_respostas = GeradorDeRespostas(funcao_de_embeddings=funcao_de_embeddings, url_banco_vetores=url_banco_vetores, colecao_de_documentos=nome_colecao, device=DEVICE)
+    return colecoes
 
-    with open(url_arquivo_entrada, 'r') as arq:
-        docs = json.load(arq)
+def gerar_mapa_fragmentos(fragmentos_referencia: List[dict], colecoes: Dict[str, chromadb.Collection]) -> dict:
+    '''
+    Recupera um dicionário em que a chave corresponde ao id de um documento de uma coleção e o valor é
+    o id de um documento com conteúdo idêntico em uma lista de referência.
+
+    Assume que todas as coleções têm somente documentos cujo conteúdo seja igual ao de um e somente um
+    documento na lista de referência.
+    É necessário, porque embora dois documentos que têm o mesmo conteúdo em coleções diferentes, seus uuids
+    são distintos. Como o arquivo de referência, usado para criar as perguntas, é criado com base em uma das
+    coleções, é necessário mapear os ids dos arquivos correspondentes das outras coleções com os do documento
+    de referência.
+
+    Parâmetros:
+        fragmentos_referencia (List[dict]): a url do banco de vetores
+        colecoes (Dict[str, chromadb.Collection]): coleções existentes no banco de vetores
+
+    Retorna:
+        (dict): mapeamento
+    '''
+
+    referencia = {fragmento['page_content']: fragmento['id'] for fragmento in fragmentos_referencia}
+    grupo_documentos = [{conteudo: id for conteudo, id in zip(dados['documents'], dados['ids'])} for dados in (c.get() for c in colecoes.values())]
+    mapa = {}
+    for grupo in grupo_documentos:
+        for conteudo, id in grupo.items():
+            mapa[id] = referencia[conteudo]
+    return mapa
+
+
+def simular_recuperacao_documentos(url_arq_fragmentos: str, url_banco_vetores: str, num_resultados: int) -> List[dict]:
+    '''
+    Utiliza uma lista de perguntas geradas para fragmentos no banco vetorial e realiza recuperação de documentos por similaridade.
+
+    Parâmetros:
+        url_arq_fragmentos (str): a url do arquivo com fragmentos e perguntas
+        url_banco_vetores (str): a url do banco de vetores
+        num_resultados (int): a quantidade de documentos a serem recuperados do banco vetorial
+
+    Retorna:
+        (List[dict]): a url do banco de vetores
+
+    **Observação:**
+    Assume que o formato do arquivo com a lista de fragmentos e perguntas segue o que é retornado pelo método
+    **`api.testes.gerador_perguntas.gerar_perguntas_banco_vetorial`**:
+
+    ```python
+    {
+        "id": str,
+        "page_content": str,
+        "metadata": dict,
+        "perguntas": [ { "pergunta": str, "trecho_resposta": str } ]
+    }
+    ```
+
+    O valor retornado segue o seguinte formato:
+    ```python
+    [{
+        'id_frag': str,
+        'pergunta': str,
+        'docs_recuperados': [{
+            'nome_colecao': str,
+            'documentos': [{
+                'id': str,
+                'score_bert': { 'resposta': str, 'score': (float, float), 'score_ponderado': float },
+                'score_cosseno': float
+            }]
+        }]
+    }]
+    ```
+    '''
     
-    print(f'Recuperando lista de documentos com perguntas ({url_arquivo_entrada})...')
-    print(f'Os resultados serão salvos em {url_arquivo_saida}')
-    perguntas = []
-    for item in docs['dados']:
-        for pergunta in item['perguntas']:
-            try:
-                if pergunta['resposta'] != '': perguntas.append({'id': item['id'], 'titulo': item['metadata']['titulo'], 'subtitulo': item['metadata']['subtitulo'], 'pergunta': pergunta['pergunta'], 'resposta': pergunta['resposta']})
-            except:
-                print(pergunta)
+    colecoes = recuperar_colecoes(url_banco_vetores=url_banco_vetores)
+    with open(url_arq_fragmentos, 'r', encoding='utf-8') as arq:
+        fragmentos_com_perguntas = json.load(arq)
 
-    qtd_perguntas = len(perguntas)
-    for idx in range(qtd_perguntas):
-        pergunta = perguntas[idx]
-        print(f'\rPergunta {idx+1} de {qtd_perguntas}', end='')
-        if fazer_log: print(f'''-- realizando consulta para: "{pergunta['pergunta']}"...''')
+    reclassificador_bert = ReclassificadorBert(device=DEVICE, fazer_log=False)
+    mapa_fragmentos = gerar_mapa_fragmentos(fragmentos_referencia=fragmentos_com_perguntas, colecoes=colecoes)
 
-        # Recuperando documentos usando o ChromaDB
-        marcador_tempo_inicio = time()
-        documentos = await gerador_de_respostas.consultar_documentos_banco_vetores(pergunta['pergunta'], num_resultados=10)
-        lista_documentos = gerador_de_respostas.formatar_lista_documentos(documentos)
-        marcador_tempo_fim = time()
-        tempo_consulta = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- consulta no banco concluída ({tempo_consulta} segundos)')
+    resultado = []
+    for idx in range(len(fragmentos_com_perguntas)):
+        fragmento = fragmentos_com_perguntas[idx]
+        id_frag = fragmento['id']
+        perguntas = [par['pergunta'] for par in fragmento['perguntas']]
+        print('RECUPERANDO DOCUMENTOS')
+        print(f'Processando fragmento {idx+1} de {len(fragmentos_com_perguntas)}')
 
-        # Atribuindo scores usando Bert
-        if fazer_log: print(f'--- aplicando scores do Bert aos documentos recuperados...')
-        marcador_tempo_inicio = time()
-        for documento in lista_documentos:
-            resposta_estimada = await gerador_de_respostas.reclassificar_documentos(pergunta['pergunta'], documento['conteudo'])
-            documento['score_bert'] = resposta_estimada['score']
-            documento['score_ponderado'] = resposta_estimada['score_ponderado']
-            documento['resposta_bert'] = resposta_estimada['resposta']
-        marcador_tempo_fim = time()
-        tempo_bert = marcador_tempo_fim - marcador_tempo_inicio
-        if fazer_log: print(f'--- scores atribuídos ({tempo_bert} segundos)\n\n\n')
-        pergunta.update({
-            'documentos': [
-                {'id': doc['id'],
-                'titulo': doc['metadados']['titulo'],
-                'subtitulo': doc['metadados']['subtitulo'],
-                'score_bert': doc['score_bert'],
-                'score_distancia': doc['score_distancia'],
-                'score_ponderado': doc['score_ponderado'],
-                'resposta_bert': doc['resposta_bert']
-                } for doc in lista_documentos],
-            'tempo_consulta': tempo_consulta,
-            'tempo_bert': tempo_bert
+        for idx in range(len(perguntas)):
+            print(f'-- pergunta {idx+1} de {len(perguntas)}')
+            pergunta = perguntas[idx]
+            relat_busca = {
+                'id_frag': id_frag,
+                'pergunta': pergunta,
+                'docs_recuperados': []
+            }
+
+            for nome_colecao, colecao in colecoes.items():
+                print(f'--- recuperando da colecao {nome_colecao}...')
+                res_consulta = colecao.query(query_texts=[pergunta], n_results=num_resultados)
+                ids = res_consulta['ids'][0]
+                conteudo = res_consulta['documents'][0]
+                distancias = res_consulta['distances'][0]
+                documentos = [item for item in zip(ids, conteudo, distancias)]
+                documentos = [{
+                    'id': mapa_fragmentos[doc[0]],
+                    'score_bert': reclassificador_bert.reclassificar_documento(pergunta=pergunta, texto_documento=doc[1]),
+                    'score_cosseno': doc[2]
+                } for doc in documentos]
+
+                relat_busca['docs_recuperados'].append(
+                    {
+                        'nome_colecao': nome_colecao,
+                        'documentos': documentos
+                    }
+                )
+            
+            resultado.append(relat_busca)
+    return resultado
+
+def avaliar_recuperacao(
+    url_arq_fragmentos: str,
+    url_banco_vetores: str,
+    url_arquivo_saida: str,
+    num_resultados: int,
+    gerar_relatorios_intermediarios_avaliacao: bool=False) -> List[dict]:
+
+    '''
+    Utiliza uma lista de perguntas geradas para fragmentos no banco vetorial e realiza uma análise comparativa da taxa de recuperação
+    de documentos por coleção/modelo de embeddings em um banco vetorial.
+
+    Parâmetros:
+        url_arq_fragmentos (str): url do arquivo com fragmentos e perguntas a ser utilizado para realizar consultas
+        url_banco_vetores (str): url do banco de vetores
+        url_arquivo_saida (str): caminho onde salvar o arquivo de saída
+        num_resultados (int): número de resultados de cada consulta ao banco de vetores
+        gerar_relatorios_intermediarios_avaliacao (bool) OPCIONAL. Default: False
+    
+    Retorna:
+        (List[dict]): lista com relatório de cada uma das coleções.
+
+    O retorno segue o seguinte formato:
+    ```python
+        [{
+            nome_colecao: {
+                'lista_ranking_documento_original': [ item (int)],
+                'lista_score_cosseno': [ item (float)],
+                'lista_score_bert_estimado': [ item (float)],
+                'lista_score_bert_soma': [ item (float)],
+                'lista_score_bert_ponderado': [ item (float)],
+                'posicao_media_distribuicao': {chave (int) : valor (int)},
+                'posicao_media': valor (float),
+                'score_cosseno_media': valor (float),
+                'score_bert_estimado_media': valor (float),
+                'score_bert_soma_media': valor (float),
+                'posicao_mscore_bert_ponderado_mediaedia': valor (float),
+            }
+        }]
+    ```
+    '''
+
+    # obtém resultados de consultas no banco vetorial
+    simulacao_recuperacao = simular_recuperacao_documentos(url_arq_fragmentos=url_arq_fragmentos, url_banco_vetores=url_banco_vetores, num_resultados=num_resultados)
+
+    # salva os resultados da busca
+    if gerar_relatorios_intermediarios_avaliacao:
+        with open(url_arq_fragmentos[:-5] + '_simulacao_recuperacao.json', 'w', encoding='utf-8') as arq:
+            json.dump(simulacao_recuperacao, arq, ensure_ascii=False, indent=4)
+
+    resultados_detalhados = []
+    # Realiza cálculo de resultados intermediários
+    for item_pergunta in simulacao_recuperacao:
+        id_frag = item_pergunta['id_frag']
+        pergunta = item_pergunta['pergunta']
+        for resultados_colecao in item_pergunta['docs_recuperados']:
+            colecao = resultados_colecao['nome_colecao']
+            ids_docs = [doc['id'] for doc in resultados_colecao['documentos']]
+            if id_frag in ids_docs:
+                posicao = ids_docs.index(id_frag)
+                score_cosseno = resultados_colecao['documentos'][posicao]['score_cosseno']
+                score_bert_estimado = resultados_colecao['documentos'][posicao]['score_bert']['score'][0]
+                score_bert_soma = resultados_colecao['documentos'][posicao]['score_bert']['score'][1]
+                score_bert_ponderado = resultados_colecao['documentos'][posicao]['score_bert']['score_ponderado']
+            else:
+                posicao = None
+                score_cosseno = None
+                score_bert_estimado = None
+                score_bert_soma = None
+                score_bert_ponderado = None
+
+            resultados_detalhados.append({
+                'id_frag': id_frag,
+                'pergunta': pergunta,
+                'colecao': colecao,
+                'posicao': posicao,
+                'score_cosseno': score_cosseno,
+                'score_bert_estimado': score_bert_estimado,
+                'score_bert_soma': score_bert_soma,
+                'score_bert_ponderado': score_bert_ponderado
             })
 
+    # salva resultados intermediários
+    if gerar_relatorios_intermediarios_avaliacao:
+        with open(url_arq_fragmentos[:-5] + '_avaliacao_resultados_detalhados.json', 'w', encoding='utf-8') as arq:
+            json.dump(resultados_detalhados, arq, ensure_ascii=False, indent=4)
+    
+    sumario_resultados = {
+        nome_colecao: {
+            'lista_ranking_documento_original': [],
+            'lista_score_cosseno': [],
+            'lista_score_bert_estimado': [],
+            'lista_score_bert_soma': [],
+            'lista_score_bert_ponderado': []
+        } for nome_colecao in set([item['colecao'] for item in resultados_detalhados])
+    }
 
-        with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
-            json.dump(perguntas, arq, indent=4, ensure_ascii=False)
+    # sumariza resultados
+    for item in resultados_detalhados:
+        sumario_resultados[item['colecao']]['lista_ranking_documento_original'].append(item['posicao'])
+        sumario_resultados[item['colecao']]['lista_score_cosseno'].append(item['score_cosseno'])
+        sumario_resultados[item['colecao']]['lista_score_bert_estimado'].append(item['score_bert_estimado'])
+        sumario_resultados[item['colecao']]['lista_score_bert_soma'].append(item['score_bert_soma'])
+        sumario_resultados[item['colecao']]['lista_score_bert_ponderado'].append(item['score_bert_ponderado'])
+
+    for colecao, resultados in sumario_resultados.items():
+        resultados['posicao_media_distribuicao'] = {posicao: resultados['lista_ranking_documento_original'].count(posicao) for posicao in [idx for idx in range(10)] + [None]}
+        resultados['posicao_media'] = sum(filter(None, resultados['lista_ranking_documento_original'])) / len([item for item in filter(None, resultados['lista_ranking_documento_original'])])
+        resultados['score_cosseno_media'] = sum(filter(None, resultados['lista_score_cosseno'])) / len([item for item in filter(None, resultados['lista_score_cosseno'])])
+        resultados['score_bert_estimado_media'] = sum(filter(None, resultados['lista_score_bert_estimado'])) / len([item for item in filter(None, resultados['lista_score_bert_estimado'])])
+        resultados['score_bert_soma_media'] = sum(filter(None, resultados['lista_score_bert_soma'])) / len([item for item in filter(None, resultados['lista_score_bert_soma'])])
+        resultados['score_bert_ponderado_media'] = sum(filter(None, resultados['lista_score_bert_ponderado'])) / len([item for item in filter(None, resultados['lista_score_bert_ponderado'])])
+
+        
+    # salva resultado final, sumarizado
+    with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
+        json.dump(sumario_resultados, arq, ensure_ascii=False, indent=4)
+
+    # imprime sumário em tela
+    print('SUMÁRIO DOS RESULTADOS')
+
+    for colecao, resultados in sumario_resultados.items():
+        print(f'''
+    ==== {colecao} ====
+    Posicao: {resultados['posicao_media']}
+    Cosseno:{resultados['score_cosseno_media']}
+    Bert Estimado: {resultados['score_bert_estimado_media']}
+    Bert Soma: {resultados['score_bert_soma_media']}
+    Bert Ponderado: {resultados['score_bert_ponderado_media']}
 
 
+    ''')
+        
+    for colecao, resultados in sumario_resultados.items():
+        print(f'======={colecao}=========')
+        for pos, cont in resultados['posicao_media_distribuicao'].items():
+            print(f'{pos}\t{cont}')
+        print('\n')
 
-# Run the `avaliar` function
+    return resultados_detalhados
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gera resultados de busca por documentos a partir de uma lista de perguntas")
-    
-    parser.add_argument('--url_entrada', type=str, required=True, help="caminho para arquivo com as perguntas")
-    parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
-    parser.add_argument('--nome_colecao', type=str, required=True, help="coleçaõ do banco a ser utilizada")
-    parser.add_argument('--url_saida', type=str, help="caminho para arquivo em que serão salvos os resultados")
-    parser.add_argument('--instrucao', type=str, help="instrucao a ser utilizada na função de embeddings")
-
+    parser.add_argument('--url_arq_fragmentos', type=str, required=True, help="caminho para arquivo com as perguntas")
+    parser.add_argument('--url_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--url_arquivo_saida', type=str, required=True, help="caminho para salvar o arquivo com o resultado")
+    parser.add_argument('--num_resultados', type=int, required=True, help='quantidade de documentos a ser recuperada de cada consulta ao banco de vetores')
+    parser.add_argument('--gerar_relatorios_intermediarios', type=bool, help='indicador se deve ou não salvar os resultados')
     args = parser.parse_args()
-    url_entrada = args.url_entrada
-    nome_banco_vetores = args.nome_banco_vetores
-    nome_colecao = args.nome_colecao
-    url_saida = None if not args.url_saida else args.url_saida
-    instrucao = None if not args.instrucao else args.instrucao
-    asyncio.run(avaliar_recuperacao_documentos(
-        url_arquivo_entrada=url_entrada,
-        nome_banco_vetores=nome_banco_vetores,
-        nome_colecao=nome_colecao,
-        url_arquivo_saida=url_saida,
-        instrucao=instrucao))
+
+    res = avaliar_recuperacao(
+        url_arq_fragmentos = args.url_arq_fragmentos,
+        url_banco_vetores = args.url_banco_vetores,
+        url_arquivo_saida = args.url_arquivo_saida,
+        num_resultados = args.num_resultados,
+        gerar_relatorios_intermediarios_avaliacao = args.gerar_relatorios_intermediarios
+    )

@@ -1,6 +1,7 @@
 from chromadb import chromadb, Documents, EmbeddingFunction, Embeddings
 from sentence_transformers import SentenceTransformer
 from torch import cuda
+from api.utils.interface_llm import ClienteOllama
 from api.configuracoes.config_gerais import configuracoes
 
 
@@ -56,6 +57,57 @@ class FuncaoEmbeddings(EmbeddingFunction):
         else:
             embeddings = self.modelo.encode(input, convert_to_numpy=True, device=self.device)
         return embeddings.tolist()
+    
+class FuncaoEmbeddingsAPI(EmbeddingFunction):
+    # Custom embedding function using API calls
+    '''
+    Função de embeddings customizada, a ser utilizada com chamadas a APIs
+
+    Atributos:
+        device (str): Tipo de dispositivo em que será executada a aplicação ['cuda', 'cpu']
+        modelo (classe baseada em transformer): modelo pré-treinado
+        instrucao (str): instrução a ser utilizada em modelos do tipo instructor
+    '''
+
+    def __init__(self, url_api: str, nome_modelo: str):
+        '''
+        Inicializa a função
+
+        Parâmetros:
+            url_api (str): url onde se localiza a API geradora de embeddings
+            nome_modelo (str): nome do modelo utilizado
+            instrucao (str): parâmetro opcional, instrução a ser utilizada em modelos do tipo instructor
+        '''
+
+        # Carrega modelo pré-treinado com remote code trust habilitado
+        self.url_api = url_api
+        self.nome_modelo = nome_modelo
+
+    def __call__(self, input: Documents) -> Embeddings:
+        '''
+        Gera embeddings para uma coleção de documentos
+
+        Parâmetros:
+            input (chromadb.Documents): uma lista de strings com o conteúdo a ser representado por embeddings
+        
+        Retorna:
+            (chroma.Embeddings): uma lista de representações de Embeddings (List[ndarray[Any, dtype[signedinteger[_32Bit] | floating[_32Bit]]]])
+        '''
+        raise NotImplementedError('Método consultar_documentos() não foi implantado para esta classe')
+
+class FuncaoEmbeddingsOllama(FuncaoEmbeddingsAPI):
+    '''
+    Especialização de FuncaoEmbeddingsAPI voltada para uso com o Ollama
+    '''
+
+    def __init__(self, url_api, nome_modelo):
+        super().__init__(url_api, nome_modelo)
+    
+    def __call__(self, input: Documents) -> Embeddings:
+        llm = ClienteOllama(nome_modelo=self.nome_modelo, url_llm=self.url_api)
+        embeddings = llm.gerar_embeddings(input)
+        return embeddings
+        
     
 class InterfaceBancoVetorial:
     # Base class for interfacing with vector stores

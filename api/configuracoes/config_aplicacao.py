@@ -17,6 +17,7 @@ class ConfiguracoesAplicacao:
         self.threadpool_max_workers=configs['threadpool_max_workers']
         
         self.url_pasta_documentos = os.path.normpath(configs['url_pasta_documentos'])
+        self.url_pasta_bancos_vetores = os.path.normpath(configs['url_pasta_bancos_vetores'])
         self.url_banco_vetores = os.path.normpath(configs['url_banco_vetores'])
         self.nome_colecao_de_documentos = configs['nome_colecao_de_documentos']
         self.num_maximo_palavras_por_fragmento = configs['num_maximo_palavras_por_fragmento']
@@ -25,6 +26,9 @@ class ConfiguracoesAplicacao:
         self.embedding_squad_portuguese = configs['embedding_squad_portuguese']
         self.embedding_alibaba_gte = configs['embedding_alibaba_gte']
         self.embedding_openai = configs['embedding_openai']
+        self.embedding_llama = configs['embedding_llama']
+        self.embedding_deepseek = configs['embedding_deepseek']
+        self.embedding_bge_m3 = configs['embedding_bge_m3']
         self.url_cache_modelos = os.path.abspath(configs['url_cache_modelos'])
         os.environ['HF_HOME'] = self.url_cache_modelos
         os.environ['HF_HUB_CACHE'] = self.url_cache_modelos
@@ -55,6 +59,7 @@ class ConfiguracoesAplicacao:
         
     def configuracoes_banco_vetores(self):
         return {
+            'url_pasta_bancos_vetores': self.url_pasta_bancos_vetores,
             'url_banco_vetores': self.url_banco_vetores,
             'nome_colecao_de_documentos': self.nome_colecao_de_documentos,
             'num_documentos_retornados': self.num_documentos_retornados,

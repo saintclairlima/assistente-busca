@@ -4,7 +4,7 @@ import json
 import os
 import uuid
 from api.configuracoes.config_gerais import configuracoes
-from api.utils.interface_banco_vetores import FuncaoEmbeddings
+from api.utils.interface_banco_vetores import FuncaoEmbeddings, FuncaoEmbeddingsOllama
 from torch import cuda
 import chromadb.utils.embedding_functions as embedding_functions
 from sentence_transformers import SentenceTransformer
@@ -12,7 +12,6 @@ from chromadb import chromadb
 from pypdf import PdfReader
 from bs4 import BeautifulSoup
 
-URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class GeradorBancoVetores:
@@ -128,7 +127,7 @@ class GeradorBancoVetores:
         return fragmentos       
     
     def extrair_fragmento_txt(self, rotulo, info, comprimento_max_fragmento):
-        with open(os.path.join(URL_LOCAL,info['url']), 'r', encoding='utf-8') as arq:
+        with open(os.path.join(configuracoes.url_pasta_documentos,info['url']), 'r', encoding='utf-8') as arq:
             texto = arq.read()
         
         fragmentos = self.processar_texto(texto, info, comprimento_max_fragmento)
@@ -139,7 +138,7 @@ class GeradorBancoVetores:
     
     def extrair_fragmento_pdf(self, rotulo, info, comprimento_max_fragmento):
         fragmentos = []
-        arquivo = PdfReader(os.path.join(URL_LOCAL,info['url']))
+        arquivo = PdfReader(os.path.join(configuracoes.url_pasta_documentos,info['url']))
         for idx in range(len(arquivo.pages)):
             pagina = arquivo.pages[idx]
             texto = pagina.extract_text()
@@ -148,7 +147,7 @@ class GeradorBancoVetores:
         return fragmentos
         
     def extrair_fragmento_html(self, rotulo, info, comprimento_max_fragmento):
-        with open(os.path.join(URL_LOCAL,info['url']), 'r', encoding='utf-8') as arq:
+        with open(os.path.join(configuracoes.url_pasta_documentos,info['url']), 'r', encoding='utf-8') as arq:
             conteudo_html = arq.read()
             
         pagina_html = BeautifulSoup(conteudo_html, 'html.parser')
@@ -192,11 +191,29 @@ class GeradorBancoVetores:
                 nome_modelo=configuracoes.embedding_alibaba_gte,
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE)
+        elif tipo == configuracoes.embedding_bge_m3:
+            funcao = FuncaoEmbeddings(
+                nome_modelo=configuracoes.embedding_bge_m3,
+                tipo_modelo=SentenceTransformer,
+                device=DEVICE)
         elif tipo == configuracoes.embedding_openai:
             funcao = embedding_functions.OpenAIEmbeddingFunction(
                 api_key = os.environ.get("OPENAI_API_KEY", None),
                 model_name=configuracoes.embedding_openai)
-        
+        elif tipo == configuracoes.embedding_llama:
+            funcao = FuncaoEmbeddingsOllama(
+                nome_modelo=configuracoes.embedding_llama,
+                url_api=configuracoes.url_llm)
+        elif tipo == configuracoes.embedding_deepseek:
+            funcao = FuncaoEmbeddingsOllama(
+                nome_modelo=configuracoes.embedding_deepseek,
+                url_api=configuracoes.url_llm)
+        elif tipo == configuracoes.embedding_squad_portuguese:
+            funcao = FuncaoEmbeddings(
+                nome_modelo=configuracoes.embedding_squad_portuguese,
+                tipo_modelo=SentenceTransformer,
+                device=DEVICE
+            )
         else:
             raise NameError(f'O tipo {tipo} ainda não tem suporte para geração de função de embeddings implementado')
         
@@ -239,13 +256,15 @@ class GeradorBancoVetores:
 
         cliente_chroma._system.stop()
         
-    def run(self,
+    def executar(self,
             indice_documentos=None,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
             nomes_funcoes_embeddings=[configuracoes.embedding_instructor],
             comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
             instrucao=None):
+        
+        print(f"-- Geração de bancos vetoriais inicializada utilizando {DEVICE}...")
         
         docs = self.extrair_fragmentos(
             indice_documentos=indice_documentos,
@@ -263,10 +282,13 @@ class GeradorBancoVetores:
         )
 
         tipos_modelos = {
-            configuracoes.embedding_instructor: 'SentenceTransformer',
+            configuracoes.embedding_instructor: 'SentenceTransformer/Instructor',
             configuracoes.embedding_openai: 'OpenAI-API',
-            configuracoes.embedding_alibaba_gte: 'Alibaba-GTE',
-            configuracoes.embedding_squad_portuguese: 'Bert-Squad-Pt',
+            configuracoes.embedding_alibaba_gte: 'SentenceTransformer/Alibaba-GTE',
+            configuracoes.embedding_squad_portuguese: 'SentenceTransformer/Bert-Squad-Pt',
+            configuracoes.embedding_llama: 'Llama',
+            configuracoes.embedding_deepseek: 'Deepseek-r1',
+            configuracoes.embedding_bge_m3: 'BGE-M3'
         }
         descritor = {
             "nome": url_banco_vetores.split('/')[-1],
@@ -286,8 +308,17 @@ class GeradorBancoVetores:
             ]
         }
         
-        with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
-            json.dump(descritor, arq, ensure_ascii=False, indent=4)
+        try:
+            with open(url_banco_vetores+ '/descritor.json', 'r', encoding='utf-8') as arq:
+                descritor_existente = json.load(arq)
+            descritor_existente['colecoes'] += descritor['colecoes']
+
+            with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
+                json.dump(descritor_existente, arq, ensure_ascii=False, indent=4)
+                
+        except FileNotFoundError:
+            with open(url_banco_vetores+ '/descritor.json', 'w', encoding='utf-8') as arq:
+                json.dump(descritor, arq, ensure_ascii=False, indent=4)
         
         if configuracoes.usar_wandb:    
             import wandb
@@ -300,9 +331,9 @@ class GeradorBancoVetores:
         
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description="Gera resultados de busca por documentos a partir de uma lista de perguntas")
+    parser = argparse.ArgumentParser(description="Gera um banco vetorial a partir de uma lista de documentos")
     parser.add_argument('--url_indice_documentos', type=str, help="caminho para arquivo com a lista de documentos")
-    parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser criado")
     parser.add_argument('--lista_colecoes', type=str, required=True, help='''uma lista com os nomes das coleções no formato "['colecao1', 'colecao2']''')
     parser.add_argument('--lista_fn_embeddings', type=str, required=True, help='''uma lista com os tipos das funções de embeddings no formato "['openai', 'instructor']''')
     parser.add_argument('--comprimento_max_fragmento', type=int, required=True, help="número máximo de palavras por fragmento")
@@ -317,7 +348,7 @@ if __name__ == "__main__":
     else:
         indice_documentos = None
             
-    nome_banco_vetores = os.path.join(URL_LOCAL,"bancos_vetores/" + args.nome_banco_vetores)
+    nome_banco_vetores = os.path.join(configuracoes.url_pasta_bancos_vetores, args.nome_banco_vetores)
     
     nomes_colecoes = ast.literal_eval(args.lista_colecoes)
     nomes_funcoes_embeddings = ast.literal_eval(args.lista_fn_embeddings)
@@ -328,7 +359,7 @@ if __name__ == "__main__":
     instrucao = None if not args.instrucao else args.instrucao
 
     gerador_banco_vetores = GeradorBancoVetores()
-    gerador_banco_vetores.run(
+    gerador_banco_vetores.executar(
         indice_documentos=indice_documentos,
         url_banco_vetores=nome_banco_vetores,
         nomes_colecoes=nomes_colecoes,
@@ -339,6 +370,6 @@ if __name__ == "__main__":
 ## Modelo de Execução
 # python -m api.dados.gerador_banco_vetores \
 # --nome_banco_vetores banco_assistente \
-# --lista_colecoes "['documentos_rh', 'documentos_rh_openai', 'documentos_rh_alibaba']" \
-# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base']" \
+# --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt']" \
+# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
 # --comprimento_max_fragmento 300

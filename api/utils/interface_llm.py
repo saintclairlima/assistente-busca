@@ -31,7 +31,7 @@ class ClienteLLM:
         url_llm (str): url onde a API do LLM se encontra
         temperature (float): temperatura do modelo. Valores altos fazem o modelo responder de forma mais criativa
         top_k (int): Reduz a probabilidade de gerar alucinação. Valores altos (ex. 100) resultam em respostas com diversidade; valores baixos (ex. 10) são mais conservadores
-        top_p (float): ATua junto com top_k. Valores altos (ex. 0.95) resultam em texto mais diverso; valores baixos (ex. 0.5) geram texto mais conservador e focado.
+        top_p (float): Atua junto com top_k. Valores altos (ex. 0.95) resultam em texto mais diverso; valores baixos (ex. 0.5) geram texto mais conservador e focado.
 
     Métodos:
         health(): teste simples de verificação se a API está ativa
@@ -54,6 +54,18 @@ class ClienteLLM:
         Teste simples de verificação se a API está ativa
 
         Retorna o Status_code da requests.Response resultante da chamada À API
+        '''
+        raise NotImplementedError('Método health() não foi implantado para esta classe')
+
+    def gerar_embeddings(self, texto: str):
+        '''
+        Utiliza o modelo do cliente para gerar embeddings do texto fornecido
+
+        Parâmetros:
+            texto (str): texto a ser convertido em embeddings.
+            
+        Retorna:
+            Uma série de str serializáveis em formato JSON com as respostas da API
         '''
         raise NotImplementedError('Método health() não foi implantado para esta classe')
         
@@ -102,8 +114,7 @@ class ClienteOllama(ClienteLLM):
         '''
 
         # Envia solicitação ao endpoint de geração de texto usando a opção de 'stream'
-        url = f"{self.url_llm}/api/chat"
-        
+        url = f"{self.url_llm}/api/chat"        
         payload = {
             "model": self.modelo,
             "messages": mensagens,
@@ -112,18 +123,27 @@ class ClienteOllama(ClienteLLM):
             "top_p": self.top_p,
             "stream": True,
             # "max_new_tokens": 4096 # AFAZER: Considerar remover este atributo
-        }
-        
+        }        
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", url, json=payload, timeout=120) as resposta:
                 resposta.raise_for_status()
-
                 async for fragmento in resposta.aiter_bytes():
                     if fragmento:
                         try:
                             yield json.loads(fragmento.decode())
                         except:
                             print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
+
+    def gerar_embeddings(self, texto: str):
+        url_llm = f"{self.url_llm}/api/embed"
+        data = {
+            "model": self.modelo,
+            "input": texto
+        }
+
+        resposta = requests.post(url_llm, json=data)
+        embeddings = json.loads(resposta.content)['embeddings']
+        return embeddings
 
 class ClienteOpenAi(ClienteLLM):
     # Client implementation for OpenAI-compatible LLM API
@@ -213,7 +233,7 @@ class InterfaceLLM:
         
         return mensagens
     
-    async def gerar_resposta_llm(self, pergunta: str, documentos: List[str], historico: List[Tuple[str, str]]):
+    async def gerar_resposta_llm_stream(self, pergunta: str, documentos: List[str], historico: List[Tuple[str, str]]):
         raise NotImplementedError('Método gerar_resposta_llm() não foi implantado para esta classe')
 
 class InterfaceOllama(InterfaceLLM):
@@ -249,7 +269,7 @@ class InterfaceOllama(InterfaceLLM):
         '''Teste simples de verificação se a API está ativa'''
         return self.cliente_ollama.health()
         
-    async def gerar_resposta_llm(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
+    async def gerar_resposta_llm_stream(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
         '''
         Invoca o ClienteLLM para realizar requisição à API do LLM e retorna resposta em formato de 'stream'
 
