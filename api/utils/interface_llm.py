@@ -159,7 +159,7 @@ class ClienteOllama(ClienteLLM):
 
         resposta = requests.post(url, json=payload)
         dados = json.loads(resposta.content)
-        return dados['message']['content']
+        return dados
 
     def gerar_embeddings(self, texto: str):
         url_llm = f"{self.url_llm}/api/embed"
