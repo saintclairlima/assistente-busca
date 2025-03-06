@@ -61,8 +61,6 @@ class GeradorPrompts:
             top_k=10,
             top_p=0.5)
         prompt=f'''Contexto:\n{str(historico)}\nFrase: {frase}'''
-        frase_reformulada = ''
-        async for item in interface_llm.gerar_resposta_llm(prompt, []):
-            frase_reformulada += item['message']['content']
-        
-        return frase_reformulada
+        frase_reformulada = interface_llm.gerar_resposta_llm(prompt, [])
+
+        return frase_reformulada['message']['content']
