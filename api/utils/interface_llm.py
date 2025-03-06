@@ -46,7 +46,7 @@ class ClienteLLM:
         self.top_k = top_k
         self.top_p = top_p
     
-    async def stream(self, mensagens: List[dict]):
+    async def gerar_resposta_stream(self, mensagens: List[dict]):
         raise NotImplementedError('Método stream() não foi implantado para esta classe')
     
     def health(self) -> int:
@@ -101,9 +101,9 @@ class ClienteOllama(ClienteLLM):
         response_llm = requests.get(url_llm)
         return response_llm.status_code
 
-    async def stream(self, mensagens: List[dict]):
+    async def gerar_resposta_stream(self, mensagens: List[dict]):
         '''
-        Faz requisição POST à API do LLM, enviando um conjunto de mensagens e recebendo a resposta do LLM
+        Faz requisição POST à API do LLM, enviando um conjunto de mensagens e recebendo a resposta do LLM por stream (token a token)
 
         Parâmetros:
             mensagens (List[dict]): lista de mensagens anteriores, bem como a mais recente a serem enviadas à API.
@@ -133,6 +133,33 @@ class ClienteOllama(ClienteLLM):
                             yield json.loads(fragmento.decode())
                         except:
                             print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
+    
+    async def gerar_resposta(self, mensagens: List[dict]):
+        '''
+        Faz requisição POST à API do LLM, enviando um conjunto de mensagens e recebendo a resposta do LLM de uma só vez
+
+        Parâmetros:
+            mensagens (List[dict]): lista de mensagens anteriores, bem como a mais recente a serem enviadas à API.
+                                    O formato de cada mensagem é: {'role': papel_do_autor_da_mensagem, 'content': conteudo_mensagem},
+                                    em que os papéis disponíveis são: 'system', 'user' e 'assistant'.
+        Retorna:
+            Uma str serializável em formato JSON com a resposta completa da API
+        '''
+
+        # Envia solicitação ao endpoint de geração de texto sem utilizar stream
+        url = f"{self.url_llm}/api/chat"        
+        payload = {
+            "model": self.modelo,
+            "messages": mensagens,
+            "temperature": self.temperature,
+            "top_k": self.top_k,
+            "top_p": self.top_p,
+            "stream": False
+        }
+
+        resposta = requests.post(url, json=payload)
+        dados = json.loads(resposta.content)
+        return dados['message']['content']
 
     def gerar_embeddings(self, texto: str):
         url_llm = f"{self.url_llm}/api/embed"
@@ -157,7 +184,7 @@ class ClienteOpenAi(ClienteLLM):
             url_llm=url_llm,
             temperature=temperature)
 
-    async def stream(self, mensagens: List[dict]):
+    async def gerar_resposta_stream(self, mensagens: List[dict]):
         '''
         Faz requisição POST à API do LLM, enviando um conjunto de mensagens e recebendo a resposta do LLM
 
@@ -200,7 +227,7 @@ class InterfaceLLM:
         formatar_prompt_usuario: utiliza o template de prompt de usuário no arquivo de configurações para gerar
                                  mensagem formatada.
         formatar_mensagens_chat: utiliza o histórico e o prompt de usuário para gerar dados a serem enviados à API do LLM
-        gerar_resposta_llm: invoca o cliente LLM para fazer a requisição à API do LLM por uma resposta
+        gerar_resposta_llm_stream: invoca o cliente LLM para fazer a requisição à API do LLM por uma resposta
     '''
     
     def __init__(self, definicoes_sistema: str=configuracoes.template_mensagem_system):
@@ -233,7 +260,10 @@ class InterfaceLLM:
         
         return mensagens
     
-    async def gerar_resposta_llm_stream(self, pergunta: str, documentos: List[str], historico: List[Tuple[str, str]]):
+    async def gerar_resposta_llm_stream(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
+        raise NotImplementedError('Método gerar_resposta_llm_stream() não foi implantado para esta classe')
+    
+    async def gerar_resposta_llm(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
         raise NotImplementedError('Método gerar_resposta_llm() não foi implantado para esta classe')
 
 class InterfaceOllama(InterfaceLLM):
@@ -249,7 +279,7 @@ class InterfaceOllama(InterfaceLLM):
         formatar_prompt_usuario: utiliza o template de prompt de usuário no arquivo de configurações para gerar
                                  mensagem formatada.
         formatar_mensagens_chat: utiliza o histórico e o prompt de usuário para gerar dados a serem enviados à API do LLM
-        gerar_resposta_llm: invoca o cliente LLM para fazer a requisição à API do LLM por uma resposta
+        gerar_resposta_llm_stream: invoca o cliente LLM para fazer a requisição à API do LLM por uma resposta
     '''
 
     def __init__(self,
@@ -283,5 +313,21 @@ class InterfaceOllama(InterfaceLLM):
 
         # AFAZER Ajeitar esse método aqui
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
-        async for fragmento_resposta in self.cliente_ollama.stream(mensagens=mensagens):
+        async for fragmento_resposta in self.cliente_ollama.gerar_resposta_stream(mensagens=mensagens):
             yield fragmento_resposta
+        
+    async def gerar_resposta_llm(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
+        '''
+        Invoca o ClienteLLM para realizar requisição à API do LLM e retorna resposta em formato de 'stream'
+
+        Parâmetros:
+            prompt_usuario (str): prompt do usuário
+            historico (List[Tuple[str, str]]): lista de tuplas representando as interações anteriores. Cada tupla contém o papel e o conteúdo da mensagem
+
+        Retorna:
+            Uma série de str serializáveis em formato JSON com as respostas da API
+        '''
+
+        # AFAZER Ajeitar esse método aqui
+        mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
+        return self.cliente_ollama.gerar_resposta_stream(mensagens=mensagens)
