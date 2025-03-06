@@ -1,11 +1,11 @@
 {
+    "embedding_bge_m3": "BAAI/bge-m3",
+    "embedding_openai": "text-embedding-ada-002",
+    "embedding_alibaba_gte": "Alibaba-NLP/gte-multilingual-base",
     "embedding_instructor": "hkunlp/instructor-xl",
     "embedding_squad_portuguese": "pierreguillou/bert-base-cased-squad-v1.1-portuguese",
-    "embedding_alibaba_gte": "Alibaba-NLP/gte-multilingual-base",
-    "embedding_openai": "text-embedding-ada-002",
-    "embedding_llama": "llama3.1",
     "embedding_deepseek": "deepseek-r1:14b",
-    "embedding_bge_m3": "BAAI/bge-m3",
+    "embedding_llama": "llama3.1",
 
     "url_indice_documentos": "api/dados/documentos/index.json",
     "url_pasta_documentos": "api/dados/documentos",

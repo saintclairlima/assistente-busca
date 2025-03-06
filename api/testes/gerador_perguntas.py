@@ -26,12 +26,9 @@ class GeradorPerguntas:
         '''
         
         msg_sistema = '''
-        Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte
-        a responder perguntas dos servidores e cidadãos sobre a Assembleia. Sua função é
-        ajudar a criar um banco de dados sintético com perguntas frequentes e dúvidas que
-        servidores reais do serviço público poderiam ter. Esse banco de dados será usado para
-        treinar uma aplicação que vai responder perguntas reais de servidores, portanto deve
-        ter perguntas pertinentes e o mais próximo possível de dúvidas reais relacionadas aos
+        Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte a responder perguntas dos servidores e cidadãos sobre a Assembleia. Sua função é
+        ajudar a criar um banco de dados sintético com perguntas frequentes e dúvidas que servidores reais do serviço público poderiam ter. Esse banco de dados será usado para
+        treinar uma aplicação que vai responder perguntas reais de servidores, portanto deve ter perguntas pertinentes e o mais próximo possível de dúvidas reais relacionadas aos
         temas de regulação de uma Assembleia Legislativa.'''
 
         msg_usuario = f'''
@@ -39,7 +36,8 @@ class GeradorPerguntas:
         
         {artigo}
         
-        Agora extraia as informações do artigo e gere perguntas que possam ser respondidas com base no conteúdo textual do artigo. Além disso, formule a resposta com base no artigo e em nenhuma outra fonte. As perguntas e respostas serão utilizadas para treinamento e finetuning de um LLM. Siga as seguintes diretrizes para gerar as perguntas e respostas:
+        Agora extraia as informações do artigo e gere perguntas que possam ser respondidas com base no conteúdo textual do artigo.
+        Além disso, formule a resposta com base no artigo e em nenhuma outra fonte. As perguntas e respostas serão utilizadas para treinamento e finetuning de um LLM. Siga as seguintes diretrizes para gerar as perguntas e respostas:
 
         Considere o texto recebido e identifique informações significativas;
         Com base nas informações, crie pelo menos 3 perguntas que possam ser respondidas com base no conteúdo do texto;
