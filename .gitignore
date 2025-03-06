@@ -1,6 +1,5 @@
 **/__pycache__/
-gpu-env
-chat-env
+/**-env
 api/.env
 api/testes/resultados/*
 api/dados/bancos_vetores/*
