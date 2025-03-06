@@ -216,6 +216,7 @@ Igualmente, criar um arquivo de configurações `arq_conf.json`, com conteúdo c
     * **embedding_openai** (text-embedding-ada-002): modelo Ada002, da Open AI
     * **embedding_llama** (llama3.1): modelo Llama3.1 da Meta
     * **embedding_deepseek** (deepseek-r1:14b): versão destilada (usando Qwen) do Deepseek R1
+    * **embedding_bge_m3** (BAAI/bge-m3): modelo BGE-m3 da Beijing Academy of Artificial Intelligence
 
 * Variáveis de configuração da aplicação
     * **url_indice_documentos**: variável utilizada pela funcionalidade de geração de bancos vetoriais com conteúdo próprio (descrita melhor na [seção que descreve o processo de geração de bancos de vetores](#criando-um-banco-de-vetores-com-conteúdo-customizado))
@@ -277,11 +278,21 @@ Para fins de demonstração e uso direto, neste repositório foi incluído algun
 * Resolução Nº 77/2024 da Alern
 * Resolução Nº 78/2024 da Alern
 
-No arquivo `api/dados/bancos_vetores/bancos_vetores.zip` há um conjunto de bancos vetoriais já prontos para uso - dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. Dentre eles, o que obteve melhores resultados foi a coleção `documentos_rh` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
+No arquivo `api/dados/bancos_vetores/bancos_vetores.zip` há um conjunto de bancos vetoriais já prontos para uso - dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. Dentre eles, o que obteve melhores resultados foi a coleção `documentos_rh_bge_m3` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
 
-Dentro do mesmo banco vetorial `banco_assistente` há a coleção `documentos_rh_openai`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial). Sua performance, até o momento, não foi testada.
+Dentro do mesmo banco vetorial `banco_assistente` há a coleção `documentos_rh_openai`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial), bem como outras coleções utilizando modelos a partir da classe `SentenceTransformer`. Segue o comparativo da performance de cada modelo, em que "top 10" representa a porcentagem das vezes em que uma consulta feita resulta na recuperação do documento adequado dentre os 10 melhores resultados e "top 5" dentre os 5 melhores resultados.
 
-Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`, dado que os arquivos de configurações já estão por padrão definidos para utilizar a coleção `docuemntos_rh` do banco vetorial `banco_assistente`. Em um ambiente Linux executa-se:
+| Coleção | Modelo | Recall - top 10 | Recall - top 5 |
+| --- | --- | --- | --- |
+`documentos_rh_bge_m3` | BAAI/BGE-M3 | 92,6% | 87,9%
+`documentos_rh_openai` | Open AI/Ada-002 | 91,2% | 86,1%
+`documentos_rh_alibaba` | Alibaba-NLP/GTE | 87,5% | 80,5%
+`documentos_rh_instructor` | HKU-NLP/Instructor | 84,9% | 78,6%
+`documentos_rh_bert_pt` | Bert-Base-Cased-Squat-1-PtBr | 7,15% | 5,6%
+`documentos_rh_deepseek` | Deepseek/Deepseek-R1 (destilado) | 4,3% | 2,0%
+`documentos_rh_llama` | Meta/Llama3.1 | 3,2% | 1,9% 
+
+Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`, dado que os arquivos de configurações já estão por padrão definidos para utilizar a coleção `documentos_rh_bge_m3` do banco vetorial `banco_assistente`. Em um ambiente Linux executa-se:
 
 ```bash
 unzip api/dados/bancos_vetores/bancos_vetores.zip -d api/dados/bancos_vetores
@@ -344,14 +355,15 @@ Para isso, na pasta raiz, basta invocar o módulo, informando os seguintes parâ
 
 Os valores por ora aceitos em `--lista_fn_embeddings` são:
 
-* `"hkunlp/instructor-xl"`: para usar o modelo Instructor da Universidade de Hong Kong
-* `"pierreguillou/bert-base-cased-squad-v1.1-portuguese"`: para usar Versão em português do BERT
-* `"Alibaba-NLP/gte-multilingual-base"`: para usar o modelo GTE da Alibaba Cloud
-* `"text-embedding-ada-002"`: para usar o modelo Ada002, da Open AI
-* `"llama3.1"`: para usar o modelo Llama3.1 da Meta
-* `"deepseek-r1:14b"`: para usar a versão destilada (usando Qwen) do Deepseek R1
+*  `"documentos_rh_bge_m3"`: para usar o modelo BGE-m3 da Beijing Academy of Artificial Intelligence
+*  `"documentos_rh_openai"`: para usar o modelo Ada002, da Open AI
+*  `"documentos_rh_alibaba"`: para usar o modelo GTE da Alibaba Cloud
+*  `"documentos_rh_instructor"`: para usar o modelo Instructor da Universidade de Hong Kong
+*  `"documentos_rh_bert_pt"`: para usar Versão em português do BERT
+*  `"documentos_rh_deepseek"`: para usar a versão destilada (usando Qwen) do Deepseek R1
+*  `"documentos_rh_llama"`: para usar o modelo Llama3.1 da Meta
 
-Os testes feitos até o momento apontam o `hkunlp/instructor-xl` com o a melhor opção.
+Os testes feitos até o momento apontam o `BAAI/bge-m3` com o a melhor opção.
 
 **OBS:** Não aconselhamos valores acima de 350-400 para `--comprimento_max_fragmento`, visto que utilizamos um modelo (BERT) internamente para realizar reranking dos documentos recuperados.
 
@@ -360,16 +372,16 @@ Exemplos de uso:
 ```bash
 python -m api.dados.gerador_banco_vetores \
 --nome_banco_vetores banco_assistente \
---lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt']" \
---lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
+--lista_colecoes "['documentos_rh_bge_m3', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_instructor', 'documentos_rh_bert_pt', 'documentos_rh_deepseek', 'documentos_rh_llama']" \
+--lista_fn_embeddings "['BAAI/bge-m3', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'hkunlp/instructor-xl', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese', 'deepseek-r1:14b', 'llama3.1']" \
 --comprimento_max_fragmento 300
 ```
 
 ```bash
 python -m api.dados.gerador_banco_vetores \
 --nome_banco_vetores banco_assistente \
---lista_colecoes "['documentos_rh']" \
---lista_fn_embeddings "['hkunlp/instructor-xl']" \
+--lista_colecoes "['documentos_rh_bge_m3']" \
+--lista_fn_embeddings "['BAAI/bge-m3']" \
 --comprimento_max_fragmento 350
 ```
 
