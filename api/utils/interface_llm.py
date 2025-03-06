@@ -327,7 +327,6 @@ class InterfaceOllama(InterfaceLLM):
         Retorna:
             Uma série de str serializáveis em formato JSON com as respostas da API
         '''
-
-        # AFAZER Ajeitar esse método aqui
+        
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
-        return self.cliente_ollama.gerar_resposta_stream(mensagens=mensagens)
+        return self.cliente_ollama.gerar_resposta(mensagens=mensagens)
