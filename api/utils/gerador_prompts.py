@@ -22,11 +22,30 @@ class GeradorPrompts:
         else: return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
 
     async def otimizar_prompt(frase, historico):
-        sistema = '''Você é uma ferramenta de reformulação de frases com base em contexto. Dado um contexto e uma dada frase, você deve analisar a frase e ver se ela tem sentido por si só ou se precisa de contexto para fazer sentido.
-        Somente nos casos em que a pergunta não for clara você deve sugerir alteração. Evite ao máximo sugerir alterações desnecessárias.
-        Quando necessário, você deve reformular a frase, utilizando somente o contexto, de forma que ela seja coerente e coesa. Não inclua nenhum elemento que não se baseie no contexto
-        Se for feita modificação, a saída deve ter apenas a pergunta reformulada, sem qualquer comentário.
-        Se não foi encontrado motivo para reformular, a saída deve ser a frase original.
+        sistema = '''
+        Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte a responder perguntas dos servidores e cidadãos sobre a Assembleia.
+        As perguntas ou frases de busca dos usuários são enviadas a um vector store para recuperação de documentos. Seu objetivo é garantir que a pergunta do
+        usuário esteja clara o suficiente para recuperar documentos relevantes da vector store. Para isso, você deve analisar uma frase e examinar a necessidade
+        de reformulá-la e utilizar o contexto de mensagens anteriores.'''
+
+
+        mensagem = f'''
+        Considere a seguinte FRASE/PERGUNTA:
+        "{frase}"
+
+        Considere o seguinte CONTEXTO de mensagens anteriores entre o usuário e um LLM assistente:
+        "{historico}"
+
+        Identifique a intenção do usuário (que informações ele está procurando?);
+        Avalie se a frase/pergunta está adequada para realizar uma busca por documentos na vector store (a vector store vai ser capaz de buscar as informações que ele deseja?);
+        Avalie se a frase/pergunta está clara, coerente, coesa (a frase é suficientemente clara e específica para recuperar documentos da vector store?).
+
+        Se a pergunta não estiver adequada, você deve reformulá-la, garantindo que ela esteja adequada para uma busca numa vector store.
+
+        Para isso você é obrigado a fazer o seguinte:
+        * Somente nos casos em que a pergunta não for clara você deve sugerir alteração. Evite ao máximo sugerir alterações desnecessárias.
+        * Quando necessário, você deve reformular a frase, utilizando somente o contexto, de forma que ela seja coerente e coesa. Não inclua nenhum elemento que não se baseie no contexto
+        * Se não foi encontrado motivo para reformular, a saída deve ser uma string vazia: {'""'}.
 
         <Exemplo 1>
         Contexto:
@@ -53,6 +72,27 @@ class GeradorPrompts:
         A sua resposta deve ser: "Quanto tempo dura uma legislatura?"
         <Fim do Exemplo 3>
         '''
+
+        formato = {
+            "type": "object",
+            "properties": {
+                "pergunta-frase-original": {"type": "string"},
+                "pergunta-frase-reformulada": {"type": "string"}
+            },
+            "required": ["pergunta", "resposta"]
+        }
+
+        payload = {
+            "model": configuracoes.modelo_llm,
+            "messages": mensagens,
+            "temperature": 0.0,
+            "format": formato,
+            "stream": False
+        }
+        
+        resposta = requests.post(self.url_llm, json=payload)
+        dados = json.loads(resposta.content)
+        return dados['message']['content']
         
         interface_llm = InterfaceOllama(
             url_ollama=configuracoes.url_llm,
