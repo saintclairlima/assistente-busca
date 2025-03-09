@@ -151,7 +151,7 @@ class GeradorPerguntas:
 
             print(f'Salvando resultados em {url_arquivo_saida}')
             with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
-                arq.write(json.dumps(documentos, indent=4, ensure_ascii=False))
+                json.dump(documentos, indent=4, ensure_ascii=False)
                 
             client._system.stop()
 
@@ -178,16 +178,19 @@ if __name__ == "__main__":
     parser.add_argument('--modelo_llm', type=str, help="modelo de LLM a ser utilizado")
     parser.add_argument('--url_llm', type=str, help="url da api em que o modelo está sendo executado")
     args = parser.parse_args()
-
+    
+    url_banco_vetorial = configuracoes.url_banco_vetores if not args.url_banco_vetorial else args.url_banco_vetorial
+    nome_colecao = configuracoes.nome_colecao_de_documentos + '/api/chat' if not args.nome_colecao else args.nome_colecao
+    url_arquivo_saida = f'documentos_perguntas_{nome_colecao}.json' if not args.url_arquivo_saida else args.url_arquivo_saida
     modelo_llm = configuracoes.modelo_llm if not args.modelo_llm else args.modelo_llm
     url_llm = configuracoes.url_llm + '/api/chat' if not args.url_llm else args.url_llm
     
     print(f'Iniciando gerador de perguntas (modelo: "{modelo_llm}", url: "{url_llm}")')
-    gerador_banco_perguntas = GeradorPerguntas(modelo_llm=modelo_llm, url_llm=url_llm)
-    gerador_banco_perguntas.gerar_perguntas_banco_vetorial(
-        url_banco_vetorial=args.url_banco_vetorial,
-        nome_colecao=args.nome_colecao,
-        url_arquivo_saida=args.url_arquivo_saida)
+    gerador_perguntas = GeradorPerguntas(modelo_llm=modelo_llm, url_llm=url_llm)
+    gerador_perguntas.gerar_perguntas_banco_vetorial(
+        url_banco_vetorial=url_banco_vetorial,
+        nome_colecao=nome_colecao,
+        url_arquivo_saida=url_arquivo_saida)
     
 ## Modelo de execução
 #python -m api.testes.gerador_perguntas --url_banco_vetorial "api/dados/bancos_vetores/banco_assistente" --nome_colecao "documentos_rh" --url_arquivo_saida "api/testes/perguntas_documentos_rh.json" --modelo_llm "llama3.1" --url_llm "http://10.90.6.15:11434"
