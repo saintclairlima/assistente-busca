@@ -320,3 +320,11 @@ if __name__ == "__main__":
         num_resultados = num_resultados,
         gerar_relatorios_intermediarios_avaliacao = gerar_relatorios_intermediarios
     )
+
+# Modelo de execução
+# !python -m api.testes.avaliar_recuperacao_documentos \
+# --url_arq_fragmentos api/testes/resultados/perguntas_documentos.json \
+# --url_banco_vetores api/dados/bancos_vetores/banco_assistente \
+# --url_arquivo_saida api/testes/resultados/perguntas_documentos_sumario.json\
+# --num_resultados 10 \
+# --gerar_relatorios_intermediarios True
