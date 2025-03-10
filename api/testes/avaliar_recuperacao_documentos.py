@@ -8,6 +8,7 @@ from torch import cuda
 
 from api.dados.gerador_banco_vetores import GeradorBancoVetores
 from api.utils.reclassificador import ReclassificadorBert
+from api.configuracoes.config_gerais import configuracoes
 
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 print(f'Ambiente de execução: {DEVICE}')
@@ -306,10 +307,16 @@ if __name__ == "__main__":
     parser.add_argument('--gerar_relatorios_intermediarios', type=bool, help='indicador se deve ou não salvar os resultados')
     args = parser.parse_args()
 
+    url_arq_fragmentos = 'api/testes/resultados/perguntas_documentos.json' if not args.url_arq_fragmentos else args.url_arq_fragmentos
+    url_banco_vetores = configuracoes.url_banco_vetores if not args.url_banco_vetores else args.url_banco_vetores
+    url_arquivo_saida = os.path.basename(url_arq_fragmentos)[:-4] + '_sumario.json' if not args.url_arquivo_saida else args.url_arquivo_saida
+    num_resultados = 10 if not args.num_resultados else args.num_resultados
+    gerar_relatorios_intermediarios = True if not args.num_resultados else args.num_resultados
+
     res = avaliar_recuperacao(
-        url_arq_fragmentos = args.url_arq_fragmentos,
-        url_banco_vetores = args.url_banco_vetores,
-        url_arquivo_saida = args.url_arquivo_saida,
-        num_resultados = args.num_resultados,
-        gerar_relatorios_intermediarios_avaliacao = args.gerar_relatorios_intermediarios
+        url_arq_fragmentos = url_arq_fragmentos,
+        url_banco_vetores = url_banco_vetores,
+        url_arquivo_saida = url_arquivo_saida,
+        num_resultados = num_resultados,
+        gerar_relatorios_intermediarios_avaliacao = gerar_relatorios_intermediarios
     )
