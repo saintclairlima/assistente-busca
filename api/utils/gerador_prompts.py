@@ -1,5 +1,8 @@
 
+import json
 from typing import List
+
+import requests
 from api.configuracoes.config_gerais import configuracoes
 from api.utils.interface_llm import InterfaceOllama
 
@@ -21,65 +24,77 @@ class GeradorPrompts:
         if template: return template.format('\n'.join(documentos), pergunta)
         else: return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
 
-    async def otimizar_prompt(frase, historico):
-        sistema = '''
-        Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte a responder perguntas dos servidores e cidadãos sobre a Assembleia.
-        As perguntas ou frases de busca dos usuários são enviadas a um vector store para recuperação de documentos. Seu objetivo é garantir que a pergunta do
-        usuário esteja clara o suficiente para recuperar documentos relevantes da vector store. Para isso, você deve analisar uma frase e examinar a necessidade
-        de reformulá-la e utilizar o contexto de mensagens anteriores.'''
+    def otimizar_prompt(frase, historico):
+        msg_sistema = f'''
+        Você é um agente que atua na otimização do funcionamento de um sistema de recuperação de dados, semelhante a um chatbot, usando uma pergunta ou frase de busca dos usuários para recuperar as informações.
+        As perguntas ou frases de busca dos usuários são enviadas a uma vector store para recuperação de documentos.
+        Com cada pergunta/frase, você recebe um contexto com as perguntas/frases de busca anteriores, bem como as informações recuperadas.
+        Seu objetivo é garantir que a pergunta/frase do usuário esteja clara o suficiente para recuperar documentos relevantes da vector store.
+        Você deve analisar a frase/pergunta do usuário, examinar a necessidade de reformulá-la e utilizar o contexto de mensagens anteriores para fazer as alterações necessárias.
 
-
-        mensagem = f'''
-        Considere a seguinte FRASE/PERGUNTA:
-        "{frase}"
-
-        Considere o seguinte CONTEXTO de mensagens anteriores entre o usuário e um LLM assistente:
-        "{historico}"
-
+        Considerando a frase/pergunta, faça o seguinte:
+        Analise a frase/pergunta;
         Identifique a intenção do usuário (que informações ele está procurando?);
         Avalie se a frase/pergunta está adequada para realizar uma busca por documentos na vector store (a vector store vai ser capaz de buscar as informações que ele deseja?);
         Avalie se a frase/pergunta está clara, coerente, coesa (a frase é suficientemente clara e específica para recuperar documentos da vector store?).
 
         Se a pergunta não estiver adequada, você deve reformulá-la, garantindo que ela esteja adequada para uma busca numa vector store.
 
-        Para isso você é obrigado a fazer o seguinte:
-        * Somente nos casos em que a pergunta não for clara você deve sugerir alteração. Evite ao máximo sugerir alterações desnecessárias.
-        * Quando necessário, você deve reformular a frase, utilizando somente o contexto, de forma que ela seja coerente e coesa. Não inclua nenhum elemento que não se baseie no contexto
-        * Se não foi encontrado motivo para reformular, a saída deve ser uma string vazia: {'""'}.
+        Para reformular a frase/pergunta, faça o seguinte:
+        * Analise o contexto e veja se há informações nele que estejam implícitas na frase/pergunta analisada. Se for o caso, complete a frase/pergunta com a informação que falta. Por exemplo:
+        CONTEXTO:
+        {[{'role': 'user', 'content': 'Quanto tempo dura uma legislatura?'},
+        {'role': 'assistant', 'content': 'Uma legislatura dura quatro anos.'}]}
+        PERGUNTA: "E uma seção ordinária?"
+        A sua resposta deve ser: 
+        '{{"pergunta-frase-original": "E uma seção ordinária?", "intencao-usuario": "Saber qual é o tempo de duração de uma seção ordinária?", "pergunta-frase-reformulada": "Quanto tempo dura uma seção ordinária?"}}'
 
-        <Exemplo 1>
-        Contexto:
-        [{'role': 'user', 'content': 'Eu gosto de bananas e sou torcedor do palmeiras. Meu irmão gosta de maçã e torce pelo Flamengo. Lembre-se disso'},
-        {'role': 'assistant', 'content': 'Ok. Vou me lembrar disso'},
-        {'role': 'user', 'content': 'Eu gosto de qual fruta?'},
-        {'role': 'assistant', 'content': 'Você gosta de bananas.'}]
-        Frase: "E meu irmão?"
-        A sua resposta deve ser: "Meu irmão gosta de qual fruta?"
-        <Fim do Exemplo 1>
-        
-        <Exemplo 2>
-        Contexto:
-        [{'role': 'user', 'content': 'Como se fala "Eu estou com fome" em alemão?'},
-        {'role': 'assistant', 'content': '"Eu estou com fome" em alemão é "Ich habe hunger"'}]
-        Frase: "E como se diz 'Eu estou com sede' em alemão?"
-        A sua resposta deve ser: "E como se diz 'Eu estou com sede' em alemão?"
-        <Fim do Exemplo 2>
-        
-        <Exemplo 3>
-        Contexto:
+        * Quando a frase estiver com erro de grafia, você deve corrigir. Por exemplo:
+        CONTEXTO:
         []
-        Frase: "Quanto tempo dura uma legislatura?"
-        A sua resposta deve ser: "Quanto tempo dura uma legislatura?"
-        <Fim do Exemplo 3>
+        FRASE: "QUEM TEM DIREITO ÀLICENÇA PREMIO"
+        A sua resposta deve ser: 
+        '{{"pergunta-frase-original": "QUEM TEM DIREITO ÀLICENÇA PREMIO", "intencao-usuario": "Saber que pessoa tem direito a receber a licença prêmio", "pergunta-frase-reformulada": "Quem tem direito à licença prêmio?"}}'
+
+        * Somente nos casos em que a pergunta não for clara você deve sugerir alteração. Evite ao máximo sugerir alterações desnecessárias.
+        * Se não foi encontrado motivo para reformular, não gere uma frase reformulada. Nesse caso o campo "pergunta-frase-reformulada" deve ter uma string vazia como valor. Por exemplo:
+        CONTEXTO:
+        []
+        PERGUNTA: "Quanto tempo dura uma legislatura?"
+        A sua resposta deve ser:
+        '{{"pergunta-frase-original": "Quanto tempo dura uma legislatura?", "intencao-usuario": "Saber qual é o tempo de duração de uma seção ordinária?", "pergunta-frase-reformulada": ""}}'
+        
+        * Na sua reformulação, não inclua nada que não possa ser inferido do contexto. Não faça reformulações desnecessárias!
+        
         '''
+
+
+        msg_usuario = f'''
+        Considere a seguinte FRASE/PERGUNTA:
+        "{frase}"
+
+        Considere o seguinte CONTEXTO de mensagens anteriores entre o usuário e um LLM assistente:
+        "{historico}"
+
+        Analise a FRASE/PERGUNTA e, se for necessário, reformule-a para que fique clara e com as informações necessárias para recuperar documentos numa vector store.
+
+        Vamos começar!
+        
+        '''
+
+        mensagens = [
+            {'role': 'system', 'content': msg_sistema},
+            {'role': 'user', 'content': msg_usuario}
+        ]
 
         formato = {
             "type": "object",
             "properties": {
                 "pergunta-frase-original": {"type": "string"},
+                "intencao-usuario": {"type": "string"},
                 "pergunta-frase-reformulada": {"type": "string"}
             },
-            "required": ["pergunta", "resposta"]
+            "required": ["pergunta", "intencao-usuario", "resposta"]
         }
 
         payload = {
@@ -90,17 +105,12 @@ class GeradorPrompts:
             "stream": False
         }
         
-        resposta = requests.post(self.url_llm, json=payload)
+        resposta = requests.post(f'{configuracoes.url_llm}/api/chat', json=payload)
         dados = json.loads(resposta.content)
-        return dados['message']['content']
-        
-        interface_llm = InterfaceOllama(
-            url_ollama=configuracoes.url_llm,
-            nome_modelo=configuracoes.modelo_llm,
-            definicoes_sistema=sistema,
-            top_k=10,
-            top_p=0.5)
-        prompt=f'''Contexto:\n{str(historico)}\nFrase: {frase}'''
-        frase_reformulada = interface_llm.gerar_resposta_llm(prompt, [])
-
-        return frase_reformulada['message']['content']
+        dados = json.loads(dados['message']['content'])
+        return dados
+    
+# msgs = [{'role': 'user', 'content': 'Quantas são as comissões permanentes da ALRN?'},
+#         {'role': 'assistant', 'content': 'A ALRN tem 10 comissões permanentes'}]
+# msg='Quais as funções delas?'
+# gp.otimizar_prompt(msg, msgs)
