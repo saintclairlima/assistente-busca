@@ -1,7 +1,11 @@
-## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
+import argparse
 import json
-import sys
+import ast
+from typing import List
 from openai import OpenAI
+from chromadb import chromadb
+
+from api.configuracoes.config_gerais import configuracoes
 
 class GeradorPerguntasOpenAI:
     def __init__(self, nome_modelo='gpt-4o', papel=None):
@@ -11,21 +15,33 @@ class GeradorPerguntasOpenAI:
         if papel: self.papel = papel
         else:
             self.papel = '''
-            Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte
-            a responder perguntas dos servidores e cidadãos sobre a Assembleia. Sua função é
-            ajudar a criar um banco de dados sintético com perguntas frequentes e dúvidas que
-            servidores reais do serviço público poderiam ter. Esse banco de dados será usado para
-            treinar uma aplicação que vai responder perguntas reais de servidores, portanto deve
-            ter perguntas pertinentes e o mais próximo possível de dúvidas reais relacionadas aos
-            temas de regulação de uma Assembleia Legislativa.
-            '''
+        Você auxilia o setor de informações da Assembleia Legislativa do Rio Grande do Norte a responder perguntas dos servidores e cidadãos sobre a Assembleia. Sua função é
+        ajudar a criar um banco de dados sintético com perguntas frequentes e dúvidas que servidores reais do serviço público poderiam ter. Esse banco de dados será usado para
+        treinar uma aplicação que vai responder perguntas reais de servidores, portanto deve ter perguntas pertinentes e o mais próximo possível de dúvidas reais relacionadas aos
+        temas de regulação de uma Assembleia Legislativa.'''
     
-    def gerar_perguntas(self, texto) :
+    def gerar_perguntas_artigo(self, artigo):
+
+        '''Gera uma lista de perguntas e respostas com base em um texto. É utilizado um LLM para realizar a geração
+
+        Parâmetros:
+            artigo (str): texto base a ser utilizado para gerar as perguntas
+
+        Retorna:
+            (List[dict]): lista de dicionários com uma pergunta e uma resposta por entrada no formato: 
+        ```python
+        [ {"pergunta": str, "trecho_resposta": str} ]
+        ```
+
+        '''
+        
         prompt = f'''
-        Você vai considerar um texto base, que é um artigo de uma lei. Após isso, extraia as informações do artigo e
-        gere perguntas que possam ser respondidas com base no conteúdo textual do artigo. Além disso, formule a
-        resposta com base no artigo e em nenhuma outra fonte. As perguntas e respostas serão utilizadas para
-        treinamento e finetuning de um LLM. Siga as seguintes diretrizes para gerar as perguntas e respostas:
+        Considere o texto a seguir, que é um artigo de uma lei:
+        
+        {artigo}
+        
+        Agora extraia as informações do artigo e gere perguntas que possam ser respondidas com base no conteúdo textual do artigo.
+        Além disso, formule a resposta com base no artigo e em nenhuma outra fonte. As perguntas e respostas serão utilizadas para treinamento e finetuning de um LLM. Siga as seguintes diretrizes para gerar as perguntas e respostas:
 
         Considere o texto recebido e identifique informações significativas;
         Com base nas informações, crie pelo menos 3 perguntas que possam ser respondidas com base no conteúdo do texto;
@@ -40,8 +56,13 @@ class GeradorPerguntasOpenAI:
         * For uma pergunta relevante, semelhante ao que seria perguntado por uma pessoa vim dúvida
         * Puder ser respondida usando o fragmento apresentado
 
-        O resultado deve ser uma lista de objetos JSON, com os atributos {[{"pergunta": "Texto da pergunta Gerada", "resposta": "fragmento do artigo que responde a pergunta"}]}.
-        Não adicione nenhum texto adicional à resposta, exceto a lista de objetos JSON
+        O resultado deve ser em formato estruturado, em formato JSON, sendo uma lista de objetos assim:
+        
+        {[{"pergunta": "texto da pergutna", "resposta":"texto da resposta"},
+          {"pergunta": "texto da pergutna", "resposta":"texto da resposta"}]}
+        
+        Não deve haver nenhum outro texto, apenas a lista.
+
         Um exemplo de como devem ser geradas as perguntas:
 
         Exemplo de texto base:
@@ -64,7 +85,7 @@ class GeradorPerguntasOpenAI:
             ]}
 
         Caso o texto não tenha conteúdo relevante, o resultado deve ser um objeto vazio {{}}.
-        ESTE É O TEXTO BASE: {texto}
+
         Vamos começar?'''
         
         return self.cliente_openai.chat.completions.create(
@@ -73,36 +94,89 @@ class GeradorPerguntasOpenAI:
                 {"role": "system", "content": self.papel},
                 {"role": "user",   "content": prompt}
             ],
-        )
+        ).choices[0].message.content
     
-    def run(self, url_arquivo_entrada, url_arquivo_saida=None):
-        if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada.split('.')[0] + '_perguntas.json'
+    def gerar_perguntas_banco_vetorial(self, url_banco_vetorial: str, nome_colecao: str, url_arquivo_saida: str) -> List[dict]:
+
+        '''
+        Gera uma lista de perguntas para cada um dos fragmentos em um banco vetorial
+
+        Parâmetros:
+            url_banco_vetorial (str): a url do banco de vetores a ser usado como base
+            nome_colecao (str): nome da coleção a ser usada, existente no banco
+            url_arquivo_saida (str): caminho em que será salvo o arquivo com o resultado
+
+        Retorna:
+            Retorna uma lista de documentos na coleção, acrescentados de uma lista de perguntas
         
-        with open(url_arquivo_entrada, 'r') as arq:
-            artigos = json.load(arq)
-        
-        arts_perguntas = {}
-        
-        for id, texto in artigos.items():
-            print(f'\rProcessando documento de id {id}', end='')
-            perguntas = self.gerar_perguntas(texto)
-            
-            arts_perguntas[id] = {
-                'id': id,
-                'texto': texto,
-                'perguntas': perguntas.choices[0].message.content
-            }
-            
+        O formato da lista retornada é o seguinte:
+        [{
+            "id": str,
+            "page_content": str,
+            "metadata": dict,
+            "perguntas": [ { "pergunta": str, "trecho_resposta": str } ]
+        }]
+        '''
+
+        try:
+            with open(url_arquivo_saida, 'r', encoding='utf-8') as arq:
+                documentos = json.load(arq)
+                print(f'Carregados dados em {url_arquivo_saida}')
+
+        except FileNotFoundError:
+            print(f'Consultando documentos do banco de vetores')
+            client = chromadb.PersistentClient(path=url_banco_vetorial)
+            collection = client.get_collection(name=nome_colecao)
+            registros = collection.get()
+            registros = zip(registros['ids'], registros['documents'], registros['metadatas'])
+            documentos = [ {
+                    "id": r[0],
+                    "page_content": r[1],
+                    "metadata": r[2]
+                } for r in registros]
+
+            print(f'Salvando resultados em {url_arquivo_saida}')
             with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
-                json.dump(arts_perguntas, arq, ensure_ascii=False, indent=4)
+                arq.write(json.dumps(documentos, indent=4, ensure_ascii=False))
+                
+            client._system.stop()
+
+        qtd_docs = len(documentos)
+        
+        print(f'Gerando perguntas para {qtd_docs} documentos')
+        for idx in range(qtd_docs):
+            print(f'\rProcessando documento {idx+1} de {qtd_docs}', end='')
+            doc = documentos[idx]
+            if 'perguntas' not in doc:
+                perguntas = self.gerar_perguntas_artigo(artigo=doc['page_content'])
+                perguntas = perguntas.replace('```json', '').replace('```', '')
+                try: doc['perguntas'] = ast.literal_eval(perguntas)
+                except: print(perguntas)
+                
+                with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
+                    json.dump(documentos, arq, indent=4, ensure_ascii=False)
+        
+        return documentos
                 
 if __name__ == "__main__":
-    print('Iniciando gerador de perguntas')
+    parser = argparse.ArgumentParser(description="Gera um conjunto de perguntas a partir de documentos armazenados em um banco vetorial")
+    parser.add_argument('--url_banco_vetorial', type=str, required=True, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--nome_colecao', type=str, required=True, help='''nome da coleção a ser consultada''')
+    parser.add_argument('--url_arquivo_saida', type=str, required=True, help='url do arquivo em que vão ser salvos os resultados')
+    parser.add_argument('--modelo_llm', type=str, help="modelo de LLM a ser utilizado")
+    args = parser.parse_args()
+    
+    url_banco_vetorial = configuracoes.url_banco_vetores if not args.url_banco_vetorial else args.url_banco_vetorial
+    nome_colecao = configuracoes.nome_colecao_de_documentos + '/api/chat' if not args.nome_colecao else args.nome_colecao
+    url_arquivo_saida = f'documentos_perguntas_{nome_colecao}.json' if not args.url_arquivo_saida else args.url_arquivo_saida
+    modelo_llm = None if not args.modelo_llm else args.modelo_llm
+    
+    print(f'Iniciando gerador de perguntas (modelo: "{modelo_llm}")')
     gerador_perguntas = GeradorPerguntasOpenAI()
-    try:
-        url_entrada = sys.argv[1]
-        url_saida = sys.argv[2]
-        gerador_perguntas.run(url_arquivo_entrada=url_entrada, url_arquivo_saida=url_saida)
-    except:
-        url_entrada = sys.argv[1]
-        gerador_perguntas.run(url_arquivo_entrada=url_entrada)
+    gerador_perguntas.gerar_perguntas_banco_vetorial(
+        url_banco_vetorial=url_banco_vetorial,
+        nome_colecao=nome_colecao,
+        url_arquivo_saida=url_arquivo_saida)
+    
+    ## Modelo de execução
+    #python -m api.testes.gerador_perguntas_openai --url_banco_vetorial "api/dados/bancos_vetores/banco_assistente" --nome_colecao "documentos_rh_bge_m3" --url_arquivo_saida "api/testes/perguntas_documentos_rh.json"
