@@ -179,43 +179,43 @@ class GeradorBancoVetores:
         
         return fragmentos
 
-    def obter_funcao_embeddings(self, tipo: str=configuracoes.embedding_instructor, instrucao: str=None):
-        if tipo == configuracoes.embedding_instructor:
+    def obter_funcao_embeddings(self, nome_modelo: str=configuracoes.embedding_instructor, instrucao: str=None):
+        if nome_modelo == configuracoes.embedding_instructor:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_instructor,
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE,
                 instrucao=instrucao)
-        elif tipo == configuracoes.embedding_alibaba_gte:
+        elif nome_modelo == configuracoes.embedding_alibaba_gte:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_alibaba_gte,
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE)
-        elif tipo == configuracoes.embedding_bge_m3:
+        elif nome_modelo == configuracoes.embedding_bge_m3:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_bge_m3,
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE)
-        elif tipo == configuracoes.embedding_openai:
+        elif nome_modelo == configuracoes.embedding_openai:
             funcao = embedding_functions.OpenAIEmbeddingFunction(
                 api_key = os.environ.get("OPENAI_API_KEY", None),
                 model_name=configuracoes.embedding_openai)
-        elif tipo == configuracoes.embedding_llama:
+        elif nome_modelo == configuracoes.embedding_llama:
             funcao = FuncaoEmbeddingsOllama(
                 nome_modelo=configuracoes.embedding_llama,
                 url_api=configuracoes.url_llm)
-        elif tipo == configuracoes.embedding_deepseek:
+        elif nome_modelo == configuracoes.embedding_deepseek:
             funcao = FuncaoEmbeddingsOllama(
                 nome_modelo=configuracoes.embedding_deepseek,
                 url_api=configuracoes.url_llm)
-        elif tipo == configuracoes.embedding_squad_portuguese:
+        elif nome_modelo == configuracoes.embedding_squad_portuguese:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_squad_portuguese,
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE
             )
         else:
-            raise NameError(f'O tipo {tipo} ainda não tem suporte para geração de função de embeddings implementado')
+            raise NameError(f'O tipo {nome_modelo} ainda não tem suporte para geração de função de embeddings implementado')
         
         return funcao
         
@@ -224,20 +224,26 @@ class GeradorBancoVetores:
             documentos,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
-            nomes_funcoes_embeddings=[configuracoes.embedding_instructor],
+            nomes_modelos_embeddings=[configuracoes.embedding_instructor],
             uuids_colecoes=[str(uuid.uuid4())],
-            instrucao=None):
+            lista_instrucoes=None):
         
         # Utilizando o ChromaDb diretamente
         cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
         
-        funcoes_embeddings = [self.obter_funcao_embeddings(fn) for fn in nomes_funcoes_embeddings]
+        if lista_instrucoes == None: lista_instrucoes = [None for item in nomes_modelos_embeddings]
+        
+        funcoes_embeddings = [
+            self.obter_funcao_embeddings(
+                nome_modelo=nomes_modelos_embeddings[idx],
+                instrucao=lista_instrucoes[idx]
+            ) for idx in range(len(nomes_modelos_embeddings))]
         
         hnsw_space = configuracoes.hnsw_space
         for idx in range(len(nomes_colecoes)):
             colecao = cliente_chroma.create_collection(name=nomes_colecoes[idx], embedding_function=funcoes_embeddings[idx], metadata={'hnsw:space': hnsw_space, 'uuid': uuids_colecoes[idx]})
         
-            print(f'Gerando >>> Banco {url_banco_vetores} - Coleção {nomes_colecoes[idx]} - Embeddings {nomes_funcoes_embeddings[idx]} - Instrução: {instrucao}')
+            print(f'Gerando >>> Banco {url_banco_vetores} - Coleção {nomes_colecoes[idx]} - Embeddings {nomes_modelos_embeddings[idx]} - Instrução: {instrucao}')
             qtd_docs = len(documentos)
             for idx in range(qtd_docs):
                 print(f'\r>>> Incluindo documento {idx+1} de {qtd_docs}', end='')
@@ -260,9 +266,9 @@ class GeradorBancoVetores:
             indice_documentos=None,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
-            nomes_funcoes_embeddings=[configuracoes.embedding_instructor],
+            nomes_modelos_embeddings=[configuracoes.embedding_instructor],
             comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
-            instrucao=None):
+            lista_instrucoes=None):
         
         print(f"-- Geração de bancos vetoriais inicializada utilizando {DEVICE}...")
         
@@ -276,9 +282,9 @@ class GeradorBancoVetores:
             documentos=docs,
             url_banco_vetores=url_banco_vetores,
             nomes_colecoes=nomes_colecoes,
-            nomes_funcoes_embeddings=nomes_funcoes_embeddings,
+            nomes_modelos_embeddings=nomes_modelos_embeddings,
             uuids_colecoes=uuids_colecoes,
-            instrucao=instrucao
+            lista_instrucoes=lista_instrucoes
         )
 
         tipos_modelos = {
@@ -296,13 +302,13 @@ class GeradorBancoVetores:
                 {
                     "uuid": uuids_colecoes[idx],
                     "nome": nomes_colecoes[idx],
-                    "instrucao": instrucao,
+                    "instrucao": lista_instrucoes[idx],
                     "quantidade_max_palavras_por_documento": comprimento_max_fragmento,
                     "hnsw:space": configuracoes.hnsw_space,
                     # Se não for fornecida uma função, vai ser utilizada a padrão
                     "funcao_embeddings": {
-                        "nome_modelo": nomes_funcoes_embeddings[idx],
-                        "tipo_modelo": tipos_modelos[nomes_funcoes_embeddings[idx]]
+                        "nome_modelo": nomes_modelos_embeddings[idx],
+                        "tipo_modelo": tipos_modelos[nomes_modelos_embeddings[idx]]
                     }
                 } for idx in range(len(nomes_colecoes))
             ]
@@ -335,9 +341,9 @@ if __name__ == "__main__":
     parser.add_argument('--url_indice_documentos', type=str, help="caminho para arquivo com a lista de documentos")
     parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser criado")
     parser.add_argument('--lista_colecoes', type=str, required=True, help='''uma lista com os nomes das coleções no formato "['colecao1', 'colecao2']''')
-    parser.add_argument('--lista_fn_embeddings', type=str, required=True, help='''uma lista com os tipos das funções de embeddings no formato "['openai', 'instructor']''')
+    parser.add_argument('--lista_nomes_modelos_embeddings', type=str, required=True, help='''uma lista com os tipos das funções de embeddings no formato "['openai', 'instructor']''')
     parser.add_argument('--comprimento_max_fragmento', type=int, required=True, help="número máximo de palavras por fragmento")
-    parser.add_argument('--instrucao', type=str, help="instrucao a ser utilizada na função de embeddings")
+    parser.add_argument('--lista_instrucoes', type=str, help="lsita de instrucoes a serem utilizadas nas funções de embeddings de modelos")
 
     args = parser.parse_args()
     url_indice_documentos = None if not args.url_indice_documentos else args.url_indice_documentos
@@ -351,25 +357,25 @@ if __name__ == "__main__":
     nome_banco_vetores = os.path.join(configuracoes.url_pasta_bancos_vetores, args.nome_banco_vetores)
     
     nomes_colecoes = ast.literal_eval(args.lista_colecoes)
-    nomes_funcoes_embeddings = ast.literal_eval(args.lista_fn_embeddings)
-    if not isinstance(nomes_colecoes, list) or not isinstance(nomes_funcoes_embeddings, list) or len(nomes_colecoes) != len(nomes_funcoes_embeddings):
+    nomes_modelos_embeddings = ast.literal_eval(args.lista_nomes_modelos_embeddings)
+    if not isinstance(nomes_colecoes, list) or not isinstance(nomes_modelos_embeddings, list) or len(nomes_colecoes) != len(nomes_modelos_embeddings):
         raise ValueError('Problema ao processar argumentos de coleções e funções de embeddings')
     
     comprimento_max_fragmento = args.comprimento_max_fragmento
-    instrucao = None if not args.instrucao else args.instrucao
+    lista_instrucoes = None if not args.lista_instrucoes else args.lista_instrucoes
 
     gerador_banco_vetores = GeradorBancoVetores()
     gerador_banco_vetores.executar(
         indice_documentos=indice_documentos,
         url_banco_vetores=nome_banco_vetores,
         nomes_colecoes=nomes_colecoes,
-        nomes_funcoes_embeddings=nomes_funcoes_embeddings,
+        nomes_modelos_embeddings=nomes_modelos_embeddings,
         comprimento_max_fragmento=comprimento_max_fragmento,
-        instrucao=instrucao)
+        lista_instrucoes=lista_instrucoes)
     
 ## Modelo de Execução
 # python -m api.dados.gerador_banco_vetores \
 # --nome_banco_vetores banco_assistente \
 # --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt']" \
-# --lista_fn_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
+# --lista_nomes_modelos_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
 # --comprimento_max_fragmento 300

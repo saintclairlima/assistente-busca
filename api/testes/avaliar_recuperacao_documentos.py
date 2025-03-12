@@ -33,7 +33,7 @@ def recuperar_colecoes(url_banco_vetores: str) -> Dict[str, chromadb.Collection]
     gb = GeradorBancoVetores()
 
     for desc_colecao in desc['colecoes']:
-        funcao = gb.obter_funcao_embeddings(tipo=desc_colecao['funcao_embeddings']['nome_modelo'])
+        funcao = gb.obter_funcao_embeddings(nome_modelo=desc_colecao['funcao_embeddings']['nome_modelo'])
         colecao = cliente_chroma.get_collection(name=desc_colecao['nome'], embedding_function=funcao)
         colecoes[desc_colecao['nome']] = colecao
     
