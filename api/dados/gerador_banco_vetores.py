@@ -362,7 +362,7 @@ if __name__ == "__main__":
         raise ValueError('Problema ao processar argumentos de coleções e funções de embeddings')
     
     comprimento_max_fragmento = args.comprimento_max_fragmento
-    lista_instrucoes = None if not args.lista_instrucoes else args.lista_instrucoes
+    lista_instrucoes = None if not args.lista_instrucoes else ast.literal_eval(args.lista_instrucoes)
 
     gerador_banco_vetores = GeradorBancoVetores()
     gerador_banco_vetores.executar(
