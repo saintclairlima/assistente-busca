@@ -243,7 +243,7 @@ class GeradorBancoVetores:
         for idx in range(len(nomes_colecoes)):
             colecao = cliente_chroma.create_collection(name=nomes_colecoes[idx], embedding_function=funcoes_embeddings[idx], metadata={'hnsw:space': hnsw_space, 'uuid': uuids_colecoes[idx]})
         
-            print(f'Gerando >>> Banco {url_banco_vetores} - Coleção {nomes_colecoes[idx]} - Embeddings {nomes_modelos_embeddings[idx]} - Instrução: {instrucao}')
+            print(f'Gerando >>> Banco {url_banco_vetores} - Coleção {nomes_colecoes[idx]} - Embeddings {nomes_modelos_embeddings[idx]} - Instrução: {lista_instrucoes[idx]}')
             qtd_docs = len(documentos)
             for idx in range(qtd_docs):
                 print(f'\r>>> Incluindo documento {idx+1} de {qtd_docs}', end='')
