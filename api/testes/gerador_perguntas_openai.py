@@ -58,8 +58,8 @@ class GeradorPerguntasOpenAI:
 
         O resultado deve ser em formato estruturado, em formato JSON, sendo uma lista de objetos assim:
         
-        {[{"pergunta": "texto da pergutna", "resposta":"texto da resposta"},
-          {"pergunta": "texto da pergutna", "resposta":"texto da resposta"}]}
+        {[{"pergunta": "texto da pergunta", "resposta":"texto da resposta"},
+          {"pergunta": "texto da pergunta", "resposta":"texto da resposta"}]}
         
         Não deve haver nenhum outro texto, apenas a lista.
 
