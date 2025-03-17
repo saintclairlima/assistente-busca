@@ -2,7 +2,6 @@
 print('Importando bibliotecas')
 import argparse
 import json
-from time import time
 from sentence_transformers import SentenceTransformer
 from chromadb import chromadb
 from ..configuracoes.config_gerais import configuracoes
@@ -11,7 +10,6 @@ from ..utils.interface_llm import InterfaceOllama
 import asyncio
 import os
 from torch import cuda
-import sys
 
 FAZER_LOG = False
 
@@ -25,7 +23,7 @@ URL_BANCO_VETORES=os.path.join(URL_LOCAL,"../dados/bancos_vetores/banco_vetores_
 NOME_COLECAO='regimento_resolucoes_rh'
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
-async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome_colecao, url_arquivo_saida=None, instrucao=None):
+async def avaliar_respostas_ollama(url_arquivo_entrada, url_banco_vetores, nome_colecao, url_arquivo_saida=None, instrucao=None):
     if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada
     if FAZER_LOG: print('Carregando JSON')
     with open(url_arquivo_entrada, 'r', encoding='utf-8') as arq:
@@ -35,7 +33,6 @@ async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome
     interface_ollama = InterfaceOllama(url_ollama=URL_LLM, nome_modelo=MODELO_OLLAMA)
 
     if FAZER_LOG: print('Criando cliente Chroma')
-    url_banco_vetores = os.path.join(URL_LOCAL, f"../dados/bancos_vetores/{nome_banco_vetores}")
     client = chromadb.PersistentClient(path=url_banco_vetores)
     if FAZER_LOG: print('Criando função de embeddings')
     funcao_de_embeddings_sentence_tranformer = FuncaoEmbeddings(nome_modelo=EMBEDDING_INSTRUCTOR, tipo_modelo=SentenceTransformer, instrucao=instrucao, device=DEVICE)
@@ -75,33 +72,28 @@ async def avaliar_respostas_ollama(url_arquivo_entrada, nome_banco_vetores, nome
         with open(os.path.join(url_arquivo_saida), 'w', encoding='utf-8') as arq:
             arq.write(json.dumps(dados, ensure_ascii=False, indent=4))
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Gera resultados de busca por documentos a partir de uma lista de perguntas")
 
-    parser.add_argument('--url_entrada', type=str, required=True, help="caminho para arquivo com as perguntas")
-    parser.add_argument('--nome_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
-    parser.add_argument('--nome_colecao', type=str, required=True, help="coleçaõ do banco a ser utilizada")
-    parser.add_argument('--url_saida', type=str, help="caminho para arquivo em que serão salvos os resultados")
-    parser.add_argument('--instrucao', type=str, help="instrucao a ser utilizada na função de embeddings")
-
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Gera respostas do Ollama a partir de uma lista de perguntas")
+    parser.add_argument('--url_arq_fragmentos', type=str, help="caminho para arquivo com as perguntas")
+    parser.add_argument('--url_banco_vetores', type=str, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--nome_colecao', type=str, )
+    parser.add_argument('--url_arquivo_saida', type=str, help="caminho para salvar o arquivo com o resultado")
+    parser.add_argument('--num_resultados', type=int, help="quantidade de documentos a ser recuperada de cada consulta ao banco de vetores")
+    parser.add_argument('--instrucao', type=str, help="instrução para ser usada com algum modelo com instrução")
     args = parser.parse_args()
-    url_entrada = args.url_entrada
-    nome_banco_vetores = args.nome_banco_vetores
-    nome_colecao = args.nome_colecao
-    url_saida = None if not args.url_saida else args.url_saida
+
+    url_arq_fragmentos = 'api/testes/resultados/perguntas_documentos.json' if not args.url_arq_fragmentos else args.url_arq_fragmentos
+    url_banco_vetores = configuracoes.url_banco_vetores if not args.url_banco_vetores else args.url_banco_vetores
+    nome_colecao = configuracoes.nome_colecao_de_documentos if not args.nome_colecao else args.nome_colecao
+    url_arquivo_saida = os.path.basename(url_arq_fragmentos)[:-4] + '_respostas_llama.json' if not args.url_arquivo_saida else args.url_arquivo_saida
+    num_resultados = configuracoes.num_documentos_retornados if not args.num_resultados else args.num_resultados
     instrucao = None if not args.instrucao else args.instrucao
+
     asyncio.run(avaliar_respostas_ollama(
-        url_arquivo_entrada=url_entrada,
-        nome_banco_vetores=nome_banco_vetores,
+        url_arquivo_entrada=url_arq_fragmentos,
+        nome_banco_vetores=url_banco_vetores,
         nome_colecao=nome_colecao,
-        url_arquivo_saida=url_saida,
+        url_arquivo_saida=url_arquivo_saida,
         instrucao=instrucao
     ))
-# else:
-#     avaliar_respostas_ollama(
-#         url_arquivo_entrada=url_entrada,
-#         nome_banco_vetores=nome_banco_vetores,
-#         nome_colecao=nome_colecao,
-#         url_arquivo_saida=url_saida,
-#         instrucao=instrucao
-#     )
