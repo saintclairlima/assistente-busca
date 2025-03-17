@@ -303,10 +303,10 @@ def avaliar_recuperacao(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gera resultados de busca por documentos a partir de uma lista de perguntas")
-    parser.add_argument('--url_arq_fragmentos', type=str, required=True, help="caminho para arquivo com as perguntas")
-    parser.add_argument('--url_banco_vetores', type=str, required=True, help="nome do banco de vetores a ser consultado")
-    parser.add_argument('--url_arquivo_saida', type=str, required=True, help="caminho para salvar o arquivo com o resultado")
-    parser.add_argument('--num_resultados', type=int, required=True, help='quantidade de documentos a ser recuperada de cada consulta ao banco de vetores')
+    parser.add_argument('--url_arq_fragmentos', type=str, help="caminho para arquivo com as perguntas")
+    parser.add_argument('--url_banco_vetores', type=str, help="nome do banco de vetores a ser consultado")
+    parser.add_argument('--url_arquivo_saida', type=str, help="caminho para salvar o arquivo com o resultado")
+    parser.add_argument('--num_resultados', type=int, help='quantidade de documentos a ser recuperada de cada consulta ao banco de vetores')
     parser.add_argument('--gerar_relatorios_intermediarios', type=bool, help='indicador se deve ou não salvar os resultados')
     args = parser.parse_args()
 
