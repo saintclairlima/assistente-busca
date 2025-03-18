@@ -1,99 +1,80 @@
-## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
+
 print('Importando bibliotecas')
 import argparse
+import ast
 import json
-from sentence_transformers import SentenceTransformer
-from chromadb import chromadb
-from ..configuracoes.config_gerais import configuracoes
-from ..utils.interface_banco_vetores import FuncaoEmbeddings
-from ..utils.interface_llm import InterfaceOllama
-import asyncio
-import os
-from torch import cuda
+import requests
+from time import time
+from typing import List
+from api.configuracoes.config_gerais import configuracoes
+from api.utils.gerador_prompts import GeradorPrompts
 
-FAZER_LOG = False
-
-
-
-URL_LOCAL = os.path.abspath(os.path.join(os.path.dirname(__file__), "./"))
-URL_LLM = 'http://localhost:11434'
-MODELO_OLLAMA='llama3.1'
-EMBEDDING_INSTRUCTOR="hkunlp/instructor-xl"
-URL_BANCO_VETORES=os.path.join(URL_LOCAL,"../dados/bancos_vetores/banco_vetores_regimento_resolucoes_rh")
-NOME_COLECAO='regimento_resolucoes_rh'
-DEVICE='cuda' if cuda.is_available() else 'cpu'
-
-async def avaliar_respostas_ollama(url_arquivo_entrada, url_banco_vetores, nome_colecao, url_arquivo_saida=None, instrucao=None):
-    if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada
-    if FAZER_LOG: print('Carregando JSON')
-    with open(url_arquivo_entrada, 'r', encoding='utf-8') as arq:
-        dados = json.load(arq)
-        dados=dados['dados'] # por motivodfe mudança na estrutura do arquivo
-    if FAZER_LOG: print('Criando interface Ollama')
-    interface_ollama = InterfaceOllama(url_ollama=URL_LLM, nome_modelo=MODELO_OLLAMA)
-
-    if FAZER_LOG: print('Criando cliente Chroma')
-    client = chromadb.PersistentClient(path=url_banco_vetores)
-    if FAZER_LOG: print('Criando função de embeddings')
-    funcao_de_embeddings_sentence_tranformer = FuncaoEmbeddings(nome_modelo=EMBEDDING_INSTRUCTOR, tipo_modelo=SentenceTransformer, instrucao=instrucao, device=DEVICE)
-    if FAZER_LOG: print('Definindo Coleção')
-    collection = client.get_collection(name=nome_colecao, embedding_function=funcao_de_embeddings_sentence_tranformer)
+def simular_geracao_resposta_ollama(
+        pergunta:str,
+        documentos: List[str],
+        url_llm: str=configuracoes.url_llm,
+        modelo_llm: str=configuracoes.modelo_llm):
     
-    if FAZER_LOG: print('Processando perguntas')
-    num_itens = len(dados)
-    for idx in range(num_itens):
-        print(f'\rPergunta {idx+1} de {num_itens}', end="")
-        item = dados[idx]
+    prompt_usuario = GeradorPrompts.gerar_prompt_rag(pergunta=pergunta, documentos=documentos)
 
-        # Ignora Cada item que já tem uma resposta do ollama
-        if 'resp_llm' in item: continue
+    mensagens = [
+        {'role': 'system', 'content': configuracoes.template_mensagem_system},
+        {'role': 'user', 'content': prompt_usuario}
+    ]
 
-        pergunta = item['pergunta']
-        if FAZER_LOG: print('Recuperando documentos')
-        documentos = collection.get(
-            ids=[doc['id'] for doc in item['documentos']]
-        )
-        if FAZER_LOG: print('Enviando dados para o ollama')
-        texto_resposta_llm = ''
-        async for resp_llm in interface_ollama.gerar_resposta_llm_stream(
-                    pergunta=pergunta,
-                    # Inclui o título dos documentos no prompt do Ollama
-                    documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'], documentos['documents'])],
-                    historico=[]):
-            
-            texto_resposta_llm += resp_llm['response']
+    payload = {
+        "model": modelo_llm,
+        "messages": mensagens,
+        "temperature": 0.0,
+        "stream": False
+    }
 
-        resp_llm['response'] = texto_resposta_llm
-        resp_llm['context'] = []
+    url = f"{url_llm}/api/chat"
 
-        item['resp_llm'] = resp_llm
+    tempo_inicial = time()
+    resultado = requests.post(url, json=payload)
 
-        if FAZER_LOG: print('salvando json')
-        with open(os.path.join(url_arquivo_saida), 'w', encoding='utf-8') as arq:
-            arq.write(json.dumps(dados, ensure_ascii=False, indent=4))
+    resposta_ollama = json.loads(resultado.content)
+    resposta_ollama['tempo_execucao'] = time() - tempo_inicial
+
+    return resposta_ollama
+
+def avaliar_respostas_ollama(url_arquivo_perguntas: str, url_llm: str, modelo_llm: str):
+
+    with open(url_arquivo_perguntas, 'r', encoding='utf-8') as arq:
+        info_perguntas = json.load(arq)
+
+    qtd_perguntas = len(info_perguntas)
+    
+    for idx in range(qtd_perguntas):
+        item = info_perguntas[idx]
+        if 'resposta_' + modelo_llm not in item:
+            print(f'\r--- processando pergunta {idx+1} de {qtd_perguntas}...', end='')
+            pergunta = item['pergunta']
+            documentos = item['docs']
+            resposta = simular_geracao_resposta_ollama(pergunta, documentos, url_llm, modelo_llm)
+            item['resposta_' + modelo_llm] = resposta
+
+            with open(url_arquivo_perguntas, 'w', encoding='utf-8') as arq:
+                json.dump(info_perguntas, arq, ensure_ascii=False, indent=4)
+    
+    
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Gera respostas do Ollama a partir de uma lista de perguntas")
-    parser.add_argument('--url_arq_fragmentos', type=str, help="caminho para arquivo com as perguntas")
-    parser.add_argument('--url_banco_vetores', type=str, help="nome do banco de vetores a ser consultado")
-    parser.add_argument('--nome_colecao', type=str, )
-    parser.add_argument('--url_arquivo_saida', type=str, help="caminho para salvar o arquivo com o resultado")
-    parser.add_argument('--num_resultados', type=int, help="quantidade de documentos a ser recuperada de cada consulta ao banco de vetores")
-    parser.add_argument('--instrucao', type=str, help="instrução para ser usada com algum modelo com instrução")
+    parser.add_argument('--url_arquivo_perguntas', type=str, help="caminho para arquivo com as perguntas e documentos")
+    parser.add_argument('--url_llm', type=str, help='url em que está sendo executado o LLM')
+    parser.add_argument('--modelos_llm', type=str, help='lista de modelos a serem testados')
     args = parser.parse_args()
 
-    url_arq_fragmentos = 'api/testes/resultados/perguntas_documentos.json' if not args.url_arq_fragmentos else args.url_arq_fragmentos
-    url_banco_vetores = configuracoes.url_banco_vetores if not args.url_banco_vetores else args.url_banco_vetores
-    nome_colecao = configuracoes.nome_colecao_de_documentos if not args.nome_colecao else args.nome_colecao
-    url_arquivo_saida = os.path.basename(url_arq_fragmentos)[:-4] + '_respostas_llama.json' if not args.url_arquivo_saida else args.url_arquivo_saida
-    num_resultados = configuracoes.num_documentos_retornados if not args.num_resultados else args.num_resultados
-    instrucao = None if not args.instrucao else args.instrucao
+    url_arquivo_perguntas = 'api/testes/resultados/perguntas_documentos_rh_simulacao_perguntas.json' if not args.url_arquivo_perguntas else args.url_arquivo_perguntas
+    url_llm = configuracoes.url_llm if not args.url_llm else args.url_llm
+    modelos_llm = ast.literal_eval(f'["{configuracoes.modelo_llm}"]') if not args.modelos_llm else ast.literal_eval(args.modelos_llm)
 
-    asyncio.run(avaliar_respostas_ollama(
-        url_arquivo_entrada=url_arq_fragmentos,
-        nome_banco_vetores=url_banco_vetores,
-        nome_colecao=nome_colecao,
-        url_arquivo_saida=url_arquivo_saida,
-        instrucao=instrucao
-    ))
+    print(f'Respostas sendo enviadas a {url_llm}')
+    for modelo in modelos_llm:
+        print(f'\nGerando respostas com {modelo}:')
+        avaliar_respostas_ollama(url_arquivo_perguntas=url_arquivo_perguntas, url_llm=url_llm, modelo_llm=modelo)
+
+    print('\nConcluído!!!')
