@@ -312,7 +312,7 @@ if __name__ == "__main__":
 
     url_arq_fragmentos = 'api/testes/resultados/perguntas_documentos.json' if not args.url_arq_fragmentos else args.url_arq_fragmentos
     url_banco_vetores = configuracoes.url_banco_vetores if not args.url_banco_vetores else args.url_banco_vetores
-    url_arquivo_saida = os.path.basename(url_arq_fragmentos)[:-4] + '_sumario.json' if not args.url_arquivo_saida else args.url_arquivo_saida
+    url_arquivo_saida = os.path.basename(url_arq_fragmentos)[:-5] + '_sumario.json' if not args.url_arquivo_saida else args.url_arquivo_saida
     num_resultados = 10 if not args.num_resultados else args.num_resultados
     gerar_relatorios_intermediarios = True if not args.num_resultados else args.num_resultados
 
