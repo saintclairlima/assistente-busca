@@ -1,50 +1,159 @@
-## AFAZER: Ajustar para dar conta das alteraç~eos feitas nas classes usadas
-print('Fazendo imports...')
+print('Carregando bibliotecas...')
 import argparse
+import ast
 import json
+from typing import List
 from bert_score import score
 
-def aplicar_score(url_arquivo_entrada, url_arquivo_saida=None):
-    if not url_arquivo_saida: url_arquivo_saida = url_arquivo_entrada.split('.')[0] + '_bertscore.json'
-    
-    print(f'Carregando dados({url_arquivo_entrada})...')
-    with open(url_arquivo_entrada, 'r') as arq:
-        dados = json.load(arq)
-        dados = dados['dados']
-
-    candidates = []
-    references = []
-    indices = []
-
-    for idx in range(len(dados)):
-        item = dados[idx]
-        if 'resp_llm' in item:
-            indices.append(idx)
-            candidates.append(item['resposta'])
-            references.append(item['resp_llm']['response'])
+def aplicar_score(textos_candidatos, textos_referencia):
+    indices = [idx for idx in range(len(textos_candidatos))]
 
     print('Calculando BertScore...')
-    P, R, F1 = score(candidates, references, lang="pt-br", verbose=False)
-
+    P, R, F1 = score(textos_candidatos, textos_referencia, lang="pt-br", verbose=False)
+    
     resultado = [
         {
             'indice': indices[i],
             'precision': P[i].item(),
             'recall': R[i].item(),
             'f1': F1[i].item()
-        } for i in range(len(candidates))]
+        } for i in range(len(textos_candidatos))]
     
-    with open(url_arquivo_saida, 'w', encoding='utf-8') as arq:
-        json.dump(resultado, arq, ensure_ascii=False, indent=4)
+    return resultado
+
+def avaliar_respostas_llm(dados: List[dict], modelos_llm: List[str]) -> dict:
+
+    respostas = {'referencia': []}
+    for modelo in modelos_llm:
+        respostas[modelo] = []
+
+    for item in dados:
+        todos_modelos = True
+
+        for modelo in modelos_llm:
+            if modelo not in item:
+                todos_modelos = False
+                break
+
+        if todos_modelos:
+            respostas['referencia'].append(item['resposta'])
+            for modelo in modelos_llm:
+                if '<think>' in item[modelo]['message']['content'] and '<think/>' in item[modelo]['message']['content']:
+                    item[modelo]['message']['content'] = item[modelo]['message']['content'].split('</think>')[1]
+                respostas[modelo].append(item[modelo]['message']['content'])
+    
+    scores = {
+        modelo: aplicar_score(respostas[modelo], respostas['referencia']) for modelo in modelos_llm
+    }
+
+    return scores
+        
         
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Gera resultados de busca por documentos a partir de uma lista de perguntas")
     
-    parser.add_argument('--url_entrada', type=str, required=True, help="caminho para arquivo com as perguntas")
+    parser.add_argument('--url_entrada', type=str, help="caminho para arquivo com as perguntas")
     parser.add_argument('--url_saida', type=str, help="caminho para arquivo em que serão salvos os resultados")
-    
+    parser.add_argument('--modelos_llm', type=str, help="lista de modelos testados")    
     args = parser.parse_args()
-    url_entrada = args.url_entrada
-    url_saida = None if not args.url_saida else args.url_saida
+
+    url_entrada = 'api/testes/resultados/perguntas_documentos_rh_simulacao_perguntas.json' if not args.url_entrada else args.url_entrada
+    url_saida = url_entrada[:-5] + '_bertscore.json' if not args.url_saida else args.url_saida
+    modelos_llm = ast.literal_eval(f'["resposta_deepseek-r1:latest", "resposta_llama3.1"]') if not args.modelos_llm else ast.literal_eval(args.modelos_llm)
+    with open(url_entrada, 'r', encoding='utf-8') as arq:
+        dados = json.load(arq)
     
-    aplicar_score(url_arquivo_entrada=url_entrada, url_arquivo_saida=url_saida)
+    scores_modelos = avaliar_respostas_llm(dados=dados, modelos_llm=modelos_llm)
+
+    with open(url_saida, 'w', encoding='utf-8') as arq:
+        json.dump(scores_modelos, arq)
+
+    for modelo, lista_scores in scores_modelos.items():
+        scores_detalhados = {
+            "precision": [],
+            "recall": [],
+            "f1": []
+        }
+
+        for score in lista_scores:
+            scores_detalhados['precision'].append(score['precision'])
+            scores_detalhados['recall'].append(score['recall'])
+            scores_detalhados['f1'].append(score['f1'])
+        
+        scores_medias = {
+            "precision": sum(scores_detalhados['precision']) / len(scores_detalhados['precision']),
+            "recall": sum(scores_detalhados['recall']) / len(scores_detalhados['recall']),
+            "f1": sum(scores_detalhados['f1']) / len(scores_detalhados['f1']),
+        }
+
+        print(f'=== Relatório de Scores - {modelo} ===')
+        for score, valor in scores_medias.items():
+            print(f'- {score}:\t{valor}')
+        print('--------------------------\n\n')
+
+
+
+
+
+
+# import json
+# import matplotlib.pyplot as plt
+# import seaborn as sns
+# import pandas as pd
+
+# with open('api/testes/resultados/perguntas_documentos_rh_simulacao_perguntas_bertscore.json', 'r', encoding='utf-8') as arq:
+#     dados = json.load(arq)
+
+# scores_llama = {
+#     "precision": [],
+#     "recall": [],
+#     "f1": []
+# }
+# for score in dados['resposta_llama3.1']:
+#     scores_llama['precision'].append(score['precision'])
+#     scores_llama['recall'].append(score['recall'])
+#     scores_llama['f1'].append(score['f1'])
+
+# scores_deepseek = {
+#     "precision": [],
+#     "recall": [],
+#     "f1": []
+# }
+# for score in dados['resposta_deepseek-r1:latest']:
+#     scores_deepseek['precision'].append(score['precision'])
+#     scores_deepseek['recall'].append(score['recall'])
+#     scores_deepseek['f1'].append(score['f1'])
+
+
+# # Convert dictionaries to DataFrame format suitable for seaborn
+# def dict_to_df(scores_dict, label):
+#     df = pd.DataFrame(scores_dict)
+#     df = df.melt(var_name="Métrica", value_name="Score")
+#     df["Modelo"] = label
+#     return df
+
+# df1 = dict_to_df(scores_llama, "llama")
+# df2 = dict_to_df(scores_deepseek, "deepseek")
+
+# combined_df = pd.concat([df1, df2], ignore_index=True)
+
+# # Set up plot aesthetics
+# sns.set(style="whitegrid", palette="pastel", font_scale=1.2)
+
+# # Rearranged version: 3 columns (one per score), 2 rows (one per dictionary)
+# g = sns.catplot(
+#     data=combined_df,
+#     x="Modelo",
+#     y="Score",
+#     kind="box",
+#     col="Métrica",
+#     col_order=["precision", "recall", "f1"],
+#     height=4,
+#     aspect=0.8,
+#     palette="pastel"
+# )
+
+# g.fig.subplots_adjust(top=0.85)
+# g.fig.suptitle("Boxplot of Precision, Recall, and F1 Scores", fontsize=16)
+
+# plt.show()
