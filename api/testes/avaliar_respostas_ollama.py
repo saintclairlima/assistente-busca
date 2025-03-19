@@ -1,5 +1,5 @@
 
-print('Importando bibliotecas')
+print('Carregando bibliotecas...')
 import argparse
 import ast
 import json
