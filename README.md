@@ -186,7 +186,9 @@ pip install -r requirements.txt
 ```
 É importante instalar o `torch` isoladamente, antes da de instalar os pacotes no arquivo de requirements, de forma a evitar que durante a instalação de outros pacotes a versão do `torch` seja sobreescrita.
 
-**Obs**: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos requisitos (2.x) e a biblioteca `transformers`. Sendo este o caso, basta instalax uma versão 1.x do `Numpy`.
+**Obs**: Em alguns casos, há problema de conflito entre a versão do `Numpy` nos requisitos (2.x) e a biblioteca `transformers`. Sendo este o caso, basta instalar uma versão 1.x do `Numpy`.
+
+**CUIDADO**: Em ambientes com GPU garanta que sua placa gráfica tem os requisitos mínimos para executar ao mesmo tempo a API Ollama e os recursos do Assistente de Busca. Caso não seja suficiente para execuçaõ mútua, o Ollama passará a utilizar a CPU, deixando o processo de geraça~ode resposta lento. Priorize o uso da GPU pelo Ollama.
 
 ### Arquivos de ambiente e configuração
 Antes da execução, é necessário criar um arquivo `.env`, na pasta `/api`, com um conteúdo conforme o arquivo `.TEMPLATE`.
