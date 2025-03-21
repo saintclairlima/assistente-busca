@@ -13,6 +13,7 @@ source chat-env/bin/activate
 echo "\n\n\n"
 
 echo "Instalando dependências..."
+# pip install torch --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 echo "\n\n\n"
 
