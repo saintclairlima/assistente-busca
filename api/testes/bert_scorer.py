@@ -41,9 +41,12 @@ def avaliar_respostas_llm(dados: List[dict], modelos_llm: List[str]) -> dict:
         if todos_modelos:
             respostas['referencia'].append(item['resposta'])
             for modelo in modelos_llm:
-                if '<think>' in item[modelo]['message']['content'] and '<think/>' in item[modelo]['message']['content']:
-                    item[modelo]['message']['content'] = item[modelo]['message']['content'].split('</think>')[1]
-                respostas[modelo].append(item[modelo]['message']['content'])
+                if modelo != 'resposta_gpt-4o':
+                    if '<think>' in item[modelo]['message']['content'] and '<think/>' in item[modelo]['message']['content']:
+                        item[modelo]['message']['content'] = item[modelo]['message']['content'].split('</think>')[1]
+                    respostas[modelo].append(item[modelo]['message']['content'])
+                else:
+                    respostas[modelo].append(item[modelo]["choices"][0]["message"]["content"])
     
     scores = {
         modelo: aplicar_score(respostas[modelo], respostas['referencia']) for modelo in modelos_llm
@@ -62,7 +65,7 @@ def avaliar_respostas_llm(dados: List[dict], modelos_llm: List[str]) -> dict:
 
 #     url_entrada = 'api/testes/resultados/perguntas_documentos_rh_simulacao_perguntas.json' if not args.url_entrada else args.url_entrada
 #     url_saida = url_entrada[:-5] + '_bertscore.json' if not args.url_saida else args.url_saida
-#     modelos_llm = ast.literal_eval(f'["resposta_deepseek-r1:latest", "resposta_llama3.1"]') if not args.modelos_llm else ast.literal_eval(args.modelos_llm)
+#     modelos_llm = ast.literal_eval(f'["resposta_deepseek-r1:latest", "resposta_llama3.1", "resposta_gpt-4o"]') if not args.modelos_llm else ast.literal_eval(args.modelos_llm)
 #     with open(url_entrada, 'r', encoding='utf-8') as arq:
 #         dados = json.load(arq)
     
@@ -112,6 +115,12 @@ def plotar_resultados(url_arquivo: str='api/testes/resultados/perguntas_document
         scores_deepseek['recall'].append(score['recall'])
         scores_deepseek['f1'].append(score['f1'])
         
+    scores_gpt = {"precision": [], "recall": [], "f1": []}
+    for score in dados['resposta_gpt-4o']:
+        scores_gpt['precision'].append(score['precision'])
+        scores_gpt['recall'].append(score['recall'])
+        scores_gpt['f1'].append(score['f1'])
+        
     def dict_to_df(scores_dict, label):
         df = pd.DataFrame(scores_dict)
         df = df.melt(var_name="Métrica", value_name="Score")
@@ -120,8 +129,9 @@ def plotar_resultados(url_arquivo: str='api/testes/resultados/perguntas_document
 
     df_llama = dict_to_df(scores_llama, "llama3.1")
     df_deepseek = dict_to_df(scores_deepseek, "deepseek-r1")
+    df_gpt = dict_to_df(scores_gpt, "gpt-4o")
     
-    combined_df = pd.concat([df_llama, df_deepseek], ignore_index=True)
+    combined_df = pd.concat([df_llama, df_deepseek, df_gpt], ignore_index=True)
     
     sns.set(style="white", font_scale=1.1)
     
@@ -129,7 +139,8 @@ def plotar_resultados(url_arquivo: str='api/testes/resultados/perguntas_document
 
     colors = {
         "llama3.1": "#aec7e8",
-        "deepseek-r1": "#ffbb78"
+        "deepseek-r1": "#ffbb78",
+        "gpt-4o": "#c1e1c1"
     }
 
     metrics = ["precision", "recall", "f1"]
