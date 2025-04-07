@@ -72,19 +72,24 @@ hr{
     box-shadow: 0 0 10px rgba(0,0,0,0.2);
     border-radius: 5px;
 }
-.nome-bot{
+.cabecalho-assistente{
     background: white;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     padding: 5px;
     box-shadow: 0px 4px 4px -4px;
     z-index: 1000;
 }
+.info-assistente{
+    display: flex;
+    align-items: center;
+}
 .img-assistente{
     margin: 10px;
-    height: 30px;
+    height: 40px;
     border-radius: 50%;
     border-style: solid;
     border-width: 1px;
@@ -95,6 +100,27 @@ hr{
     font-size: 22px;
     font-family: Roboto, sans-serif;
     color: var(--azul-escuro)
+}
+.botao-pdf {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background-color: transparent;
+    color: var(--cinza-escuro);
+    border: 1px solid var(--cinza-claro);
+    border-radius: 20px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+    margin-right: 10px;
+}
+.botao-pdf:hover {
+    background-color: var(--cinza-claro);
+}
+.botao-pdf .material-icons {
+    font-size: 20px;
 }
 .wrapper-container-exibicao-mensagens{
     padding: 0px 10px;
@@ -174,7 +200,6 @@ hr{
     
 }
 .botoes-aval{
-  /* background: green; */
   display: flex;
   justify-content: flex-end;
 }
@@ -303,6 +328,34 @@ hr{
         display: flex;
         align-items: center;
     }
+}
+
+.pdf-wrapper .text-box{
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 0px;
+    background-color: white;
+    word-wrap: break-word;
+    box-sizing: border-box;
+    font-size: small;
+    box-shadow: 0px 0px 0px rgb(0, 0, 0, 0.1);
+    justify-content:space-between;
+}
+.pdf-wrapper .mensagem-enviada{
+    align-self: flex-start;
+    background-color: white;
+    color: black;
+    font-weight: bolder;
+}
+.pdf-wrapper .mensagem-recebida{
+    align-self: flex-start;
+    background-color: white;
+}
+.pdf-wrapper .mensagem-erro{
+    align-self: flex-start;
+    background-color: #ffdddd;
+    color:#bb3434
 }
 
 @keyframes dot-blink1{ 0%, 25%{opacity: 0;} 26%, 50%{opacity: 1;} 51%, 75%{opacity: 1;} 76%, 100%{opacity: 1;} }

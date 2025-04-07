@@ -15,6 +15,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script src="/web/markdown.js"></script>
     <script src="/web/chat.js"></script>
     <script>
@@ -46,9 +47,15 @@
     </div>
 
     <div class="container-conteudo">
-        <div class="nome-bot">
-            <img class="img-assistente" src="/web/img/Assistente_.png">
-            <span class="rotulo-assistente">Legis</span>
+        <div class="cabecalho-assistente">
+            <div class="info-assistente">
+                <img class="img-assistente" src="/web/img/Assistente_.png">
+                <span class="rotulo-assistente">Legis</span>
+            </div>
+            <button class="botao-pdf" onclick="baixarPDF()">
+                <span class="material-icons">picture_as_pdf</span>
+                <span>Salvar</span>
+            </button>
         </div>
 
         <div class="wrapper-container-exibicao-mensagens">

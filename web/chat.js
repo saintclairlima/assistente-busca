@@ -306,3 +306,27 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
         }
     });
 }
+function baixarPDF() {
+    var mensagens = document.getElementsByClassName('text-box');
+    var wrapper = document.createElement('div');
+    wrapper.classList.add('pdf-wrapper');
+    Array.from(mensagens).forEach(msg => {
+        // Clona o elemento para não interferir nos elementos exibidos em tela
+        var clone = msg.cloneNode(true);
+        wrapper.appendChild(clone);
+    });
+
+    console.log(wrapper);
+
+    // Define opções para o html2pdf
+    const options = {
+        margin:       10,
+        filename:     'mensagens.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2 },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+
+    // Gera o PDF a partir do wrapper com as mensagens clonadas
+    html2pdf().set(options).from(wrapper).save();
+}
