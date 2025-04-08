@@ -306,27 +306,28 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
         }
     });
 }
-function baixarPDF() {
-    var mensagens = document.getElementsByClassName('text-box');
+
+function salvarConversa() {
+    var cabecalho = document.getElementsByClassName('cabecalho')[0].cloneNode(true);
+    cabecalho.style.marginBottom = '30px'
+    var rodape = document.createElement('div');
+    rodape.classList.add('rodape');
+    rodape.innerHTML = (`<strong>ID da Interação:</strong> ${idSessao}`)
+    var mensagens = Array.from(document.getElementsByClassName('text-box'));
+    // Remove mensagem inicial do Assistente
+    mensagens.shift();
     var wrapper = document.createElement('div');
     wrapper.classList.add('pdf-wrapper');
-    Array.from(mensagens).forEach(msg => {
+    wrapper.appendChild(cabecalho);
+    // wrapper.appendChild(rodape);
+    mensagens.forEach(msg => {
         // Clona o elemento para não interferir nos elementos exibidos em tela
         var clone = msg.cloneNode(true);
         wrapper.appendChild(clone);
-    });
-
-    console.log(wrapper);
-
-    // Define opções para o html2pdf
-    const options = {
-        margin:       10,
-        filename:     'mensagens.pdf',
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2 },
-        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
-
-    // Gera o PDF a partir do wrapper com as mensagens clonadas
-    html2pdf().set(options).from(wrapper).save();
+    });    
+    document.body.appendChild(wrapper);
+    document.body.style.backgroundColor = "white";
+    window.print();
+    document.body.removeChild(wrapper);
+    document.body.style.backgroundColor = "#f6f6f6";
 }

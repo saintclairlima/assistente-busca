@@ -330,32 +330,80 @@ hr{
     }
 }
 
-.pdf-wrapper .text-box{
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 0px;
+.pdf-wrapper{
+    font-family: Roboto, sans-serif;
     background-color: white;
-    word-wrap: break-word;
-    box-sizing: border-box;
-    font-size: small;
-    box-shadow: 0px 0px 0px rgb(0, 0, 0, 0.1);
-    justify-content:space-between;
+}
+
+.pdf-wrapper .cabecalho{
+    all: initial;
+    display: block;
+    width: 100%;
+    background-color: var(--azul-escuro);
+}
+.pdf-wrapper .text-box{
+    all: initial;
 }
 .pdf-wrapper .mensagem-enviada{
-    align-self: flex-start;
-    background-color: white;
-    color: black;
-    font-weight: bolder;
+    all: initial;
+    font-family: Roboto, sans-serif;
+    font-size: large;
+    font-weight: bold;
+    padding-top: 40px;
 }
 .pdf-wrapper .mensagem-recebida{
-    align-self: flex-start;
-    background-color: white;
+    all: initial;
+    font-family: Roboto, sans-serif;
 }
 .pdf-wrapper .mensagem-erro{
-    align-self: flex-start;
-    background-color: #ffdddd;
-    color:#bb3434
+    all: initial;
+    font-family: Roboto, sans-serif;
+}
+.pdf-wrapper .toggle-fontes-label{
+    all: initial;
+    display: none;
+}
+.pdf-wrapper .fontes{
+    all: initial;
+    font-size: smaller;
+    font-style: italic;
+    font-family: Roboto, sans-serif;
+
+}
+.pdf-wrapper .botoes-aval{
+    display: none;
+}
+.pdf-wrapper .documento{
+    margin-left: 30px;
+}
+
+.pdf-wrapper .rodape {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    padding: 10px 0;
+    border-top: 1px solid #ccc;
+    background-color: white;
+}
+
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important; /* Chrome/Safari */
+        print-color-adjust: exact !important;         /* Firefox */
+      }
+    .pdf-wrapper {
+        display: block;
+        position: relative;
+        width: 100%;
+    }
+    
+    body *:not(.pdf-wrapper, .pdf-wrapper *) {
+        display: none;
+    }
 }
 
 @keyframes dot-blink1{ 0%, 25%{opacity: 0;} 26%, 50%{opacity: 1;} 51%, 75%{opacity: 1;} 76%, 100%{opacity: 1;} }
