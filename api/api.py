@@ -61,6 +61,23 @@ print('Definindo as rotas')
 async def pagina_chat():
     return gerador_de_respostas.health()
 
+@controller.get('/')
+async def pagina_chat_default(request: Request, url_redirec: str = Query(None)):
+    with open('web/chat.html', 'r', encoding='utf-8') as arquivo: conteudo_html = arquivo.read()
+    # AFAZER: considerar se manter esse elemento faz sentido. Só é utilizado para uso de testes com o ngrok, no colab
+    if url_redirec:
+        configuracoes.tags_substituicao_html['TAG_INSERCAO_URL_HOST'] = url_redirec
+    
+    # substituindo as tags dentro do HTML, para maior controle
+    for tag, valor in configuracoes.tags_substituicao_html.items():
+        conteudo_html = conteudo_html.replace(tag, valor)
+    
+    response = HTMLResponse(content=conteudo_html, status_code=200)
+    if not request.cookies.get("idSessao"):
+        response.set_cookie(key="idSessao", value=str(uuid.uuid4()))
+    
+    return response
+
 @controller.get('/chat/')
 async def pagina_chat(request: Request, url_redirec: str = Query(None)):
     with open('web/chat.html', 'r', encoding='utf-8') as arquivo: conteudo_html = arquivo.read()
