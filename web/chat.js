@@ -310,17 +310,16 @@ async function avaliarInteracao(elementoClicado, idInteracao, avaliacao){
 
 function salvarConversa() {
     var cabecalho = document.getElementsByClassName('cabecalho')[0].cloneNode(true);
-    cabecalho.style.marginBottom = '30px'
-    var rodape = document.createElement('div');
-    rodape.classList.add('rodape');
-    rodape.innerHTML = (`<strong>ID da Interação:</strong> ${idSessao}`)
+    var labelSessao = document.createElement('div');
+    labelSessao.classList.add('identificador-sessao');
+    labelSessao.innerHTML = (`<strong>ID da Sessão:</strong> ${idSessao}`)
     var mensagens = Array.from(document.getElementsByClassName('text-box'));
     // Remove mensagem inicial do Assistente
     mensagens.shift();
     var wrapper = document.createElement('div');
     wrapper.classList.add('pdf-wrapper');
     wrapper.appendChild(cabecalho);
-    // wrapper.appendChild(rodape);
+    wrapper.appendChild(labelSessao);
     mensagens.forEach(msg => {
         // Clona o elemento para não interferir nos elementos exibidos em tela
         var clone = msg.cloneNode(true);

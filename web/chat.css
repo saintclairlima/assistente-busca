@@ -334,12 +334,21 @@ hr{
     font-family: Roboto, sans-serif;
     background-color: white;
 }
-
 .pdf-wrapper .cabecalho{
     all: initial;
     display: block;
     width: 100%;
+    margin-bottom: 5px;
     background-color: var(--azul-escuro);
+}
+.pdf-wrapper .identificador-sessao {
+    margin-bottom: 30px;
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    border-top: 1px solid #ccc;
+    background-color: white;
 }
 .pdf-wrapper .text-box{
     all: initial;
@@ -375,18 +384,6 @@ hr{
 }
 .pdf-wrapper .documento{
     margin-left: 30px;
-}
-
-.pdf-wrapper .rodape {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    text-align: right;
-    font-size: 12px;
-    color: #666;
-    padding: 10px 0;
-    border-top: 1px solid #ccc;
-    background-color: white;
 }
 
 
