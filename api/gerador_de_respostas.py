@@ -75,6 +75,7 @@ class GeradorDeRespostas:
         historico = dados_chat.historico
         pergunta = dados_chat.pergunta
         id_sessao = dados_chat.id_sessao
+        id_cliente = dados_chat.id_cliente
         
         if len(pergunta.split(' ')) > 300:
             #AFAZER: decidir se mantém essa limitação. Colocada a princípio para evitar
@@ -203,7 +204,8 @@ class GeradorDeRespostas:
             'tempo_total_llm': tempo_cliente_llm,
             'resposta': texto_resposta_llm,
             'resposta_completa_llm': resposta_completa_llm,
-            'id_sessao': id_sessao
+            'id_sessao': id_sessao,
+            'id_cliente': id_cliente
         }
         
         # id no índice 0 é o da interação persistida

@@ -44,6 +44,7 @@ CREATE TABLE Interacao (
     LLM_Tipo_Conclusao VARCHAR(50),
     JSON_Interacao VARCHAR(MAX),
     UUID_Sessao UNIQUEIDENTIFIER,
+    UUID_Cliente UNIQUEIDENTIFIER,
     Data_Criacao DATETIME DEFAULT GETDATE(),
     CONSTRAINT Pk_Interacao PRIMARY KEY (UUID_Interacao));
 

@@ -47,6 +47,7 @@ CREATE TABLE Interacao (
     LLM_Tipo_Conclusao TEXT,
     JSON_Interacao TEXT,
     UUID_Sessao TEXT,
+    UUID_Cliente TEXT,
     Data_Criacao DATETIME DEFAULT (CURRENT_TIMESTAMP),
     PRIMARY KEY (UUID_Interacao)
 );

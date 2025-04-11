@@ -71,6 +71,7 @@ async def pagina_chat_default(request: Request, url_redirec: str = Query(None)):
     # substituindo as tags dentro do HTML, para maior controle
     for tag, valor in configuracoes.tags_substituicao_html.items():
         conteudo_html = conteudo_html.replace(tag, valor)
+    conteudo_html = conteudo_html.replace('TAG_INSERCAO_UUID_CLIENTE', str(uuid.uuid4()))
     
     response = HTMLResponse(content=conteudo_html, status_code=200)
     if not request.cookies.get("idSessao"):
@@ -88,10 +89,11 @@ async def pagina_chat(request: Request, url_redirec: str = Query(None)):
     # substituindo as tags dentro do HTML, para maior controle
     for tag, valor in configuracoes.tags_substituicao_html.items():
         conteudo_html = conteudo_html.replace(tag, valor)
+    conteudo_html = conteudo_html.replace('TAG_INSERCAO_UUID_SESSAO', str(uuid.uuid4()))
     
     response = HTMLResponse(content=conteudo_html, status_code=200)
-    if not request.cookies.get("idSessao"):
-        response.set_cookie(key="idSessao", value=str(uuid.uuid4()))
+    if not request.cookies.get("idCliente"):
+        response.set_cookie(key="idCliente", value=str(uuid.uuid4()))
     
     return response
 

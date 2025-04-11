@@ -26,13 +26,14 @@
                     return obj;
                 }, {});
             
-            return cookies["idSessao"];
+            return cookies["idCliente"];
         }
 
         var historico = [];
         var urlHost = "TAG_INSERCAO_URL_HOST";
         var mostrarCampoComentario = TAG_INSERCAO_MOSTRAR_CAMPO_COMENTARIO; // true ou false
-        var idSessao = obterIdSessao();
+        var idSessao = "TAG_INSERCAO_UUID_SESSAO";
+        var idCliente = obterIdSessao();
     </script>
     <link rel="stylesheet" href="/web/chat.css">
 </head>

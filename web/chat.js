@@ -134,7 +134,8 @@ async function enviarPergunta(){
                 body: JSON.stringify({
                     pergunta: pergunta,
                     historico: historico,
-                    id_sessao: idSessao
+                    id_sessao: idSessao,
+                    id_cliente: idCliente
                 }),
                 headers: {
                     "Content-type": "application/json; charset=UTF-8"
