@@ -155,6 +155,7 @@ class GeradorDeRespostas:
             ).json() + '\n'
         
         try:
+            
             marcador_tempo_inicio = time()
             texto_resposta_llm = ''
             flag_tempo_resposta = False

@@ -19,3 +19,35 @@ class GeradorPrompts:
 
         if template: return template.format('\n'.join(documentos), pergunta)
         else: return 'DOCUMENTOS:\n{}\nPERGUNTA: {}'.format('\n'.join(documentos), pergunta)
+
+    def criar_marcador_idioma(pergunta: str) -> str:
+        msg_sistema = f''''''
+        msg_usuario = pergunta
+
+        mensagens = [
+            {'role': 'system', 'content': msg_sistema},
+            {'role': 'user', 'content': msg_usuario}
+        ]
+
+        formato = {
+            "type": "object",
+            "properties": {
+                "marcador-idioma": {"type": "string"},
+                "intencao-usuario": {"type": "string"},
+                "pergunta-frase-reformulada": {"type": "string"}
+            },
+            "required": ["pergunta", "intencao-usuario", "resposta"]
+        }
+
+        payload = {
+            "model": configuracoes.modelo_llm,
+            "messages": mensagens,
+            "temperature": 0.0,
+            "format": formato,
+            "stream": False
+        }
+        
+        resposta = requests.post(f'{configuracoes.url_llm}/api/chat', json=payload)
+        dados = json.loads(resposta.content)
+        dados = json.loads(dados['message']['content'])
+        return dados
