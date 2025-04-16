@@ -157,7 +157,7 @@ class GeradorDeRespostas:
         try:
             marcador_idioma = GeradorPrompts.criar_marcador_idioma(pergunta)
             if 'mensagem' in marcador_idioma: pergunta += f' ({marcador_idioma['mensagem']})'
-            
+            print('>>> ', marcador_idioma)
             marcador_tempo_inicio = time()
             texto_resposta_llm = ''
             flag_tempo_resposta = False
