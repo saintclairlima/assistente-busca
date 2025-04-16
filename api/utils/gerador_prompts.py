@@ -49,7 +49,7 @@ class GeradorPrompts:
         idioma: Deutsch
         mensagem: "Antworten Sie die Frage auf deutsch?"
         '''
-        msg_usuario = f"Identifique o idioma da seguinte pergunta e me informe em que idioma eu devo responder: {pergunta}"
+        msg_usuario = f"Identifique o idioma da seguinte pergunta e me informe em que idioma ela deve ser respondida: {pergunta}"
 
         mensagens = [
             {'role': 'system', 'content': msg_sistema},
