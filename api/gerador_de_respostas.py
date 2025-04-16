@@ -155,6 +155,8 @@ class GeradorDeRespostas:
             ).json() + '\n'
         
         try:
+            marcador_idioma = GeradorPrompts.criar_marcador_idioma(pergunta)
+            if 'mensagem' in marcador_idioma: pergunta += f' ({marcador_idioma['mensagem']})'
             
             marcador_tempo_inicio = time()
             texto_resposta_llm = ''
