@@ -184,7 +184,9 @@ async function enviarPergunta(){
                             documentos = conteudoJSON.dados.conteudo;
                         } else if (conteudoJSON.dados.tag == 'persistencia-interacao') {
                             divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos) + gerarCampoAvaliacaoInteracao(conteudoJSON.dados.conteudo);
-                            historico.push([pergunta, respostaLLM])
+                            // mantém o histórico com no máximo 5 mensagens na memória
+                            if (historico.length == 5) historico.shift();
+                            historico.push([pergunta, respostaLLM]);
                             habilitarCampos = true;
                         }
                         continue;
