@@ -4,7 +4,7 @@ import json
 import os
 import uuid
 from api.configuracoes.config_gerais import configuracoes
-from api.utils.interface_banco_vetores import FuncaoEmbeddings, FuncaoEmbeddingsOllama
+from api.utils.interface_banco_vetores import FuncaoEmbeddings, FuncaoEmbeddingsOllama, FuncaoEmbeddingsGeneric
 from torch import cuda
 import chromadb.utils.embedding_functions as embedding_functions
 from sentence_transformers import SentenceTransformer
@@ -179,7 +179,7 @@ class GeradorBancoVetores:
         
         return fragmentos
 
-    def obter_funcao_embeddings(self, nome_modelo: str=configuracoes.embedding_instructor, instrucao: str=None):
+    def obter_funcao_embeddings(self, nome_modelo: str=configuracoes.embedding_bge_m3, instrucao: str=None):
         if nome_modelo == configuracoes.embedding_instructor:
             funcao = FuncaoEmbeddings(
                 nome_modelo=configuracoes.embedding_instructor,
@@ -214,6 +214,10 @@ class GeradorBancoVetores:
                 tipo_modelo=SentenceTransformer,
                 device=DEVICE
             )
+        elif nome_modelo == configuracoes.embedding_univ_sent_encoder:
+            import tensorflow_hub as hub
+            funcao_customizada = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+            funcao = FuncaoEmbeddingsGeneric(funcao=funcao_customizada)
         else:
             raise NameError(f'O tipo {nome_modelo} ainda não tem suporte para geração de função de embeddings implementado')
         
@@ -266,7 +270,7 @@ class GeradorBancoVetores:
             indice_documentos=None,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
-            nomes_modelos_embeddings=[configuracoes.embedding_instructor],
+            nomes_modelos_embeddings=[configuracoes.embedding_bge_m3],
             comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
             lista_instrucoes=None):
         
@@ -294,7 +298,8 @@ class GeradorBancoVetores:
             configuracoes.embedding_squad_portuguese: 'SentenceTransformer/Bert-Squad-Pt',
             configuracoes.embedding_llama: 'Llama',
             configuracoes.embedding_deepseek: 'Deepseek-r1',
-            configuracoes.embedding_bge_m3: 'BGE-M3'
+            configuracoes.embedding_bge_m3: 'BGE-M3',
+            configuracoes.embedding_univ_sent_encoder: 'Universal Sentence Encoder'
         }
         descritor = {
             "nome": url_banco_vetores.split('/')[-1],
@@ -362,7 +367,7 @@ if __name__ == "__main__":
         raise ValueError('Problema ao processar argumentos de coleções e funções de embeddings')
     
     comprimento_max_fragmento = args.comprimento_max_fragmento
-    lista_instrucoes = None if not args.lista_instrucoes else ast.literal_eval(args.lista_instrucoes)
+    lista_instrucoes = [None] if not args.lista_instrucoes else ast.literal_eval(args.lista_instrucoes)
 
     gerador_banco_vetores = GeradorBancoVetores()
     gerador_banco_vetores.executar(
@@ -379,3 +384,6 @@ if __name__ == "__main__":
 # --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt']" \
 # --lista_nomes_modelos_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
 # --comprimento_max_fragmento 300
+
+
+#python -m api.dados.gerador_banco_vetores --nome_banco_vetores banco_assistente --lista_colecoes "['documentos_rh_univ_sent_enc']" --lista_nomes_modelos_embeddings "['universal-sentence-encoder']" --comprimento_max_fragmento 300

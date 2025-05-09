@@ -6,6 +6,7 @@
     "embedding_squad_portuguese": "pierreguillou/bert-base-cased-squad-v1.1-portuguese",
     "embedding_deepseek": "deepseek-r1:14b",
     "embedding_llama": "llama3.1",
+    "embedding_univ_sent_encoder": "universal-sentence-encoder",
 
     "url_indice_documentos": "api/dados/documentos/index.json",
     "url_pasta_documentos": "api/dados/documentos",

@@ -29,6 +29,7 @@ class ConfiguracoesAplicacao:
         self.embedding_llama = configs['embedding_llama']
         self.embedding_deepseek = configs['embedding_deepseek']
         self.embedding_bge_m3 = configs['embedding_bge_m3']
+        self.embedding_univ_sent_encoder = configs['embedding_univ_sent_encoder']
         self.url_cache_modelos = os.path.abspath(configs['url_cache_modelos'])
         os.environ['HF_HOME'] = self.url_cache_modelos
         os.environ['HF_HUB_CACHE'] = self.url_cache_modelos
