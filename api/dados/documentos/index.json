@@ -68,5 +68,19 @@
         "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
         "fonte": "documentos/html/res_substituicao_cargo_funcao_alrn.html",
         "texto_articulado": true
+    },
+    "res_venda_ferias" : {
+        "url": "res_venda_ferias.txt",
+        "titulo": "Resolução Nº 133, de 27 de março de 2025 - Regulamenta as férias dos servidores e dos membros do Poder Legislativo",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_venda_ferias.html",
+        "texto_articulado": true
+    },
+    "manual_processo_legislativo" : {
+        "url": "manual_processo_legislativo.md",
+        "titulo": "Manual de Processo Legislativo - ALERN",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "https://www.al.rn.leg.br/documentos/legislacao/Manual_Processo_Legislativo_ALRN.pdf",
+        "texto_articulado": false
     }
 }
