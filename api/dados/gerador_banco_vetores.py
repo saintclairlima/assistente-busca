@@ -15,6 +15,75 @@ from bs4 import BeautifulSoup
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class GeradorBancoVetores:
+
+    def fragmentar_texto_markdown(self, texto: str, comprimento_max_fragmento: int) -> ast.List[str]:
+        """
+        Divide um texto Markdown em fragmentos com tamanho máximo de palavras, mantendo a estrutura de títulos.
+        
+        Args:
+            texto: Texto em formato Markdown.
+            comprimento_max_fragmento: Número máximo de palavras por fragmento.
+        
+        Returns:
+            Lista de fragmentos como strings.
+        """
+        linhas = [linha for linha in texto.splitlines() if linha.strip()]
+        
+        fragmentos = []
+        fragmento = ''
+        titulos = []
+        nivel_titulo_base = 1
+
+        for linha in linhas:
+            elementos = linha.split(' ')
+            if elementos[0].startswith('#'):
+                if fragmento:
+                    cabecalho = '\n'.join(titulos) + '\n'
+                    fragmentos.append({'titulos': titulos.copy(), 'conteudo': cabecalho + fragmento})
+                    fragmento = ''
+                nivel_titulo = len(elementos[0])
+                if nivel_titulo_base >= nivel_titulo:
+                    titulos = titulos[:nivel_titulo - 1]            
+                nivel_titulo_base = nivel_titulo
+                titulos.append(' '.join(elementos[1:]))
+            else:
+                # Não é título
+                cabecalho = '\n'.join(titulos) + '\n'
+                texto_possivel_fragmento = cabecalho + fragmento + f'{linha}\n'
+                if len(texto_possivel_fragmento.replace('\n', ' ').split(' ')) <= comprimento_max_fragmento:
+                    # Não extrapola tamanho máximo
+                    fragmento += f'{linha}\n'
+                else:
+                    # Extrapola tamanho máximo
+                    fragmentos.append({'titulos': titulos.copy(), 'conteudo': cabecalho + fragmento})
+                    fragmento = f'{linha}\n'
+
+        if fragmento:
+            cabecalho = '\n'.join(titulos) + '\n'
+            fragmentos.append({'titulos': titulos.copy(), 'conteudo': cabecalho + fragmento})
+        
+        return fragmentos
+    
+    def processar_texto_markdown(self, texto, info, comprimento_max_fragmento, profund_maxima=3):
+        fragmentos_titulos = self.fragmentar_texto_markdown(texto=texto, comprimento_max_fragmento=comprimento_max_fragmento)
+
+        fragmentos = []
+        titulos = []
+        for frag_titulo in fragmentos_titulos:
+            tit = frag_titulo['titulos'][:profund_maxima][-1]
+            titulos.append(tit)
+            fragmento = {
+                'page_content': frag_titulo,
+                'metadata': {
+                    'titulo': f'{info["titulo"]}',
+                    'subtitulo': f'{tit} - {titulos.count(tit)}',
+                    'autor': f'{info["autor"]}',
+                    'fonte': f'{info["fonte"]}#{tit}'
+                },
+            }
+            fragmentos.append(fragmento)
+        return fragmentos
+        
     
     def processar_texto_articulado(self, texto, info, comprimento_max_fragmento):
         '''Processa textos legais, divididos em artigos. Mantém o Caput dos artigos em cada um dos fragmentos.'''
