@@ -2,6 +2,9 @@ import argparse
 import ast
 import json
 import os
+import re
+from typing import List
+import unicodedata
 import uuid
 from api.configuracoes.config_gerais import configuracoes
 from api.utils.interface_banco_vetores import FuncaoEmbeddings, FuncaoEmbeddingsOllama
@@ -16,7 +19,19 @@ DEVICE='cuda' if cuda.is_available() else 'cpu'
 
 class GeradorBancoVetores:
 
-    def fragmentar_texto_markdown(self, texto: str, comprimento_max_fragmento: int) -> ast.List[str]:
+    def normalizar_string(self, s):
+        # Normaliza e remove os acentos (diacríticos)
+        s = unicodedata.normalize('NFD', s)
+        s = ''.join(c for c in s if unicodedata.category(c) != 'Mn')    
+        # Converte para letras minúsculas
+        s = s.lower()    
+        # Substitui caracteres não alfanuméricos por underscores (_)
+        s = re.sub(r'[^a-z0-9]+', '_', s)    
+        # Remove underscores duplicados e também os do início e do fim
+        s = re.sub(r'_+', '_', s).strip('_')    
+        return s
+
+    def fragmentar_texto_markdown(self, texto: str, comprimento_max_fragmento: int) -> List[str]:
         """
         Divide um texto Markdown em fragmentos com tamanho máximo de palavras, mantendo a estrutura de títulos.
         
@@ -64,7 +79,7 @@ class GeradorBancoVetores:
         
         return fragmentos
     
-    def processar_texto_markdown(self, texto, info, comprimento_max_fragmento, profund_maxima=3):
+    def processar_texto_markdown(self, texto: str, info: dict, comprimento_max_fragmento: int, profund_maxima: int=3) -> List[str]:
         fragmentos_titulos = self.fragmentar_texto_markdown(texto=texto, comprimento_max_fragmento=comprimento_max_fragmento)
 
         fragmentos = []
@@ -78,7 +93,7 @@ class GeradorBancoVetores:
                     'titulo': f'{info["titulo"]}',
                     'subtitulo': f'{tit} - {titulos.count(tit)}',
                     'autor': f'{info["autor"]}',
-                    'fonte': f'{info["fonte"]}#{tit}'
+                    'fonte': f'{info["fonte"]}#{self.normalizar_string(tit)}'
                 },
             }
             fragmentos.append(fragmento)
@@ -195,7 +210,7 @@ class GeradorBancoVetores:
             
         return fragmentos       
     
-    def extrair_fragmento_txt(self, rotulo, info, comprimento_max_fragmento):
+    def extrair_fragmentos_txt(self, rotulo, info, comprimento_max_fragmento):
         with open(os.path.join(configuracoes.url_pasta_documentos,info['url']), 'r', encoding='utf-8') as arq:
             texto = arq.read()
         
@@ -205,7 +220,7 @@ class GeradorBancoVetores:
             fragmentos[idx]['metadata']['tag_fragmento'] = f'{rotulo}:{idx+1}'
         return fragmentos
     
-    def extrair_fragmento_pdf(self, rotulo, info, comprimento_max_fragmento):
+    def extrair_fragmentos_pdf(self, rotulo, info, comprimento_max_fragmento):
         fragmentos = []
         arquivo = PdfReader(os.path.join(configuracoes.url_pasta_documentos,info['url']))
         for idx in range(len(arquivo.pages)):
@@ -215,7 +230,7 @@ class GeradorBancoVetores:
         for idx in range(len(fragmentos)): fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
         return fragmentos
         
-    def extrair_fragmento_html(self, rotulo, info, comprimento_max_fragmento):
+    def extrair_fragmentos_html(self, rotulo, info, comprimento_max_fragmento):
         with open(os.path.join(configuracoes.url_pasta_documentos,info['url']), 'r', encoding='utf-8') as arq:
             conteudo_html = arq.read()
             
@@ -227,10 +242,21 @@ class GeradorBancoVetores:
         for idx in range(len(fragmentos)): fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
         return fragmentos
     
+    def extrair_fragmentos_markdown(self, rotulo, info, comprimento_max_fragmento):
+        with open(os.path.join(configuracoes.url_pasta_documentos,info['url']), 'r', encoding='utf-8') as arq:
+            texto_markdown = arq.read()
+
+        fragmentos = self.processar_texto_markdown(texto=texto_markdown, info=info, comprimento_max_fragmento=comprimento_max_fragmento)
+        for idx in range(len(fragmentos)):
+            fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
+
+        return fragmentos
+    
     extrair_fragmento_por_tipo = {
-        'txt':  extrair_fragmento_txt,
-        'pdf':  extrair_fragmento_pdf,
-        'html': extrair_fragmento_html,
+        'txt':  extrair_fragmentos_txt,
+        'pdf':  extrair_fragmentos_pdf,
+        'html': extrair_fragmentos_html,
+        'md':   extrair_fragmentos_markdown
     }    
     
     def extrair_fragmentos(self,
@@ -293,7 +319,7 @@ class GeradorBancoVetores:
             documentos,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
-            nomes_modelos_embeddings=[configuracoes.embedding_instructor],
+            nomes_modelos_embeddings=[configuracoes.embedding_bge_m3],
             uuids_colecoes=[str(uuid.uuid4())],
             lista_instrucoes=None):
         
@@ -330,12 +356,53 @@ class GeradorBancoVetores:
             print('\n-- Coleção concluída')
 
         cliente_chroma._system.stop()
+
+    def adicionar_documento_colecao(self,
+            rotulo_documento,
+            comprimento_max_fragmento,
+            url_indice_documentos=None,
+            url_banco_vetores=configuracoes.url_banco_vetores,
+            nome_colecao=configuracoes.nome_colecao_de_documentos,
+            nome_modelo_embeddings=configuracoes.embedding_bge_m3):
+        
+        if url_indice_documentos:
+            info_documento = json.load(url_indice_documentos)[rotulo_documento]
+        else:
+            info_documento = configuracoes.documentos[rotulo_documento]
+        
+        fragmentos = self.extrair_fragmento_markdown(rotulo_documento, info_documento, comprimento_max_fragmento)
+        cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
+        funcao_embeddings = self.obter_funcao_embeddings(nome_modelo=nome_modelo_embeddings)
+        colecao = cliente_chroma.get_collection(name=nome_colecao, embedding_function=funcao_embeddings)
+
+        print(f'>>> Atualizando Banco {url_banco_vetores} - Coleção {nomes_colecoes[idx]} - Embeddings {nome_modelo_embeddings}')
+
+        uuids_fragmentos_incluidos = []
+        qtd_fragmentos = len(fragmentos)
+        for idx in range(qtd_fragmentos):
+            print(f'\r>>> Incluindo fragmento {idx+1} de {qtd_fragmentos}', end='')
+            frag = fragmentos[idx]
+            
+            uuid_frag = str(uuid.uuid4())
+            frag['id'] = uuid_frag
+            frag['metadata']['id'] = uuid_frag
+
+            colecao.add(
+                documents=[frag['page_content']],
+                ids=[str(frag['id'])],
+                metadatas=[frag['metadata']],
+            )
+            uuids_fragmentos_incluidos.append(uuid_frag)
+        print('\n-- Coleção concluída')
+        # AFAZER: atualizar SQL
+        return None
+
         
     def executar(self,
             indice_documentos=None,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nomes_colecoes=[configuracoes.nome_colecao_de_documentos],
-            nomes_modelos_embeddings=[configuracoes.embedding_instructor],
+            nomes_modelos_embeddings=[configuracoes.embedding_bge_m3],
             comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
             lista_instrucoes=None):
         
