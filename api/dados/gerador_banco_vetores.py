@@ -88,7 +88,7 @@ class GeradorBancoVetores:
             tit = frag_titulo['titulos'][:profund_maxima][-1]
             titulos.append(tit)
             fragmento = {
-                'page_content': frag_titulo,
+                'page_content': frag_titulo['conteudo'],
                 'metadata': {
                     'titulo': f'{info["titulo"]}',
                     'subtitulo': f'{tit} - {titulos.count(tit)}',
@@ -248,7 +248,7 @@ class GeradorBancoVetores:
 
         fragmentos = self.processar_texto_markdown(texto=texto_markdown, info=info, comprimento_max_fragmento=comprimento_max_fragmento)
         for idx in range(len(fragmentos)):
-            fragmentos[idx]['id'] = f'{rotulo}:{idx+1}'
+            fragmentos[idx]['metadata']['tag_fragmento'] = f'{rotulo}:{idx+1}'
 
         return fragmentos
     
@@ -359,7 +359,7 @@ class GeradorBancoVetores:
 
     def adicionar_documento_colecao(self,
             rotulo_documento,
-            comprimento_max_fragmento,
+            comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
             url_indice_documentos=None,
             url_banco_vetores=configuracoes.url_banco_vetores,
             nome_colecao=configuracoes.nome_colecao_de_documentos,
@@ -370,12 +370,12 @@ class GeradorBancoVetores:
         else:
             info_documento = configuracoes.documentos[rotulo_documento]
         
-        fragmentos = self.extrair_fragmento_markdown(rotulo_documento, info_documento, comprimento_max_fragmento)
+        fragmentos = self.extrair_fragmentos_markdown(rotulo_documento, info_documento, comprimento_max_fragmento)
         cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
         funcao_embeddings = self.obter_funcao_embeddings(nome_modelo=nome_modelo_embeddings)
         colecao = cliente_chroma.get_collection(name=nome_colecao, embedding_function=funcao_embeddings)
 
-        print(f'>>> Atualizando Banco {url_banco_vetores} - Coleção {nomes_colecoes[idx]} - Embeddings {nome_modelo_embeddings}')
+        print(f'>>> Atualizando Banco {url_banco_vetores} - Coleção {nome_colecao} - Embeddings {nome_modelo_embeddings}')
 
         uuids_fragmentos_incluidos = []
         qtd_fragmentos = len(fragmentos)
@@ -393,8 +393,52 @@ class GeradorBancoVetores:
                 metadatas=[frag['metadata']],
             )
             uuids_fragmentos_incluidos.append(uuid_frag)
-        print('\n-- Coleção concluída')
-        # AFAZER: atualizar SQL
+        print('\n-- Coleção atualizada com novo documento')
+
+        print('Atualizando tabelas SQL...')
+        from api.dados.persistencia import GerenciadorPersistenciaSQL, GerenciadorPersistenciaSQLite
+        if configuracoes.tipo_persistencia == 'mssql':
+            gp = GerenciadorPersistenciaSQL()
+        elif configuracoes.tipo_persistencia == 'sqlite':
+            gp = GerenciadorPersistenciaSQLite()
+            
+        banco_dados = gp.obter_conexao_banco()
+
+        colecoes_uuids = {
+            resultado[1]: str(resultado[0])
+            for resultado in banco_dados.executar_query_select(tabela='colecao', colunas=['uuid_colecao', 'nome'])
+        }
+
+        query_inserir_doc = 'INSERT INTO Documento ' + \
+                            '(UUID_Documento, Tag_Fragmento, Conteudo, Titulo, Subtitulo, Autor, Fonte, UUID_Colecao) ' + \
+                            'VALUES (?,?,?,?,?,?,?,?);'
+        
+        fragmentos = colecao.get(ids=uuids_fragmentos_incluidos)
+
+        fragmentos = [
+                {
+                    'id': fragmentos['ids'][idx],
+                    'conteudo': fragmentos['documents'][idx],
+                    'metadados':  fragmentos['metadatas'][idx],
+                }
+                for idx in range(len(fragmentos['ids']))
+            ]
+        
+        for idx, frag in enumerate(fragmentos):
+            print(f'\r>>> Persistindo fragmento {idx+1} de {len(fragmentos)}', end='')
+            uuid_documento=frag['metadados']['id']
+            tag_fragmento=frag['metadados']['tag_fragmento']
+            conteudo=frag['conteudo']
+            titulo=frag['metadados']['titulo']
+            subtitulo=frag['metadados']['subtitulo']
+            autor=frag['metadados']['autor']
+            fonte=frag['metadados']['fonte']
+            uuid_colecao=colecoes_uuids[nome_colecao]
+            
+            dados = [uuid_documento, tag_fragmento, conteudo, titulo, subtitulo, autor, fonte, uuid_colecao]
+            id_doc_inserido = banco_dados.executar_query_insercao(query=query_inserir_doc, dados=dados)
+        
+        print('\n-- Tabelas SQL atualizadas!')
         return None
 
         
@@ -512,6 +556,6 @@ if __name__ == "__main__":
 ## Modelo de Execução
 # python -m api.dados.gerador_banco_vetores \
 # --nome_banco_vetores banco_assistente \
-# --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt']" \
-# --lista_nomes_modelos_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese']" \
+# --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt', 'documentos_rh_bge_m3']" \
+# --lista_nomes_modelos_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese', 'BAAI/bge-m3']" \
 # --comprimento_max_fragmento 300
