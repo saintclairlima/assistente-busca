@@ -138,4 +138,9 @@ async def chat_js(): return FileResponse('web/chat.js')
 @controller.get('/web/chat.css')
 async def chat_css(): return FileResponse('web/chat.css')
 
+@controller.get('/catalogo')
+async def catalogo():
+    with open(f'web/catalogo-atividades.html', 'r', encoding='utf-8') as arquivo: conteudo_html = arquivo.read()
+    return HTMLResponse(content=conteudo_html, status_code=200)
+
 print('API inicializada')
