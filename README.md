@@ -59,11 +59,13 @@ De forma a aceitar requisições concorrentes, o Ollama precisa ter alguns parâ
 * OLLAMA_NUM_PARALLEL
 * OLLAMA_MAX_LOADED_MODELS
 * OLLAMA_MAX_QUEUE
+* OLLAMA_CONTEXT_LENGTH
 
 De acordo com a documentação (ver https://github.com/ollama/ollama/blob/main/docs/faq.md), cada uma das variáveis faz o seguinte:
 * `OLLAMA_MAX_LOADED_MODELS` - O número máximo de modelos que podem ser carregados simultaneamente, desde que caibam na memória disponível. O padrão é 3 * o número de GPUs ou 3 para inferência via CPU.
 * `OLLAMA_NUM_PARALLEL` - O número máximo de solicitações paralelas que cada modelo processará ao mesmo tempo. O padrão irá selecionar automaticamente 4 ou 1 dependendo da memória disponível.
 * `OLLAMA_MAX_QUEUE` - O número máximo de solicitações que Ollama irá enfileirar quando estiver ocupado, antes de rejeitar solicitações adicionais. O padrão é 512.
+* `OLLAMA_CONTEXT_LENGTH` - O tamanho máximo da "janela de contexto" utilizado pelo Ollama. Todo prompt que ultrapassar a quantidade de tokens do tamanho máximo do contexto será truncado, de forma que parte de seu conteúdo será descartado. O valor padrão é 4096 tokens. Não é bom que o tamanho seja muito pequeno, mas deixá-lo desnecessariamente grande pode deixar as execuções muito pesadas, dependendo da quantidade de memórias disponível.
 
 Outra variável de interesse pode ser `OLLAMA_DEBUG` (true para ativar debug), que mantém um log das atividades internas do Ollama em um terminal, após sua inicialização.
 

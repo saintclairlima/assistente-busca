@@ -54,9 +54,9 @@ Ainda nesse aspecto, é imperioso contar com a previsão da estrutura e atribui�
 
 Outrossim, a previsão dos direitos e deveres dos Deputados tem assento obrigatório no Regimento Interno, haja vista que serão esses dispositivos balizadores do mandato parlamentar, traduzindo-se em regras que fixarão as obrigações e os benefícios que decorrem da representação popular a eles outorgada. Além disso, essas disposições possibilitam o exercício pleno do mandato, com a regulação da previdência, remuneração e demais prerrogativas administrativas próprias de membros do Poder Legislativo. Adiante, o regimento necessita de amplo regulamento sobre o Processo Legislativo, com a indicação clara dos procedimentos. Afinal, uma vez instituídas as estruturas definidas de acordo com os ditames da CERN, é indispensável o estabelecimento de dispositivos que permitam o desenvolvimento das proposições, como medida de efetivação das funções legislativa e fiscalizatória.
 
-Finalmente, oportuno ressaltar que o Regimento Interno contempla todos esses elementos primordiais ao bom rendimento de uma Casa Legislativa. Há outros aspectos presentes – como, por exemplo, a instituição da Procuradoria da Mulher, que conferiu status regimental a um importante assunto – que decorrem da expansão dos serviços do parlamento com o objetivo de amparar várias demandas da sociedade contemporânea. Contudo, ao se constatar eventual omissão relativa a determinado procedimento ou situação fática, a lei interna da ALRN determina no art. 372 a consulta ao Regimento Interno da Câmara dos Deputados (RICD). Assim, tem-se um amplo lastro de regulação, já que o RICD serve, subsidiariamente, como texto complementar ao regimento da ALRN.
+Finalmente, oportuno ressaltar que o Regimento Interno contempla todos esses elementos primordiais ao bom rendimento de uma Casa Legislativa. Há outros aspectos presentes - como, por exemplo, a instituição da Procuradoria da Mulher, que conferiu status regimental a um importante assunto - que decorrem da expansão dos serviços do parlamento com o objetivo de amparar várias demandas da sociedade contemporânea. Contudo, ao se constatar eventual omissão relativa a determinado procedimento ou situação fática, a lei interna da ALRN determina no art. 372 a consulta ao Regimento Interno da Câmara dos Deputados (RICD). Assim, tem-se um amplo lastro de regulação, já que o RICD serve, subsidiariamente, como texto complementar ao regimento da ALRN.
 
-# CAPÍTULO II – Competência e Estrutura Parlamentares da ALRN
+# CAPÍTULO II - Competência e Estrutura Parlamentares da ALRN
 
 ## Composição Parlamentar e Competências Constitucionais
 
@@ -72,37 +72,37 @@ Feita essa breve introdução, pode-se adentrar na análise mais pormenorizada d
 
 Nessa perspectiva, o art. 35 da Constituição do Estado do Rio Grande do Norte elenca como sendo competências privativas da Assembleia Legislativa, sem sanção governamental, as seguintes:
 
-I – eleger a Mesa e constituir suas Comissões;
+I - eleger a Mesa e constituir suas Comissões;
 
-II – dispor sobre seu regimento interno, sua organização, funcionamento, polícia, criação, transformação ou extinção dos cargos, empregos e funções de seus serviços, e a iniciativa de lei para fixação da respectiva remuneração, observados os parâmetros estabelecidos na lei de diretrizes orçamentárias; (Redação dada pela Emenda Constitucional nº 13, de 2014)
+II - dispor sobre seu regimento interno, sua organização, funcionamento, polícia, criação, transformação ou extinção dos cargos, empregos e funções de seus serviços, e a iniciativa de lei para fixação da respectiva remuneração, observados os parâmetros estabelecidos na lei de diretrizes orçamentárias; (Redação dada pela Emenda Constitucional nº 13, de 2014)
 
-III – autorizar o Governador e o Vice-Governador a se ausentarem do País, quando a ausência exceder a quinze (15) dias;
+III - autorizar o Governador e o Vice-Governador a se ausentarem do País, quando a ausência exceder a quinze (15) dias;
 
-IV – aprovar a intervenção municipal ou suspendê-la;
+IV - aprovar a intervenção municipal ou suspendê-la;
 
-V – sustar os atos normativos do Poder Executivo que exorbitem do poder regulamentar ou dos limites de delegação legislativa;
+V - sustar os atos normativos do Poder Executivo que exorbitem do poder regulamentar ou dos limites de delegação legislativa;
 
-VI – mudar temporariamente sua sede;
+VI - mudar temporariamente sua sede;
 
-VII – fixar os subsídios dos Deputados Estaduais, do Governador, Vice-Governador e Secretários de Estado, observado o que dispõem os arts. 26, XI, e 28, § 8º, desta Constituição, e os arts. 150, II, 153, III, e 153, § 2º, I, da Constituição Federal; (Redação dada pela Emenda Constitucional nº 13, de 2014)
+VII - fixar os subsídios dos Deputados Estaduais, do Governador, Vice-Governador e Secretários de Estado, observado o que dispõem os arts. 26, XI, e 28, § 8º, desta Constituição, e os arts. 150, II, 153, III, e 153, § 2º, I, da Constituição Federal; (Redação dada pela Emenda Constitucional nº 13, de 2014)
 
-VIII – julgar, anualmente, as contas prestadas pelo Governador do Estado e conhecer os relatórios sobre a execução dos planos de Governo;
+VIII - julgar, anualmente, as contas prestadas pelo Governador do Estado e conhecer os relatórios sobre a execução dos planos de Governo;
 
-IX – fiscalizar e controlar, diretamente, ou por qualquer de suas Comissões, os atos do Poder Executivo, incluídos os da administração indireta;
+IX - fiscalizar e controlar, diretamente, ou por qualquer de suas Comissões, os atos do Poder Executivo, incluídos os da administração indireta;
 
-X – zelar pela preservação de sua competência legislativa em face da atribuição normativa dos outros Poderes;
+X - zelar pela preservação de sua competência legislativa em face da atribuição normativa dos outros Poderes;
 
-XI – eleger quatro (4) membros do Tribunal de Contas do Estado, e aprovar as indicações dos demais; (Redação dada pela Emenda Constitucional nº 13, de 2014)
+XI - eleger quatro (4) membros do Tribunal de Contas do Estado, e aprovar as indicações dos demais; (Redação dada pela Emenda Constitucional nº 13, de 2014)
 
-XII – aprovar iniciativas do Poder Executivo referentes a atividades nucleares; XIII – autorizar referendo e convocar plebiscito;
+XII - aprovar iniciativas do Poder Executivo referentes a atividades nucleares; XIII - autorizar referendo e convocar plebiscito;
 
-XV – proceder à tomada de contas do Governador do Estado, quando não apresentadas dentro de sessenta (60) dias após a abertura da sessão legislativa;
+XV - proceder à tomada de contas do Governador do Estado, quando não apresentadas dentro de sessenta (60) dias após a abertura da sessão legislativa;
 
-XVI – dar posse ao Governador e ao Vice-Governador;
+XVI - dar posse ao Governador e ao Vice-Governador;
 
-XVIII – destituir do cargo o Governador ou Secretário de Estado, após condenação por crime comum ou de responsabilidade;
+XVIII - destituir do cargo o Governador ou Secretário de Estado, após condenação por crime comum ou de responsabilidade;
 
-XIX – aprovar:
+XIX - aprovar:
 
 a) os decretos e outros atos expedidos pelo Governador, “ad referendum” da Assembleia, inclusive os de intervenção em Municípios;
 
@@ -110,17 +110,17 @@ b) os convênios intermunicipais de fixação de limites;
 
 c) previamente, por voto secreto, a indicação de três (3) Conselheiros do Tribunal de Contas, feita pelo Governador; (Redação dada pela Emenda Constitucional nº 18, de 2019)
 
-XX – expedir decretos legislativos e resoluções;
+XX - expedir decretos legislativos e resoluções;
 
-XXI – solicitar a intervenção federal, nas hipóteses dos arts. 34, IV, e 36, I, da Constituição Federal;
+XXI - solicitar a intervenção federal, nas hipóteses dos arts. 34, IV, e 36, I, da Constituição Federal;
 
-XXII – receber o Governador, em reunião previamente designada, sempre que ele manifeste o propósito de relatar, pessoalmente, assunto de interesse público;
+XXII - receber o Governador, em reunião previamente designada, sempre que ele manifeste o propósito de relatar, pessoalmente, assunto de interesse público;
 
-XXIII – determinar o sobrestamento da execução dos atos a que se referem os arts. 53, § 1º e 54, § 2º;
+XXIII - determinar o sobrestamento da execução dos atos a que se referem os arts. 53, § 1º e 54, § 2º;
 
-XXV – aprovar, por maioria absoluta e por voto secreto, a exoneração, de ofício, do Procurador-Geral de Justiça; (Incluído pela Emenda Constitucional nº 13, de 2014)
+XXV - aprovar, por maioria absoluta e por voto secreto, a exoneração, de ofício, do Procurador-Geral de Justiça; (Incluído pela Emenda Constitucional nº 13, de 2014)
 
-XXVI – Organizar as Unidades de Representação Parlamentar e os serviços e cargos necessários à sua administração. (Incluído pela Emenda Constitucional nº 18, de 2019)
+XXVI - Organizar as Unidades de Representação Parlamentar e os serviços e cargos necessários à sua administração. (Incluído pela Emenda Constitucional nº 18, de 2019)
 
 Percebe-se que, nesse viés, as competências privativas dispõem tanto sobre atribuições internas do Poder Legislativo, quanto também sobre atos de exercício de controle e fiscalização sob outros Poderes.
 
@@ -134,39 +134,39 @@ Verifica-se, preliminarmente, que as competências elencadas nos incisos do art.
 
 Assim, considerando o art. 37 da Constituição do Estado, cabem à Assembleia Legislativa, sujeitas à sanção pelo Chefe do Poder Executivo, as seguintes as matérias:
 
-I – orçamento anual e plurianual;
+I - orçamento anual e plurianual;
 
-II – sistema tributário, arrecadação e distribuição de rendas;
+II - sistema tributário, arrecadação e distribuição de rendas;
 
-III – dívida pública, abertura e operações de crédito;
+III - dívida pública, abertura e operações de crédito;
 
-IV – planos e programas de desenvolvimento econômico e social;
+IV - planos e programas de desenvolvimento econômico e social;
 
-V – licitações e contratos administrativos;
+V - licitações e contratos administrativos;
 
-VI – criação, transformação e extinção de cargos, empregos e funções públicas e fixação dos respectivos vencimentos, salários e vantagens;
+VI - criação, transformação e extinção de cargos, empregos e funções públicas e fixação dos respectivos vencimentos, salários e vantagens;
 
-VII – regime jurídico dos servidores públicos, seus direitos, deveres e sistema disciplinar e de previdência;
+VII - regime jurídico dos servidores públicos, seus direitos, deveres e sistema disciplinar e de previdência;
 
-VIII – bens do domínio do Estado, inclusive, no caso de imóveis, sua aquisição onerosa, alienação ou oneração, respeitado o disposto no art. 17;
+VIII - bens do domínio do Estado, inclusive, no caso de imóveis, sua aquisição onerosa, alienação ou oneração, respeitado o disposto no art. 17;
 
-IX – efetivo da Polícia Militar;
+IX - efetivo da Polícia Militar;
 
-X – transferência temporária da sede do Governo Estadual observado o disposto no art. 64, VIII;
+X - transferência temporária da sede do Governo Estadual observado o disposto no art. 64, VIII;
 
-XI – concessão de auxílio aos Municípios e forma de sua aplicação; XII – perdão de dívida, anistia e remissão de crédito tributário;
+XI - concessão de auxílio aos Municípios e forma de sua aplicação; XII - perdão de dívida, anistia e remissão de crédito tributário;
 
-XIII – organização e divisão judiciárias;
+XIII - organização e divisão judiciárias;
 
-XIV – organização, atribuições e o estatuto do Ministério Público e da Defensoria Pública do Estado;
+XIV - organização, atribuições e o estatuto do Ministério Público e da Defensoria Pública do Estado;
 
-XV – criação, estruturação e atribuições das Secretarias de Estado, Procuradorias Gerais, Defensoria Pública, Polícia Militar, Polícia Civil, Polícia Penal e Órgãos da Administração Pública;
+XV - criação, estruturação e atribuições das Secretarias de Estado, Procuradorias Gerais, Defensoria Pública, Polícia Militar, Polícia Civil, Polícia Penal e Órgãos da Administração Pública;
 
-XVI – matéria financeira e orçamentária;
+XVI - matéria financeira e orçamentária;
 
-XVII – normas gerais para a exploração, concessão, permissão ou autorização para exploração de serviços públicos, bem como para a fixação das respectivas tarifas ou preços;
+XVII - normas gerais para a exploração, concessão, permissão ou autorização para exploração de serviços públicos, bem como para a fixação das respectivas tarifas ou preços;
 
-XVIII – previdência social dos Deputados Estaduais.
+XVIII - previdência social dos Deputados Estaduais.
 
 Nesse sentido, observa-se que as matérias elencadas na competência legislativa geral da Assembleia Legislativa tratam de temas sensíveis ao ordenamento jurídico estadual e cuja análise não pode se dar apenas internamente ou unilateralmente no âmbito do Poder Legislativo.
 
@@ -266,25 +266,25 @@ Além disso, as Comissões Permanentes exercem o acompanhamento dos planos e pro
 
 A Assembleia Legislativa do Rio Grande do Norte possui as seguintes Comissões Permanentes:
 
-- a) Comissão de Constituição, Justiça e Redação;
+a) Comissão de Constituição, Justiça e Redação;
 
-- b) Comissão de Finanças e Fiscalização;
+b) Comissão de Finanças e Fiscalização;
 
-- c) Comissão de Administração, Serviços Públicos, Trabalho e Segurança Pública;
+c) Comissão de Administração, Serviços Públicos, Trabalho e Segurança Pública;
 
-- d) Comissão de Educação, Ciência e Tecnologia, Desenvolvimento Socioeconômico, Meio Ambiente e Turismo;
+d) Comissão de Educação, Ciência e Tecnologia, Desenvolvimento Socioeconômico, Meio Ambiente e Turismo;
 
-- e) Comissão de Defesa do Consumidor, dos Direitos Humanos e Cidadania;
+e) Comissão de Defesa do Consumidor, dos Direitos Humanos e Cidadania;
 
-- f) Comissão de Saúde.
+f) Comissão de Saúde.
 
 As Comissões Temporárias possuem um tempo determinado de existência, com início e fim bem delimitados. Sua criação é feita com finalidade especial e seu término pode ocorrer em face de 3 situações conclusivas:
 
-- a) ao término da legislatura; ou
+a) ao término da legislatura; ou
 
-- b) quando alcançado o fim a que se destinam; ou
+b) quando alcançado o fim a que se destinam; ou
 
-- c) quando expirado o prazo de sua duração.
+c) quando expirado o prazo de sua duração.
 
 As Comissões Temporárias podem ser de três tipos distintos, quais sejam, Comissões Especiais, Comissões de Inquérito e Comissões de Representação.
 
@@ -396,7 +396,7 @@ No âmbito das Audiências Públicas realizadas nas Comissões Permanentes, caso
 
 Em suma, o Regimento Interno da Assembleia Legislativa do Rio Grande do Norte estabelece as bases para a realização de audiências públicas como um mecanismo fundamental de participação democrática e de aproximação entre o poder legislativo e a sociedade, contribuindo para uma governança mais transparente, inclusiva e responsiva às necessidades da população. Para tal, ao final das audiências, são elaborados os relatórios que incluem os encaminhamentos apontados pelos participantes, com medidas concretas de resoluções aos problemas debatidos na ocasião.
 
-# CAPÍTULO III – Processo Legislativo
+# CAPÍTULO III - Processo Legislativo
 
 ## Fases do Processo Legislativo
 
@@ -526,7 +526,7 @@ Ademais, somente a CCJR poderá conferir “terminatividade positiva” à propo
 
 ##### Deliberação em Plenário
 
-A votação poderá ser ostensiva – adotando-se o processo simbólico ou nominal – ou secreta, por meio do sistema eletrônico ou de cédulas. Pelo processo simbólico, utilizado na votação das proposições em geral, o Presidente, ao submeter a matéria a votos, convidará os Deputados a favor a permanecerem como se encontram, proclamando o resultado manifesto dos votos naquele instante verificados, com fulcro no art. 257 do Regimento Interno. Logo, os parlamentares para aprovarem a matéria, permanecerão sentados, levantando-se apenas os que votarem pela rejeição. Regimentalmente, se for requerida (por requerimento oral) verificação de quórum de votação, após a votação pelo processo simbólico, será ela repetida pelo processo nominal (art. 202, X, c/c art. 168, §1º, do Regimento Interno).
+A votação poderá ser ostensiva - adotando-se o processo simbólico ou nominal - ou secreta, por meio do sistema eletrônico ou de cédulas. Pelo processo simbólico, utilizado na votação das proposições em geral, o Presidente, ao submeter a matéria a votos, convidará os Deputados a favor a permanecerem como se encontram, proclamando o resultado manifesto dos votos naquele instante verificados, com fulcro no art. 257 do Regimento Interno. Logo, os parlamentares para aprovarem a matéria, permanecerão sentados, levantando-se apenas os que votarem pela rejeição. Regimentalmente, se for requerida (por requerimento oral) verificação de quórum de votação, após a votação pelo processo simbólico, será ela repetida pelo processo nominal (art. 202, X, c/c art. 168, §1º, do Regimento Interno).
 
 Nesse contexto, cumpre registrar que a Assembleia Legislativa do Estado do Rio Grande do Norte instituiu o Sistema Eletrônico de Deliberação Remota (SDR) em decorrência da pandemia da Covid-19. Durante esse período, as votações de matérias que exigiram quórum qualificado ou nas quais foi requerida a verificação nominal de quórum foram realizadas por meio desse sistema, com o registro dos votos parlamentares através do referido equipamento.
 
@@ -568,7 +568,7 @@ Ademais, vale ressaltar, somente os projetos de lei ordinária e complementar re
 
 ##### Veto
 
-A manifestação do Chefe do Executivo – como já destacado – também poderá ocorrer sob a forma de veto. Esse foi o formato concebido para que o Poder Executivo apresentasse sua discordância e provocasse o Legislativo a rever sua posição.
+A manifestação do Chefe do Executivo - como já destacado - também poderá ocorrer sob a forma de veto. Esse foi o formato concebido para que o Poder Executivo apresentasse sua discordância e provocasse o Legislativo a rever sua posição.
 
 O veto ao projeto de lei poderá ser total ou parcial, observadas as seguintes regras:
 
@@ -600,7 +600,7 @@ Algumas curiosidades valem o registro: no Brasil, tem-se a Lei de Introdução �
 
 Em suma, com a publicação, a coletividade será sempre cientificada sobre a existência da lei, sendo a inserção do texto promulgado na Imprensa Oficial uma condição de vigência e eficácia. Com isso, tem-se o encerramento do processo legislativo.
 
-## Proposições – Espécies Normativas
+## Proposições - Espécies Normativas
 
 No âmbito do Rio Grande do Norte, a enumeração das espécies normativas, que são o resultado do processo legislativo, se encontra no art. 44 da Constituição Estadual e compreende as emendas à Constituição; leis complementares; leis ordinárias; leis delegadas; decretos legislativos e as resoluções.
 
@@ -624,7 +624,7 @@ I - de um terço (1/3), no mínimo, dos membros da Assembleia Legislativa;
 
 II - do Governador do Estado;
 
-III – de iniciativa popular, subscrita por, no mínimo, três por cento do eleitorado estadual, distribuídos, pelo menos, em três quintos dos Municípios do Estado (CERN, 1989).
+III - de iniciativa popular, subscrita por, no mínimo, três por cento do eleitorado estadual, distribuídos, pelo menos, em três quintos dos Municípios do Estado (CERN, 1989).
 
 Essa iniciativa presente no art. 45, I, II e III, da CERN, é considerada privativa e concorrente. Em razão disso, a apresentação de proposta de emenda por qualquer pessoa que não se enquadre nas categorias taxativamente enumeradas configura um vício formal subjetivo, resultando em inconstitucionalidade.
 
@@ -678,7 +678,7 @@ III - Fase complementar: compreende a promulgação e a publicação, etapas nec
 
 #### b) Diferenças
 
-Basicamente, existem duas diferenças entre ambas as espécies: uma em relação ao aspecto material – os assuntos que podem ser disciplinados – e outra relativa ao aspecto formal – especificamente o quórum de votação.
+Basicamente, existem duas diferenças entre ambas as espécies: uma em relação ao aspecto material - os assuntos que podem ser disciplinados - e outra relativa ao aspecto formal - especificamente o quórum de votação.
 
 ##### Aspecto material
 
@@ -696,7 +696,7 @@ Consequentemente, o quórum de deliberação é o mesmo para ambas as espécies 
 
 Art. 51. As leis delegadas são elaboradas pelo Governador do Estado, que deve solicitar a delegação à Assembleia Legislativa.
 
-- § 1º Não podem ser objeto de delegação os atos de competência exclusiva da Assembleia Legislativa, matéria reservada à lei complementar, nem a legislação sobre:
+§ 1º Não podem ser objeto de delegação os atos de competência exclusiva da Assembleia Legislativa, matéria reservada à lei complementar, nem a legislação sobre:
 
 I - organização do Poder Judiciário e do Ministério Público, a carreira e a garantia de seus membros;
 
@@ -794,7 +794,7 @@ Em complementação, reforça-se que os atos referidos no art. 204 mencionado en
 
 Os recursos são instrumentos regimentais para modificar alguma decisão desfavorável ao projeto propriamente dito ou ao procedimento adotado para algum projeto no curso do processo legislativo. Esse pleito poderá ser de qualquer Deputado, com o devido apoiamento dos demais, haja vista a exigência da subscrição de 3 (três) parlamentares na hipótese dos arts. 121 e 125 do Regimento Interno.
 
-Em outras palavras, essa proposição tem como objetivo contestar uma deliberação ocorrida na Casa Legislativa – seja no âmbito do Plenário, seja durante as reuniões das Comissões –, visando, consequentemente, alterar o rumo inicialmente previsto para o projeto em tramitação, de modo a alcançar uma finalidade diversa.
+Em outras palavras, essa proposição tem como objetivo contestar uma deliberação ocorrida na Casa Legislativa - seja no âmbito do Plenário, seja durante as reuniões das Comissões -, visando, consequentemente, alterar o rumo inicialmente previsto para o projeto em tramitação, de modo a alcançar uma finalidade diversa.
 
 O grande ensejo do recurso é possibilitar a revisão ou mesmo anulação de decisões equivocadas, ou politicamente desarrazoadas e sem amparo legal. Dessa feita, há permissivo regimental para se recorrer em inúmeras situações, como contestação de decisões da Mesa, indeferimento de requerimentos, inadmissibilidade das proposições (decisões terminativas das comissões, incluindo a rejeição de emendas após o exame de mérito), entre outras.
 
@@ -806,7 +806,7 @@ No âmbito do processo legislativo, os pareceres das Comissões assumem um papel
 
 Ao se estudar os tipos de pareceres emitidos pelas Comissões, o art. 115, XI, do Regimento Interno, apresenta as seguintes classificações:
 
-a) pela admissibilidade ou aprovação total: a Comissão, após analisar a matéria, emite um parecer favorável – pela admissibilidade ou aprovação, a depender do órgão – quando concorda com o teor da proposição. Isso indica a recomendação desse colegiado ao Plenário para que aprove a matéria;
+a) pela admissibilidade ou aprovação total: a Comissão, após analisar a matéria, emite um parecer favorável - pela admissibilidade ou aprovação, a depender do órgão - quando concorda com o teor da proposição. Isso indica a recomendação desse colegiado ao Plenário para que aprove a matéria;
 
 b) pela inadmissibilidade ou rejeição total: exatamente a opinião contrária a mencionada anteriormente. Se ocorrer a inadmissibilidade, a proposição sequer prosseguirá nas demais Comissões de mérito, encerrando, por consequência, a tramitação na Casa. Já a rejeição total implica na orientação ao Plenário para que desaprove a integralidade da proposição;
 
@@ -940,17 +940,17 @@ Aprovado integralmente o parecer do Relator, será este tido como parecer da Com
 
 Após a finalização do parecer, a matéria será disponibilizada no sistema eletrônico e encaminhada à Mesa. Ocorridas 2 sessões, ela será incluída na Ordem do Dia para discussão e votação. A discussão do projeto e de todas as emendas será única, podendo, os Deputados, usarem da palavra por uma vez pelo tempo de 10 minutos, assegurando-se ao Relator falar por último. A votação se dará por meio de ordem e regramento próprios, da forma apresentada a seguir:
 
-I – vota-se em primeiro lugar o projeto, cuja aprovação não prejudicará as emendas com parecer favorável, aquelas objeto de recurso, e os destaques oportunamente requeridos;
+I - vota-se em primeiro lugar o projeto, cuja aprovação não prejudicará as emendas com parecer favorável, aquelas objeto de recurso, e os destaques oportunamente requeridos;
 
-II – votam-se, em seguida, os destaques ao projeto;
+II - votam-se, em seguida, os destaques ao projeto;
 
-III – as emendas e respectivas subemendas com pareceres favoráveis são votadas em seguida e em bloco, ressalvados os destaques, votados logo após;
+III - as emendas e respectivas subemendas com pareceres favoráveis são votadas em seguida e em bloco, ressalvados os destaques, votados logo após;
 
-IV – as subemendas substitutivas são votadas antes das emendas, e, aprovadas, as prejudicam;
+IV - as subemendas substitutivas são votadas antes das emendas, e, aprovadas, as prejudicam;
 
-V – havendo subemendas aditivas, estas serão votadas depois das respectivas emendas;
+V - havendo subemendas aditivas, estas serão votadas depois das respectivas emendas;
 
-VI – finalmente são votadas, uma a uma, as emendas com parecer contrário, objeto de recurso, não admitidos destaques.
+VI - finalmente são votadas, uma a uma, as emendas com parecer contrário, objeto de recurso, não admitidos destaques.
 
 Para encaminhar cada votação, cada Deputado poderá usar da palavra por 5 minutos, assegurando-se a palavra por último ao Relator, que terá direito a 10 minutos. Aprovado, o projeto com emendas, irá à Comissão de Finanças e Fiscalização para a redação final, que será aprovada terminativamente pela Comissão no prazo de 5 dias. Por fim, cumpre ressaltar que em se tratando de projeto de lei do plano plurianual, todos os prazos fixados neste tópico contam-se em dobro.
 
@@ -1124,11 +1124,11 @@ Embora a Constituição do Estado do Rio Grande do Norte (CERN) consagre o princ
 
 O art. 184 do Regimento Interno da ALRN disciplina as sessões secretas, estabelecendo suas finalidades, condições de convocação, procedimentos de realização e diretrizes quanto ao sigilo das deliberações. Conforme o Regimento, são consideradas secretas, obrigatoriamente, as sessões deliberativas que tratem sobre:
 
-- perda de mandato;
+perda de mandato;
 
-- suspensão das imunidades parlamentares;
+suspensão das imunidades parlamentares;
 
-- eleição ou aprovação da escolha de Conselheiros do Tribunal de Contas do Estado (TCE), de Desembargadores e do Procurador-Geral de Justiça.
+eleição ou aprovação da escolha de Conselheiros do Tribunal de Contas do Estado (TCE), de Desembargadores e do Procurador-Geral de Justiça.
 
 Além dessas hipóteses, há a possibilidade de convocação de sessões secretas mediante aprovação da maioria absoluta dos deputados, com base em requerimento do Presidente da Assembleia ou de qualquer deputado. Esse requerimento deve indicar a finalidade da sessão, mas tanto o objetivo quanto o nome do requerente não serão divulgados.
 

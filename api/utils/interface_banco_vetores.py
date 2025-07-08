@@ -1,3 +1,4 @@
+from typing import Callable
 from chromadb import chromadb, Documents, EmbeddingFunction, Embeddings
 from sentence_transformers import SentenceTransformer
 from torch import cuda
@@ -64,9 +65,8 @@ class FuncaoEmbeddingsAPI(EmbeddingFunction):
     Função de embeddings customizada, a ser utilizada com chamadas a APIs
 
     Atributos:
-        device (str): Tipo de dispositivo em que será executada a aplicação ['cuda', 'cpu']
-        modelo (classe baseada em transformer): modelo pré-treinado
-        instrucao (str): instrução a ser utilizada em modelos do tipo instructor
+        url_api (str): url onde se localiza a API geradora de embeddings
+        nome_modelo (str): nome do modelo utilizado
     '''
 
     def __init__(self, url_api: str, nome_modelo: str):
@@ -76,7 +76,6 @@ class FuncaoEmbeddingsAPI(EmbeddingFunction):
         Parâmetros:
             url_api (str): url onde se localiza a API geradora de embeddings
             nome_modelo (str): nome do modelo utilizado
-            instrucao (str): parâmetro opcional, instrução a ser utilizada em modelos do tipo instructor
         '''
 
         # Carrega modelo pré-treinado com remote code trust habilitado
@@ -107,6 +106,36 @@ class FuncaoEmbeddingsOllama(FuncaoEmbeddingsAPI):
         llm = ClienteOllama(nome_modelo=self.nome_modelo, url_llm=self.url_api)
         embeddings = llm.gerar_embeddings(input)
         return embeddings
+    
+class FuncaoEmbeddingsGeneric(EmbeddingFunction):
+    '''
+    Oferece uma possibilidade de função de embedding completamente customizada
+
+    Atributos:
+        funcao (Callable[[Documents], Embeddings]): função a ser utilizada para gerar os embeddings
+    '''
+
+    def __init__(self, funcao: Callable[[Documents], Embeddings]):
+        '''
+        Inicializa a função
+
+        Parâmetros:
+            funcao (Callable[[Documents], Embeddings]): função a ser utilizada para gerar os embeddings
+        '''
+        
+        self.funcao = funcao
+
+    def __call__(self, input: Documents) -> Embeddings:
+        '''
+        Gera embeddings para uma coleção de documentos
+
+        Parâmetros:
+            input (chromadb.Documents): uma lista de strings com o conteúdo a ser representado por embeddings
+        
+        Retorna:
+            (chroma.Embeddings): uma lista de representações de Embeddings (List[ndarray[Any, dtype[signedinteger[_32Bit] | floating[_32Bit]]]])
+        '''
+        return self.funcao(input)
         
     
 class InterfaceBancoVetorial:
