@@ -13,19 +13,19 @@ class InterfacePersistencia:
         pass
     
     def executar_script(self, script: str):
-        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        raise NotImplementedError('Método executar_script() não foi implantado para esta classe')
         
     def __insert(self, query: str, dados: tuple):
-        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        raise NotImplementedError('Método __insert() não foi implantado para esta classe')
     
     def __insert_multiplo(self, multiplas_queries: list, multiplos_dados: list):
-        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        raise NotImplementedError('Método __insert_multiplo() não foi implantado para esta classe')
             
     def __update(self, query: str, dados: tuple):
-        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        raise NotImplementedError('Método __update() não foi implantado para esta classe')
             
     def __select(self, tabela: str, colunas: tuple):
-        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        raise NotImplementedError('Método __select() não foi implantado para esta classe')
 
 
 class InterfacePersistenciaSQL(InterfacePersistencia):
@@ -244,6 +244,9 @@ class GerenciadorPersistencia:
     def __init__(self, info_banco: dict, classeInterface: type):
         self.info_banco = info_banco
         self.classeInterface = classeInterface
+
+    def obter_conexao_banco(self):
+        return self.classeInterface(**self.info_banco['parametros'])
 
     def inicializar_banco(self, url_script_sql: str=configuracoes.url_script_geracao_banco_sqlite):
 
