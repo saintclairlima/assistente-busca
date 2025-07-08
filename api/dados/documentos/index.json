@@ -80,7 +80,7 @@
         "url": "manual_processo_legislativo.md",
         "titulo": "Manual de Processo Legislativo - ALERN",
         "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
-        "fonte": "https://www.al.rn.leg.br/documentos/legislacao/Manual_Processo_Legislativo_ALRN.pdf",
+        "fonte": "documentos/html/manual_processo_legislativo.html",
         "texto_articulado": false
     }
 }
