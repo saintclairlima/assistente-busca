@@ -7,7 +7,9 @@ function gerarRespostaFormatada(resposta){
 }
 
 function gerarFontesFormatadas(documentos){
-    var htmlFontes =                
+    var htmlFontes = '';
+    if (documentos.length > 0) {
+        htmlFontes =                
         `<hr>\n<p class="toggle-fontes-label" id="toggle-fontes-label" onclick="toggleFontes(this)">Mostrar Fontes</p>\n` + 
         `<div class="fontes fontes-fechado" id="fontes">`+
             documentos.map((documento) =>{
@@ -18,7 +20,7 @@ function gerarFontesFormatadas(documentos){
                 `</div>`
             }).join("\n") + 
         `</div>`;
-    
+    }
     return htmlFontes;
 }
 
@@ -135,7 +137,8 @@ async function enviarPergunta(){
                     pergunta: pergunta,
                     historico: historico,
                     id_sessao: idSessao,
-                    id_cliente: idCliente
+                    id_cliente: idCliente,
+                    intencao: null
                 }),
                 headers: {
                     "Content-type": "application/json; charset=UTF-8"
@@ -182,12 +185,16 @@ async function enviarPergunta(){
                             divResposta.innerHTML = gerarRespostaFormatada(respostaLLM);
                         } else if (conteudoJSON.dados.tag == 'lista-docs-recuperados') {
                             documentos = conteudoJSON.dados.conteudo;
-                        } else if (conteudoJSON.dados.tag == 'persistencia-interacao') {
-                            divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos) + gerarCampoAvaliacaoInteracao(conteudoJSON.dados.conteudo);
+                        } else if (conteudoJSON.dados.tag == 'interacao-finalizada') {
+                            if (respostaLLM) divResposta.innerHTML = gerarRespostaFormatada(respostaLLM) + gerarFontesFormatadas(documentos) + gerarCampoAvaliacaoInteracao(conteudoJSON.dados.conteudo);
+                            else divResposta.innerHTML = divResposta.innerHTML + gerarCampoAvaliacaoInteracao(conteudoJSON.dados.conteudo);
+                            
                             // mantém o histórico com no máximo 5 mensagens na memória
                             if (historico.length == 5) historico.shift();
                             historico.push([pergunta, respostaLLM]);
                             habilitarCampos = true;
+                        } else if (conteudoJSON.dados.tag == 'servir-documento') {
+                            divResposta.innerHTML = conteudoJSON.dados.conteudo;
                         }
                         continue;
                     } else if (typeof conteudoJSON === 'string') {

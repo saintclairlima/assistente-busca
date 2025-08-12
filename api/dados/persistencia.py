@@ -342,8 +342,9 @@ class GerenciadorPersistencia:
                                   '(UUID_Interacao, Pergunta, Tipo_Dispositivo_Aplicacao, Tipo_Dispositivo_LLM, Tempo_Recuperacao_Documentos, ' + \
                                   'Tempo_Estimativa_Bert, LLM_Template_System, LLM_Historico, LLM_Cliente, LLM_Nome_Modelo, ' + \
                                   'LLM_Tempo_Carregamento, LLM_Num_Tokens_Prompt, LLM_Tempo_Processamento_Prompt, LLM_Num_Tokens_Resposta, ' + \
-                                  'LLM_Tempo_Processamento_Resposta, LLM_Tempo_Inicio_Stream, LLM_Tempo_Total, LLM_Resposta, LLM_Tipo_Conclusao, JSON_Interacao, UUID_Sessao, UUID_Cliente) ' + \
-                                  'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);'
+                                  'LLM_Tempo_Processamento_Resposta, LLM_Tempo_Inicio_Stream, LLM_Tempo_Total, LLM_Resposta, ' + \
+                                  'LLM_Tipo_Conclusao, Intencao, JSON_Interacao, UUID_Sessao, UUID_Cliente) ' + \
+                                  'VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);'
 
         dados_interacao['uuid_interacao'] = str(uuid.uuid4())
         dados_inserir_interacao=(
@@ -357,17 +358,18 @@ class GerenciadorPersistencia:
             str(dados_interacao['historico_llm']),
             dados_interacao['cliente_llm'],
             dados_interacao['modelo_llm'],
-            dados_interacao['resposta_completa_llm']['load_duration'] / 1_000_000_000,         # tempo_carregamento_llm
-            dados_interacao['resposta_completa_llm']['prompt_eval_count'],                     # num_tokens_promt
-            dados_interacao['resposta_completa_llm']['prompt_eval_duration']  / 1_000_000_000, # tempo_processamento_prompt
-            dados_interacao['resposta_completa_llm']['eval_count'],                            # num_tokens_resposta
-            dados_interacao['resposta_completa_llm']['eval_duration']  / 1_000_000_000,        # tempo_geracao_resposta
+            dados_interacao['resposta_completa_llm']['load_duration'] / 1_000_000_000 if dados_interacao['resposta_completa_llm'] else None,         # tempo_carregamento_llm
+            dados_interacao['resposta_completa_llm']['prompt_eval_count'] if dados_interacao['resposta_completa_llm'] else None,                     # num_tokens_promt
+            dados_interacao['resposta_completa_llm']['prompt_eval_duration']  / 1_000_000_000 if dados_interacao['resposta_completa_llm'] else None, # tempo_processamento_prompt
+            dados_interacao['resposta_completa_llm']['eval_count'] if dados_interacao['resposta_completa_llm'] else None,                            # num_tokens_resposta
+            dados_interacao['resposta_completa_llm']['eval_duration']  / 1_000_000_000 if dados_interacao['resposta_completa_llm'] else None,        # tempo_geracao_resposta
             dados_interacao['tempo_inicio_stream_resposta'],
             dados_interacao['tempo_total_llm'],
             dados_interacao['resposta'],
-            dados_interacao['resposta_completa_llm']['done_reason'],                           # tipo_conclusao_llm
-            json.dumps(dados_interacao, ensure_ascii=False),                                   # conteúdo completo da interação em json-string
-            dados_interacao['id_sessao'],                                                      # identificador da sessão de que a intereção faz parte
+            dados_interacao['resposta_completa_llm']['done_reason'] if dados_interacao['resposta_completa_llm'] else None,                           # tipo_conclusao_llm
+            dados_interacao['intencao'],                                                                                                             # intenção do usuário segundo predito pelo classificador
+            json.dumps(dados_interacao, ensure_ascii=False),                                                                                         # conteúdo completo da interação em json-string
+            dados_interacao['id_sessao'],                                                                                                            # identificador da sessão de que a intereção faz parte
             dados_interacao['id_cliente']
         )
 

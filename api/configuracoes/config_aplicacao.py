@@ -49,11 +49,14 @@ class ConfiguracoesAplicacao:
         self.top_p = configs['top_p']
 
         self.papel_llm = mensagens['papel_llm']
-        self.diretrizes_llm = mensagens['diretrizes_llm']
-        self.template_mensagem_system = f'''PAPEL: {self.papel_llm} DIRETRIZES PARA AS RESPOSTAS: {self.diretrizes_llm}'''
+        # self.diretrizes_llm = mensagens['diretrizes_llm']
+        self.template_mensagem_system = f'''PAPEL: {self.papel_llm}'''
+        self.templates_intencoes = mensagens['templates_intencoes']
         self.template_prompt_rag = 'DOCUMENTOS:\n{}\nPERGUNTA: {}'
 
         self.mensagens_retorno = mensagens['mensagens_retorno']
+        self.mensagens_interacao_inadequada = mensagens['mensagens_interacao_inadequada']
+        self.mensagem_interacao_documento = mensagens['mensagem_interacao_documento']
 
         self.permitir_comentarios = configs['permitir_comentarios']
         

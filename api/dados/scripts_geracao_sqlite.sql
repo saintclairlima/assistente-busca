@@ -45,6 +45,7 @@ CREATE TABLE Interacao (
     LLM_Tempo_Total REAL,
     LLM_Resposta TEXT,
     LLM_Tipo_Conclusao TEXT,
+    Intencao TEXT,
     JSON_Interacao TEXT,
     UUID_Sessao TEXT,
     UUID_Cliente TEXT,

@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import httpx
 import json
 from api.configuracoes.config_gerais import configuracoes
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # Data model for chat interactions
 class DadosChat(BaseModel):
@@ -16,12 +16,14 @@ class DadosChat(BaseModel):
         historico (List[str]): histórico com as últimas interações
         id_sessao (str): identificador da sessão, servindo para agrupar interações por sessão
         id_cliente(str): identificador do cliente inicializador da sessão
+        intencao(str): identificador da intenção da pergunta, atribuída por um classificador
     '''
 
     pergunta: str
     historico: list
     id_sessao: str
     id_cliente: str
+    intencao: Optional[str] = None
 
 class ClienteLLM:
     # Base client class for LLM interactions
