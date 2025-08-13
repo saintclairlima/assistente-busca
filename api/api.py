@@ -90,8 +90,19 @@ async def pagina_chat(request: Request, url_redirec: str = Query(None)):
     return recuperar_pagina_chat(request=request, url_redirec=url_redirec)
 
 @controller.post('/chat/enviar-pergunta/')
-async def gerar_resposta(dadosRecebidos: DadosChat):
-    dadosRecebidos.intencao = classificador_de_intencao.classificar_intencao(dadosRecebidos.pergunta)
+async def gerar_resposta(dadosRecebidos: DadosChat) -> StreamingResponse:
+    
+    pergunta_otimizada = await gerador_de_respostas.otimizar_prompt_usuario(
+        dadosRecebidos.pergunta,
+        dadosRecebidos.historico
+    )
+
+    dadosRecebidos.pergunta_otimizada = pergunta_otimizada['pergunta_reformulada']
+
+    intencao_com_probabilidade = sorted(classificador_de_intencao.classificar_intencao_proba(dadosRecebidos.pergunta).items(), key=lambda i: i[1], reverse=True)
+    dadosRecebidos.intencao = intencao_com_probabilidade[0][0]
+    dadosRecebidos.confianca_intencao = intencao_com_probabilidade[0][1]
+    
     return StreamingResponse(
         gerador_de_respostas.gerar_resposta(dadosRecebidos),
         media_type='text/plain'

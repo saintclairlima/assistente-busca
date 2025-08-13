@@ -13,6 +13,7 @@ class DadosChat(BaseModel):
 
     Atributos:
         pergunta (str): pergunta do usuário
+        pergunta_otimizada (str): pergunta do usuário alterada para ficar mais clara ou semanticamente independente
         historico (List[str]): histórico com as últimas interações
         id_sessao (str): identificador da sessão, servindo para agrupar interações por sessão
         id_cliente(str): identificador do cliente inicializador da sessão
@@ -20,10 +21,12 @@ class DadosChat(BaseModel):
     '''
 
     pergunta: str
+    pergunta_otimizada: Optional[str] = None
     historico: list
     id_sessao: str
     id_cliente: str
     intencao: Optional[str] = None
+    confianca_intencao: Optional[float] = None
 
 class ClienteLLM:
     # Base client class for LLM interactions
@@ -51,7 +54,13 @@ class ClienteLLM:
         self.top_p = top_p
     
     async def gerar_resposta_stream(self, mensagens: List[dict]):
-        raise NotImplementedError('Método stream() não foi implantado para esta classe')
+        raise NotImplementedError('Método gerar_resposta_stream() não foi implantado para esta classe')
+    
+    async def gerar_resposta_llm(self, mensagens: List[dict]):
+        raise NotImplementedError('Método gerar_resposta() não foi implantado para esta classe')
+    
+    async def gerar_resposta_llm_json(self, mensagens: List[dict], formato: dict):
+        raise NotImplementedError('Método gerar_resposta_json() não foi implantado para esta classe')
     
     def health(self) -> int:
         '''
@@ -138,7 +147,7 @@ class ClienteOllama(ClienteLLM):
                         except:
                             print('ERRO: falha na serialização do fragmento\n' + fragmento.decode())
     
-    async def gerar_resposta(self, mensagens: List[dict]):
+    async def gerar_resposta_llm(self, mensagens: List[dict]):
         '''
         Faz requisição POST à API do LLM, enviando um conjunto de mensagens e recebendo a resposta do LLM de uma só vez
 
@@ -161,9 +170,61 @@ class ClienteOllama(ClienteLLM):
             "stream": False
         }
 
-        resposta = requests.post(url, json=payload)
-        dados = json.loads(resposta.content)
-        return dados
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()
+            return response.json()
+    
+    async def gerar_resposta_llm_json(self, mensagens: List[dict], formato:dict) -> str:
+        '''
+        Faz requisição POST à API do LLM, enviando um conjunto de mensagens e recebendo a resposta do LLM de uma só vez, estruturada em formato JSON
+
+        Parâmetros:
+            mensagens (List[dict]): lista de mensagens anteriores, bem como a mais recente a serem enviadas à API.
+                                    O formato de cada mensagem é: {'role': papel_do_autor_da_mensagem, 'content': conteudo_mensagem},
+                                    em que os papéis disponíveis são: 'system', 'user' e 'assistant'.
+            formato (dict): dicionário com o formato de retorno esperado para a resposta. Os campos são:
+                            'type': deve ter o valor 'object';
+                            'properties': dicionário em que cada entrada é a descrição de uma propriedade
+                                          que a resposta deve conter. É um dicionário em que as chaves são os nomes das propriedades;
+                            'required': uma lista com os nomes das propriedades que são obrigatórias na resposta.
+                            EX: {
+                                "type": "object",
+                                "properties": {
+                                    "propriedade1": {
+                                        "type": "string",
+                                    },
+                                    "propriedade2": {
+                                        "type": "float"
+                                    },
+                                    "propriedade3": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+        Retorna:
+            Uma str serializável em formato JSON com a resposta completa da API
+        '''
+
+        # Envia solicitação ao endpoint de geração de texto utilizando o formato especificado de resposta
+        url = f"{self.url_llm}/api/chat"        
+        payload = {
+            "model": self.modelo,
+            "messages": mensagens,
+            "format": formato,
+            "temperature": 0.0,
+            "top_k": 0,
+            "top_p": 0,
+            "stream": False
+        }
+
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()
+            return response.json()
 
     def gerar_embeddings(self, texto: str):
         url_llm = f"{self.url_llm}/api/embed"
@@ -269,6 +330,9 @@ class InterfaceLLM:
     
     async def gerar_resposta_llm(self, prompt_usuario: str, historico: List[Tuple[str, str]]):
         raise NotImplementedError('Método gerar_resposta_llm() não foi implantado para esta classe')
+    
+    async def gerar_resposta_llm_json(self, prompt_usuario: str, historico: List[Tuple[str, str]], formato: dict):
+        raise NotImplementedError('Método gerar_resposta_llm_stream() não foi implantado para esta classe')
 
 class InterfaceOllama(InterfaceLLM):
     # Implementation of the LLM interface using Ollama
@@ -315,7 +379,6 @@ class InterfaceOllama(InterfaceLLM):
             Uma série de str serializáveis em formato JSON com as respostas da API
         '''
 
-        # AFAZER Ajeitar esse método aqui
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
         async for fragmento_resposta in self.cliente_ollama.gerar_resposta_stream(mensagens=mensagens):
             yield fragmento_resposta
@@ -333,4 +396,24 @@ class InterfaceOllama(InterfaceLLM):
         '''
         
         mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
-        return self.cliente_ollama.gerar_resposta(mensagens=mensagens)
+        return await self.cliente_ollama.gerar_resposta_llm(mensagens=mensagens)
+    
+    async def gerar_resposta_llm_json(self, prompt_usuario: str, historico: List[Tuple[str, str]], formato: dict):
+        '''
+        Invoca o ClienteLLM para realizar requisição à API do LLM e retorna resposta em formato 'json'
+
+        Parâmetros:
+            prompt_usuario (str): prompt do usuário
+            historico (List[Tuple[str, str]]): lista de tuplas representando as interações anteriores. Cada tupla contém o papel e o conteúdo da mensagem
+            formato (dict): dicionário com o formato de retorno esperado para a resposta. Os campos são:
+                            'type': deve ter o valor 'object';
+                            'properties': dicionário em que cada entrada é a descrição de uma propriedade
+                                          que a resposta deve conter. É um dicionário em que as chaves são os nomes das propriedades;
+                            'required': uma lista com os nomes das propriedades que são obrigatórias na resposta.
+
+        Retorna:
+            Uma série de str serializáveis em formato JSON com as respostas da API
+        '''
+        
+        mensagens = self.formatar_mensagens_chat(prompt_usuario=prompt_usuario, historico=historico)
+        return await self.cliente_ollama.gerar_resposta_llm_json(mensagens=mensagens, formato=formato)

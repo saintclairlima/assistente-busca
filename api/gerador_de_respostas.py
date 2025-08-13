@@ -68,6 +68,34 @@ class GeradorDeRespostas:
                 'conteudo': documentos['documents'][0][idx]
             } for idx in range(len(documentos['ids'][0]))
         ]
+    
+    async def otimizar_prompt_usuario(self, pergunta, historico):
+        if len(historico) > 0:
+            ultima_interacao = historico[-1]
+            prompt_independencia_semantica = GeradorPrompts.prompt_independencia_semantica(pergunta, ultima_interacao)
+            formato = {
+                "type": "object",
+                "properties": {
+                    "semanticamente_independente": {
+                        "type": "boolean",
+                    },
+                    "pergunta_reformulada": {
+                        "type": "string",
+                    }
+                }
+            }
+
+            response = await self.interface_llm.gerar_resposta_llm_json(
+                prompt_usuario=prompt_independencia_semantica,
+                historico=[],
+                formato=formato
+            )
+
+            dados_retorno = json.loads(response['message']['content'])
+            dados_retorno = {'otimizada': dados_retorno['semanticamente_independente'], 'pergunta_original': pergunta, 'pergunta_reformulada': dados_retorno['pergunta_reformulada']}
+            return dados_retorno
+        else:
+            return {'otimizada': False, 'pergunta_original': pergunta, 'pergunta_reformulada': pergunta}
 
     async def reclassificar_documentos(self, pergunta, texto_documento: str):
         return self.reestimador.reclassificar_documento(pergunta=pergunta, texto_documento=texto_documento)
@@ -133,7 +161,8 @@ class GeradorDeRespostas:
 
     async def gerar_resposta_rag(self, dados_chat: DadosChat):
         historico = dados_chat.historico
-        pergunta = dados_chat.pergunta
+        # pergunta = dados_chat.pergunta
+        pergunta = dados_chat.pergunta_otimizada
         id_sessao = dados_chat.id_sessao
         id_cliente = dados_chat.id_cliente
         intencao = dados_chat.intencao
@@ -241,6 +270,7 @@ class GeradorDeRespostas:
         
         dados_interacao = {
             'pergunta': pergunta,
+            'pergunta_original': dados_chat.pergunta_otimizada,
             'tipo_dispositivo_aplicacao': configuracoes.device,
             'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
             'documentos': lista_documentos_formatados,
@@ -450,7 +480,8 @@ class GeradorDeRespostas:
             'inadeq': self.interacao_inadequada,
         }
 
-        if self.fazer_log: print(f'Gerador de respostas: respondendo a "{dados_chat.pergunta}" - ({dados_chat.intencao})')
+        if self.fazer_log: print(f'Gerador de respostas: respondendo a "{dados_chat.pergunta}" - ({dados_chat.intencao}: {dados_chat.confianca_intencao:.2%})\n' + \
+                                 f'                      otimizada para {dados_chat.pergunta_otimizada}')
         metodo_escolhido = mapa_intencoes.get(dados_chat.intencao, self.interacao)
 
         async for fragmento in metodo_escolhido(dados_chat):

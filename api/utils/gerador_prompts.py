@@ -96,3 +96,29 @@ class GeradorPrompts:
         dados = json.loads(dados['message']['content'])
 
         return dados
+    
+    
+    
+    def prompt_independencia_semantica(pergunta:str, contexto:List[str]) -> str:
+        return f'''
+Considere esses dados:
+PERGUNTA ANTERIOR:
+{contexto[0]}
+
+RESPOSTA ANTERIOR:
+{contexto[1].replace('\n', ' ')}
+
+PERGUNTA ATUAL:
+{pergunta}
+
+Avalie se a pergunta atual é semanticamente independente da pergunta e resposta anteriores.
+Em outras palavras, avalie se a pergunta atual faz sentido sozinha, sem depender de informações do contexto.
+
+Se a pergunta for independente:
+- responda com o valor 'true' em semanticamente_independente
+- responda com o valor '{pergunta}' em pergunta_reformulada
+
+Se a pergunta for dependente:
+- responda com o valor 'false' em semanticamente_independente
+- reformule a pergunta, de forma que ela fique independente, colocando o resultado em pergunta_reformulada
+'''
