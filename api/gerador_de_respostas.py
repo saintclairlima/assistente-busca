@@ -269,8 +269,8 @@ class GeradorDeRespostas:
         tempo_cliente_llm = resposta_final['tempo_cliente_llm']
         
         dados_interacao = {
-            'pergunta': pergunta,
-            'pergunta_original': dados_chat.pergunta_otimizada,
+            'pergunta': dados_chat.pergunta,
+            'pergunta_otimizada': dados_chat.pergunta_otimizada,
             'tipo_dispositivo_aplicacao': configuracoes.device,
             'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
             'documentos': lista_documentos_formatados,
@@ -336,6 +336,7 @@ class GeradorDeRespostas:
         
         dados_interacao = {
             'pergunta': dados_chat.pergunta,
+            'pergunta_otimizada': dados_chat.pergunta_otimizada,
             'tipo_dispositivo_aplicacao': configuracoes.device,
             'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
             'documentos': [],
@@ -387,6 +388,7 @@ class GeradorDeRespostas:
         
         dados_interacao = {
             'pergunta': dados_chat.pergunta,
+            'pergunta_otimizada': dados_chat.pergunta_otimizada,
             'tipo_dispositivo_aplicacao': configuracoes.device,
             'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
             'documentos': [],
@@ -434,6 +436,7 @@ class GeradorDeRespostas:
         
         dados_interacao = {
             'pergunta': dados_chat.pergunta,
+            'pergunta_otimizada': dados_chat.pergunta_otimizada,
             'tipo_dispositivo_aplicacao': configuracoes.device,
             'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
             'documentos': [],
