@@ -4,7 +4,7 @@ from pydantic import BaseModel
 import httpx
 import json
 from api.configuracoes.config_gerais import configuracoes
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 # Data model for chat interactions
 class DadosChat(BaseModel):
@@ -16,12 +16,14 @@ class DadosChat(BaseModel):
         historico (List[str]): histórico com as últimas interações
         id_sessao (str): identificador da sessão, servindo para agrupar interações por sessão
         id_cliente(str): identificador do cliente inicializador da sessão
+        intencao(str): identificador da intenção da pergunta, atribuída por um classificador
     '''
 
     pergunta: str
     historico: list
     id_sessao: str
     id_cliente: str
+    intencao: Optional[str] = None
 
 class ClienteLLM:
     # Base client class for LLM interactions
@@ -40,13 +42,14 @@ class ClienteLLM:
         stream(mensagens: List[dict]): Envia solicitação ao endpoint de geração de texto usando a opção de 'stream' (obtendo a resposta em framentos)
     '''
 
-    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature, top_k: int=configuracoes.top_k, top_p: float=configuracoes.top_p):
+    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature, top_k: int=configuracoes.top_k, top_p: float=configuracoes.top_p, usar_raciocinio: bool=configuracoes.usar_raciocinio):
 
         self.modelo = nome_modelo
         self.url_llm = url_llm
         self.temperature = temperature
         self.top_k = top_k
         self.top_p = top_p
+        self.usar_raciocinio = usar_raciocinio
     
     async def gerar_resposta_stream(self, mensagens: List[dict]):
         raise NotImplementedError('Método stream() não foi implantado para esta classe')
@@ -79,13 +82,14 @@ class ClienteOllama(ClienteLLM):
     Consultar documentação para detalhes sobre os parâmetros: https://ollama.readthedocs.io/en/modelfile/#valid-parameters-and-values
     '''
 
-    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature, top_k: int=configuracoes.top_k, top_p: float=configuracoes.top_p):
+    def __init__(self, nome_modelo: str, url_llm: str, temperature: float=configuracoes.temperature, top_k: int=configuracoes.top_k, top_p: float=configuracoes.top_p, usar_raciocinio: bool=configuracoes.usar_raciocinio):
         super().__init__(
             nome_modelo=nome_modelo,
             url_llm=url_llm,
             temperature=temperature,
             top_k=top_k,
-            top_p=top_p)
+            top_p=top_p,
+            usar_raciocinio=usar_raciocinio)
         
         # Nota -- os valores padrão do Ollama são os seguintes:
         #   temperature = 0.8
@@ -123,9 +127,10 @@ class ClienteOllama(ClienteLLM):
             "temperature": self.temperature,
             "top_k": self.top_k,
             "top_p": self.top_p,
+            "think": self.usar_raciocinio,
             "stream": True,
             # "max_new_tokens": 4096 # AFAZER: Considerar remover este atributo
-        }        
+        }
         async with httpx.AsyncClient() as client:
             async with client.stream("POST", url, json=payload, timeout=120) as resposta:
                 resposta.raise_for_status()
@@ -156,12 +161,66 @@ class ClienteOllama(ClienteLLM):
             "temperature": self.temperature,
             "top_k": self.top_k,
             "top_p": self.top_p,
+            "think": self.usar_raciocinio,
             "stream": False
         }
 
-        resposta = requests.post(url, json=payload)
-        dados = json.loads(resposta.content)
-        return dados
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()
+            return response.json()
+    
+    async def gerar_resposta_llm_json(self, mensagens: List[dict], formato:dict) -> str:
+        '''
+        Faz requisição POST à API do LLM, enviando um conjunto de mensagens e recebendo a resposta do LLM de uma só vez, estruturada em formato JSON
+
+        Parâmetros:
+            mensagens (List[dict]): lista de mensagens anteriores, bem como a mais recente a serem enviadas à API.
+                                    O formato de cada mensagem é: {'role': papel_do_autor_da_mensagem, 'content': conteudo_mensagem},
+                                    em que os papéis disponíveis são: 'system', 'user' e 'assistant'.
+            formato (dict): dicionário com o formato de retorno esperado para a resposta. Os campos são:
+                            'type': deve ter o valor 'object';
+                            'properties': dicionário em que cada entrada é a descrição de uma propriedade
+                                          que a resposta deve conter. É um dicionário em que as chaves são os nomes das propriedades;
+                            'required': uma lista com os nomes das propriedades que são obrigatórias na resposta.
+                            EX: {
+                                "type": "object",
+                                "properties": {
+                                    "propriedade1": {
+                                        "type": "string",
+                                    },
+                                    "propriedade2": {
+                                        "type": "float"
+                                    },
+                                    "propriedade3": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+        Retorna:
+            Uma str serializável em formato JSON com a resposta completa da API
+        '''
+
+        # Envia solicitação ao endpoint de geração de texto utilizando o formato especificado de resposta
+        url = f"{self.url_llm}/api/chat"        
+        payload = {
+            "model": self.modelo,
+            "messages": mensagens,
+            "format": formato,
+            "temperature": 0.0,
+            "top_k": 0,
+            "top_p": 0,
+            "think": self.usar_raciocinio,
+            "stream": False
+        }
+
+        async with httpx.AsyncClient(timeout=120) as client:
+            response = await client.post(url, json=payload)
+            response.raise_for_status()
+            return response.json()
 
     def gerar_embeddings(self, texto: str):
         url_llm = f"{self.url_llm}/api/embed"
