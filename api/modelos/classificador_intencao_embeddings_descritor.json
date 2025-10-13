@@ -1,0 +1,61 @@
+{
+  "data_criacao": "2025-09-24T13:50:05.159362",
+  "dados_treinamento": "api/dados/classificador_de_intencao/dataset-treinamento-intencao-dialogar.csv",
+  "representacao_dados": {
+    "tipo": "text_embeddings",
+    "modelo": "BAAI/bge-m3"
+  },
+  "classes": [
+    "consulta",
+    "doc",
+    "inadeq",
+    "out",
+    "ping"
+  ],
+  "classificador": "Pipeline(steps=[('scaler', StandardScaler()),\n                ('classificador',\n                 LogisticRegression(C=12.398517892412489, max_iter=824,\n                                    multi_class='ovr', penalty='l1',\n                                    solver='saga', verbose=1))])",
+  "metricas_treinamento": {
+    "consulta": {
+      "precision": 0.9224952741020794,
+      "recall": 0.8970588235294118,
+      "f1-score": 0.9095992544268406,
+      "support": 544.0
+    },
+    "doc": {
+      "precision": 0.9182948490230906,
+      "recall": 0.9503676470588235,
+      "f1-score": 0.934056007226739,
+      "support": 544.0
+    },
+    "inadeq": {
+      "precision": 1.0,
+      "recall": 0.9944852941176471,
+      "f1-score": 0.9972350230414746,
+      "support": 544.0
+    },
+    "out": {
+      "precision": 0.9775700934579439,
+      "recall": 0.9613970588235294,
+      "f1-score": 0.969416126042632,
+      "support": 544.0
+    },
+    "ping": {
+      "precision": 0.9728260869565217,
+      "recall": 0.9871323529411765,
+      "f1-score": 0.9799270072992701,
+      "support": 544.0
+    },
+    "accuracy": 0.9580882352941177,
+    "macro avg": {
+      "precision": 0.958237260707927,
+      "recall": 0.9580882352941176,
+      "f1-score": 0.9580466836073913,
+      "support": 2720.0
+    },
+    "weighted avg": {
+      "precision": 0.9582372607079271,
+      "recall": 0.9580882352941177,
+      "f1-score": 0.9580466836073914,
+      "support": 2720.0
+    }
+  }
+}
