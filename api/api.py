@@ -11,6 +11,9 @@ from api.utils.interface_banco_vetores import FuncaoEmbeddings, InterfaceChroma
 from api.utils.interface_llm import DadosChat, InterfaceOllama
 from api.dados.persistencia import GerenciadorPersistenciaSQL, GerenciadorPersistenciaSQLite
 from api.utils.reclassificador import ReclassificadorBert
+from api.utils.classificador_de_intencao import ClassificadorIntencaoEmbeddings
+
+classificador_de_intencao = ClassificadorIntencaoEmbeddings()
 
 print('Instanciando a api (FastAPI)...')
 controller = FastAPI()
@@ -88,7 +91,11 @@ async def pagina_chat(request: Request, url_redirec: str = Query(None)):
 
 @controller.post('/chat/enviar-pergunta/')
 async def gerar_resposta(dadosRecebidos: DadosChat):
-    return StreamingResponse(gerador_de_respostas.gerar_resposta(dadosRecebidos), media_type='text/plain')
+    dadosRecebidos.intencao = classificador_de_intencao.classificar_intencao(dadosRecebidos.pergunta)
+    return StreamingResponse(
+        gerador_de_respostas.gerar_resposta(dadosRecebidos),
+        media_type='text/plain'
+    )
 
 @controller.post('/chat/avaliar-interacao/')
 async def gerar_resposta(dadosRecebidos: dict):

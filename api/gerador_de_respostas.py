@@ -1,8 +1,9 @@
 import json
 from torch import cuda
 from concurrent.futures import ThreadPoolExecutor
-from time import time
+from time import sleep, time
 import wandb
+from random import choice
 
 from api.configuracoes.config_gerais import configuracoes
 from api.dados.persistencia import GerenciadorPersistencia
@@ -70,12 +71,72 @@ class GeradorDeRespostas:
 
     async def reclassificar_documentos(self, pergunta, texto_documento: str):
         return self.reestimador.reclassificar_documento(pergunta=pergunta, texto_documento=texto_documento)
+    
+    async def enviar_prompt_llm(self, prompt: str, historico: list):
+        if self.fazer_log:
+            print(f'--- gerando resposta com o cliente LLM')
 
-    async def gerar_resposta(self, dados_chat: DadosChat):
+        yield MensagemControle(
+            descricao='Informação de Status',
+            dados={'tag': 'status', 'conteudo': configuracoes.mensagens_retorno['geracao_resposta']}
+        ).json() + '\n'
+
+        try:
+            marcador_tempo_inicio = time()
+            texto_resposta_llm = ''
+            flag_tempo_resposta = False
+
+            async for item in self.interface_llm.gerar_resposta_llm_stream(prompt, historico=historico):
+                texto_resposta_llm += item['message']['content']
+                yield MensagemDados(
+                    descricao='Fragmento de Resposta do LLM',
+                    dados={
+                        'tag': 'frag-resposta-llm',
+                        'conteudo': item['message']['content']
+                    }
+                ).json() + '\n'
+
+                if not flag_tempo_resposta:
+                    flag_tempo_resposta = True
+                    tempo_inicio_stream_resposta = time() - marcador_tempo_inicio
+                    if self.fazer_log:
+                        print(f'----- iniciou retorno da resposta ({tempo_inicio_stream_resposta} segundos)')
+
+            resposta_completa_llm = item
+            resposta_completa_llm['message']['content'] = texto_resposta_llm
+            marcador_tempo_fim = time()
+            tempo_cliente_llm = marcador_tempo_fim - marcador_tempo_inicio
+
+            if self.fazer_log:
+                print(f'--- resposta do Ollama concluída ({tempo_cliente_llm} segundos)')
+
+            yield MensagemDados(
+                descricao='Metadados do processo de geração de resposta do LLM',
+                dados={
+                    'tag': 'metadados-geracao-llm',
+                    'conteudo': {
+                        'texto_resposta_llm': texto_resposta_llm,
+                        'resposta_completa_llm': resposta_completa_llm,
+                        'tempo_inicio_stream_resposta': tempo_inicio_stream_resposta,
+                        'tempo_cliente_llm': tempo_cliente_llm
+                    }
+                }
+            ).json() + '\n'
+
+        except Exception as excecao:
+            yield MensagemErro(
+                descricao=f'Falha na Geração da Resposta (Ollama offline ou {configuracoes.modelo_llm} não disponível. {excecao.__class__.__name__})',
+                mensagem=f'Houve um problema geração de sua resposta. Tente mais tarde. (Tipo do erro: {excecao.__class__.__name__})'
+            ).json() + '\n'
+            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {configuracoes.modelo_llm} não disponível. {excecao.__class__.__name__}')
+            return
+
+    async def gerar_resposta_rag(self, dados_chat: DadosChat):
         historico = dados_chat.historico
         pergunta = dados_chat.pergunta
         id_sessao = dados_chat.id_sessao
         id_cliente = dados_chat.id_cliente
+        intencao = dados_chat.intencao
         
         if len(pergunta.split(' ')) > 300:
             #AFAZER: decidir se mantém essa limitação. Colocada a princípio para evitar
@@ -86,8 +147,7 @@ class GeradorDeRespostas:
                 ).json() + '\n'
             print('CONCLUÍDO POR ERRO: pergunta com mais de 300 palavras.')
             return
-
-        if self.fazer_log: print(f'Gerador de respostas: realizando consulta para "{pergunta}"...')
+        
         yield MensagemControle(
             descricao='Informação de Status',
             dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['consulta']}
@@ -154,42 +214,30 @@ class GeradorDeRespostas:
             dados={'tag':'status', 'conteudo': configuracoes.mensagens_retorno['geracao_resposta']}
             ).json() + '\n'
         
+        prompt_usuario = GeradorPrompts.gerar_prompt_rag(pergunta=pergunta, documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])])
+
+        resposta_final = None
+        gen_llm = self.enviar_prompt_llm(prompt_usuario, historico)
+
         try:
-            #marcador_idioma = GeradorPrompts.criar_marcador_idioma(pergunta)
-            #if 'mensagem' in marcador_idioma: pergunta += f''' ({marcador_idioma['mensagem']})'''
-            marcador_tempo_inicio = time()
-            texto_resposta_llm = ''
-            flag_tempo_resposta = False
+            async for fragmento in gen_llm:
+                fragmento_serializado = json.loads(fragmento)
+                if fragmento_serializado['dados']['tag'] == 'metadados-geracao-llm':
+                    resposta_final = fragmento_serializado['dados']['conteudo']
+                else:
+                    yield fragmento
+        except StopAsyncIteration as resultado:
+            resposta_final = resultado.value
+        finally:
+            await gen_llm.aclose()
 
-            prompt_usuario = GeradorPrompts.gerar_prompt_rag(pergunta=pergunta, documentos=[f"{doc[0]['titulo']} - {doc[1]}" for doc in zip(documentos['metadatas'][0], documentos['documents'][0])])
-
-            async for item in self.interface_llm.gerar_resposta_llm_stream(prompt_usuario, historico=historico):
-                
-                texto_resposta_llm += item['message']['content']
-                yield MensagemDados(
-                    descricao='Fragmento de Resposta do LLM',
-                    dados={
-                        'tag': 'frag-resposta-llm',
-                        'conteudo': item['message']['content']
-                    }
-                    ).json() + '\n'
-                if not flag_tempo_resposta:
-                    flag_tempo_resposta = True
-                    tempo_inicio_stream_resposta = time() - marcador_tempo_inicio
-                    if self.fazer_log: print(f'----- iniciou retorno da resposta ({tempo_inicio_stream_resposta} segundos)')
-
-            resposta_completa_llm = item
-            resposta_completa_llm['message']['content'] = texto_resposta_llm
-            marcador_tempo_fim = time()
-            tempo_cliente_llm = marcador_tempo_fim - marcador_tempo_inicio
-            if self.fazer_log: print(f'--- resposta do Ollama concluída ({tempo_cliente_llm} segundos)')
-        except Exception as excecao:
-            yield MensagemErro(
-                descricao=f'Falha na Geração da Resposta (Ollama offline ou {configuracoes.modelo_llm} não disponível. {excecao.__class__.__name__})',
-                mensagem=f'Houve um problema geração de sua resposta. Tente mais tarde. (Tipo do erro: {excecao.__class__.__name__})'
-            ).json() + '\n'
-            print(f'CONCLUÍDO POR ERRO: Falha na conexão com o LLM. Ollama offline ou {configuracoes.modelo_llm} não disponível. {excecao.__class__.__name__}')
+        if not resposta_final:
             return
+
+        texto_resposta_llm = resposta_final['texto_resposta_llm']
+        resposta_completa_llm = resposta_final['resposta_completa_llm']
+        tempo_inicio_stream_resposta = resposta_final['tempo_inicio_stream_resposta']
+        tempo_cliente_llm = resposta_final['tempo_cliente_llm']
         
         dados_interacao = {
             'pergunta': pergunta,
@@ -207,7 +255,8 @@ class GeradorDeRespostas:
             'resposta': texto_resposta_llm,
             'resposta_completa_llm': resposta_completa_llm,
             'id_sessao': id_sessao,
-            'id_cliente': id_cliente
+            'id_cliente': id_cliente,
+            'intencao': intencao
         }
         
         # id no índice 0 é o da interação persistida
@@ -215,9 +264,9 @@ class GeradorDeRespostas:
         
         # Retornando dados compilados
         msg = MensagemDados(
-                descricao='INTERAÇÃO FINALIZADA. Contém Id da interação (primeiro elemento) e das relações dos documentos na interação',
+                descricao='INTERAÇÃO FINALIZADA. Contém Id da interação (primeiro elemento)',
                 dados={
-                    'tag': 'persistencia-interacao',
+                    'tag': 'interacao-finalizada',
                     'conteudo': ids_persistencia_interacao
                 }
             ).json()
@@ -228,6 +277,185 @@ class GeradorDeRespostas:
 
         yield msg
         if self.fazer_log: print('Concluído')
+
+    async def interacao(self, dados_chat: DadosChat):
+        prompt = GeradorPrompts.gerar_prompt_interacao(pergunta=dados_chat.pergunta, intencao_usuario=dados_chat.intencao)
+        
+        resposta_final = None
+        gen_llm = self.enviar_prompt_llm(prompt, dados_chat.historico)
+        
+        try:
+            async for fragmento in gen_llm:
+                fragmento_serializado = json.loads(fragmento)
+                if fragmento_serializado['dados']['tag'] == 'metadados-geracao-llm':
+                    resposta_final = fragmento_serializado['dados']['conteudo']
+                else:
+                    yield fragmento
+        except StopAsyncIteration as resultado:
+            resposta_final = resultado.value
+        finally:
+            await gen_llm.aclose()
+
+        if not resposta_final:
+            return
+        
+        texto_resposta_llm = resposta_final['texto_resposta_llm']
+        resposta_completa_llm = resposta_final['resposta_completa_llm']
+        tempo_inicio_stream_resposta = resposta_final['tempo_inicio_stream_resposta']
+        tempo_cliente_llm = resposta_final['tempo_cliente_llm']
+        
+        dados_interacao = {
+            'pergunta': dados_chat.pergunta,
+            'tipo_dispositivo_aplicacao': configuracoes.device,
+            'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
+            'documentos': [],
+            'tempo_recuperacao_documentos': None,
+            'tempo_estimativa_bert': None,
+            'template_system_llm': configuracoes.template_mensagem_system,
+            'historico_llm': dados_chat.historico,
+            'cliente_llm': configuracoes.cliente_llm,
+            'modelo_llm': configuracoes.modelo_llm,
+            'tempo_inicio_stream_resposta': tempo_inicio_stream_resposta,
+            'tempo_total_llm': tempo_cliente_llm,
+            'resposta': texto_resposta_llm,
+            'resposta_completa_llm': resposta_completa_llm,
+            'id_sessao': dados_chat.id_sessao,
+            'id_cliente': dados_chat.id_cliente,
+            'intencao': dados_chat.intencao
+        }
+        
+        # id no índice 0 é o da interação persistida
+        ids_persistencia_interacao = self.gerenciador_persistencia.persistir_interacao(dados_interacao=dados_interacao)
+
+        # Retornando dados compilados
+        msg = MensagemDados(
+                descricao='INTERAÇÃO FINALIZADA. Contém Id da interação (primeiro elemento)',
+                dados={
+                    'tag': 'interacao-finalizada',
+                    'conteudo': ids_persistencia_interacao
+                }
+            ).json()
+        
+        yield msg
+        if self.fazer_log: print('Concluído')
+        return
+
+    async def interacao_inadequada(self, dados_chat: DadosChat):
+        reacao = choice(configuracoes.mensagens_interacao_inadequada['reacao'])
+        advertencia = choice(configuracoes.mensagens_interacao_inadequada['advertencia'])
+        informacao = choice(configuracoes.mensagens_interacao_inadequada['informacao'])
+        direcionamento = choice(configuracoes.mensagens_interacao_inadequada['direcionamento'])
+        resposta =  f'{reacao} {advertencia} {informacao} {direcionamento}'
+
+        yield MensagemDados(
+                descricao='INTERAÇÃO INADEQUADA. Resposta gerada sem LLM.',
+                dados={
+                    'tag': 'frag-resposta-llm',
+                    'conteudo': resposta
+                }
+            ).json()
+        
+        dados_interacao = {
+            'pergunta': dados_chat.pergunta,
+            'tipo_dispositivo_aplicacao': configuracoes.device,
+            'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
+            'documentos': [],
+            'tempo_recuperacao_documentos': None,
+            'tempo_estimativa_bert': None,
+            'template_system_llm': None,
+            'historico_llm': dados_chat.historico,
+            'cliente_llm': None,
+            'modelo_llm': None,
+            'tempo_inicio_stream_resposta': None,
+            'tempo_total_llm': None,
+            'resposta': f'(Resposta fixa) {resposta}',
+            'resposta_completa_llm': None,
+            'id_sessao': dados_chat.id_sessao,
+            'id_cliente': dados_chat.id_cliente,
+            'intencao': dados_chat.intencao
+        }
+
+        # id no índice 0 é o da interação persistida
+        ids_persistencia_interacao = self.gerenciador_persistencia.persistir_interacao(dados_interacao=dados_interacao)
+
+        # Retornando dados compilados
+        msg = MensagemDados(
+                descricao='INTERAÇÃO FINALIZADA. Contém Id da interação (primeiro elemento)',
+                dados={
+                    'tag': 'interacao-finalizada',
+                    'conteudo': ids_persistencia_interacao
+                }
+            ).json()
+        
+        yield msg
+        if self.fazer_log: print('Concluído')
+        return
+    
+    async def servir_documento(self, dados_chat: DadosChat):
+        resposta = configuracoes.mensagem_interacao_documento.replace('TAG_INSERCAO_URL_HOST', configuracoes.url_host)
+
+        yield MensagemDados(
+                descricao='SOLICITAÇÃO DE DOCUMENTO. Resposta gerada sem LLM.',
+                dados={
+                    'tag': 'servir-documento',
+                    'conteudo': resposta
+                }
+            ).json()
+        
+        dados_interacao = {
+            'pergunta': dados_chat.pergunta,
+            'tipo_dispositivo_aplicacao': configuracoes.device,
+            'tipo_dispositivo_llm': 'cuda' if cuda.is_available() else 'cpu',
+            'documentos': [],
+            'tempo_recuperacao_documentos': None,
+            'tempo_estimativa_bert': None,
+            'template_system_llm': None,
+            'historico_llm': dados_chat.historico,
+            'cliente_llm': None,
+            'modelo_llm': None,
+            'tempo_inicio_stream_resposta': None,
+            'tempo_total_llm': None,
+            'resposta': f'(Resposta fixa) {resposta}',
+            'resposta_completa_llm': None,
+            'id_sessao': dados_chat.id_sessao,
+            'id_cliente': dados_chat.id_cliente,
+            'intencao': dados_chat.intencao
+        }
+
+        # id no índice 0 é o da interação persistida
+        ids_persistencia_interacao = self.gerenciador_persistencia.persistir_interacao(dados_interacao=dados_interacao)
+
+        # Retornando dados compilados
+        msg = MensagemDados(
+                descricao='INTERAÇÃO FINALIZADA. Contém Id da interação (primeiro elemento)',
+                dados={
+                    'tag': 'interacao-finalizada',
+                    'conteudo': ids_persistencia_interacao
+                }
+            ).json()
+        
+        yield msg
+        if self.fazer_log: print('Concluído')
+        return
+    
+    async def gerar_resposta(self, dados_chat: DadosChat):
+        """
+        Decide o fluxo de geração de resposta com base na intenção do usuário.
+        """
+        mapa_intencoes = {
+            'consulta': self.gerar_resposta_rag,
+            'doc': self.servir_documento, # AFAZER: Alterar e implementar lógica de servir documento
+            'ping': self.interacao,
+            'out': self.interacao,
+            'inadeq': self.interacao_inadequada,
+        }
+
+        if self.fazer_log: print(f'Gerador de respostas: respondendo a "{dados_chat.pergunta}" - ({dados_chat.intencao})')
+        metodo_escolhido = mapa_intencoes.get(dados_chat.intencao, self.interacao)
+
+        async for fragmento in metodo_escolhido(dados_chat):
+            yield fragmento
+        return
 
     async def avaliar_interacao(self, dados_avaliacao: dict):
         try:

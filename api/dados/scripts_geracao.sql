@@ -42,6 +42,7 @@ CREATE TABLE Interacao (
     LLM_Tempo_Total FLOAT,
     LLM_Resposta VARCHAR(MAX),
     LLM_Tipo_Conclusao VARCHAR(50),
+    Intencao VARCHAR(100),
     JSON_Interacao VARCHAR(MAX),
     UUID_Sessao UNIQUEIDENTIFIER,
     UUID_Cliente UNIQUEIDENTIFIER,
