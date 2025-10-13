@@ -27,6 +27,7 @@
     "temperature": 0,
     "top_k": 40,
     "top_p": 0.9,
+    "usar_raciocinio": false,
 
     "usar_wandb": false,
     "wandb_equipe": null,

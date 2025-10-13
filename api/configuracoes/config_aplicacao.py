@@ -47,6 +47,7 @@ class ConfiguracoesAplicacao:
         self.temperature = configs['temperature']
         self.top_k =configs['top_k']
         self.top_p = configs['top_p']
+        self.usar_raciocinio = configs['usar_raciocinio']
 
         self.papel_llm = mensagens['papel_llm']
         self.diretrizes_llm = mensagens['diretrizes_llm']
