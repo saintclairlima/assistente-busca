@@ -256,7 +256,8 @@ class GeradorDeRespostas:
             'resposta_completa_llm': resposta_completa_llm,
             'id_sessao': id_sessao,
             'id_cliente': id_cliente,
-            'intencao': intencao
+            'intencao': intencao,
+            'ambiente_execucao': configuracoes.ambiente_execucao
         }
         
         # id no índice 0 é o da interação persistida
@@ -321,7 +322,8 @@ class GeradorDeRespostas:
             'resposta_completa_llm': resposta_completa_llm,
             'id_sessao': dados_chat.id_sessao,
             'id_cliente': dados_chat.id_cliente,
-            'intencao': dados_chat.intencao
+            'intencao': dados_chat.intencao,
+            'ambiente_execucao': configuracoes.ambiente_execucao
         }
         
         # id no índice 0 é o da interação persistida
@@ -372,7 +374,8 @@ class GeradorDeRespostas:
             'resposta_completa_llm': None,
             'id_sessao': dados_chat.id_sessao,
             'id_cliente': dados_chat.id_cliente,
-            'intencao': dados_chat.intencao
+            'intencao': dados_chat.intencao,
+            'ambiente_execucao': configuracoes.ambiente_execucao
         }
 
         # id no índice 0 é o da interação persistida
@@ -419,7 +422,8 @@ class GeradorDeRespostas:
             'resposta_completa_llm': None,
             'id_sessao': dados_chat.id_sessao,
             'id_cliente': dados_chat.id_cliente,
-            'intencao': dados_chat.intencao
+            'intencao': dados_chat.intencao,
+            'ambiente_execucao': configuracoes.ambiente_execucao
         }
 
         # id no índice 0 é o da interação persistida
