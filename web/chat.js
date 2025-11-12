@@ -7,6 +7,16 @@ function gerarRespostaFormatada(resposta){
 }
 
 function gerarFontesFormatadas(documentos){
+    // Função para limitar o número de palavras exibidas de cada fonte
+    const limitarPalavras = (texto, limite = 100) => {
+        if (!texto) return '';
+        const palavras = texto
+            .replace(/<[^>]*>/g, '') // remove tags e marcadores HTML
+            .trim()
+            .split(/\s+/); // faz quebra por espaço, quebra de linha ou tabulação
+        return palavras.slice(0, limite).join(' ') + (palavras.length > limite ? '...' : '');
+    };
+
     var htmlFontes = '';
     if (documentos.length > 0) {
         htmlFontes =                
@@ -16,7 +26,7 @@ function gerarFontesFormatadas(documentos){
                 return `
                 <div class="documento">
                     <div class="documento-titulo"><a href="${urlHost}/chat/documento?url_documento=${documento.metadados.fonte}" target="_blank">${documento.metadados.titulo} | ${documento.metadados.subtitulo}</a></div>` + 
-                    `<div class="documento-conteudo">${documento.conteudo}</div>`+ 
+                    `<div class="documento-conteudo">${limitarPalavras(documento.conteudo)}</div>`+ 
                 `</div>`
             }).join("\n") + 
         `</div>`;
