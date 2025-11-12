@@ -8,7 +8,7 @@ function gerarRespostaFormatada(resposta){
 
 function gerarFontesFormatadas(documentos){
     // Função para limitar o número de palavras exibidas de cada fonte
-    const limitarPalavras = (texto, limite = 100) => {
+    const limitarPalavras = (texto, limite = 60) => {
         if (!texto) return '';
         const palavras = texto
             .replace(/<[^>]*>/g, '') // remove tags e marcadores HTML
