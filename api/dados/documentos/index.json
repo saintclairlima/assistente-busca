@@ -82,5 +82,12 @@
         "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
         "fonte": "documentos/html/manual_processo_legislativo.html",
         "texto_articulado": false
+    },
+    "constituicao_estadual" : {
+        "url": "constituicao_estadual.txt",
+        "titulo": "Constituição do Estado do Rio Grande do Norte",
+        "autor": "Governo do Estado do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/constituicao_estadual.html",
+        "texto_articulado": true
     }
 }
