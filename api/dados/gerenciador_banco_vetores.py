@@ -17,7 +17,7 @@ from bs4 import BeautifulSoup
 
 DEVICE='cuda' if cuda.is_available() else 'cpu'
 
-class GeradorBancoVetores:
+class GerenciadorBancoVetores:
 
     def normalizar_string(self, s):
         # Normaliza e remove os acentos (diacríticos)
@@ -366,11 +366,14 @@ class GeradorBancoVetores:
             nome_modelo_embeddings=configuracoes.embedding_bge_m3):
         
         if url_indice_documentos:
-            info_documento = json.load(url_indice_documentos)[rotulo_documento]
+            with open(url_indice_documentos, 'r', encoding='utf-8') as arq:
+                info_documento = json.load(arq)[rotulo_documento]
         else:
             info_documento = configuracoes.documentos[rotulo_documento]
+            
+        tipo = info_documento["url"].split('.')[-1]
         
-        fragmentos = self.extrair_fragmentos_markdown(rotulo_documento, info_documento, comprimento_max_fragmento)
+        fragmentos = self.extrair_fragmento_por_tipo[tipo](self, rotulo=rotulo_documento, info=info_documento, comprimento_max_fragmento=comprimento_max_fragmento)
         cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
         funcao_embeddings = self.obter_funcao_embeddings(nome_modelo=nome_modelo_embeddings)
         colecao = cliente_chroma.get_collection(name=nome_colecao, embedding_function=funcao_embeddings)
@@ -544,8 +547,8 @@ if __name__ == "__main__":
     comprimento_max_fragmento = args.comprimento_max_fragmento
     lista_instrucoes = [None] * len(nomes_colecoes) if not args.lista_instrucoes else ast.literal_eval(args.lista_instrucoes)
 
-    gerador_banco_vetores = GeradorBancoVetores()
-    gerador_banco_vetores.executar(
+    gerenciador_banco_vetores = GerenciadorBancoVetores()
+    gerenciador_banco_vetores.executar(
         indice_documentos=indice_documentos,
         url_banco_vetores=nome_banco_vetores,
         nomes_colecoes=nomes_colecoes,
@@ -554,7 +557,7 @@ if __name__ == "__main__":
         lista_instrucoes=lista_instrucoes)
     
 ## Modelo de Execução
-# python -m api.dados.gerador_banco_vetores \
+# python -m api.dados.gerenciador_banco_vetores \
 # --nome_banco_vetores banco_assistente \
 # --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt', 'documentos_rh_bge_m3']" \
 # --lista_nomes_modelos_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese', 'BAAI/bge-m3']" \

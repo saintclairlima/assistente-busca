@@ -6,7 +6,7 @@ from typing import Dict, List
 from chromadb import chromadb
 from torch import cuda
 
-from api.dados.gerador_banco_vetores import GeradorBancoVetores
+from dados.gerenciador_banco_vetores import GerenciadorBancoVetores
 from api.utils.reclassificador import ReclassificadorBert
 from api.configuracoes.config_gerais import configuracoes
 
@@ -30,7 +30,7 @@ def recuperar_colecoes(url_banco_vetores: str) -> Dict[str, chromadb.Collection]
     
     colecoes = {}
     cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
-    gb = GeradorBancoVetores()
+    gb = GerenciadorBancoVetores()
 
     for desc_colecao in desc['colecoes']:
         funcao = gb.obter_funcao_embeddings(

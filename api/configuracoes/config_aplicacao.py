@@ -8,7 +8,7 @@ class ConfiguracoesAplicacao:
             configs = json.load(arq)
 
         url_indice_documentos=configs['url_indice_documentos']
-        with open(url_indice_documentos, 'r') as arq:
+        with open(url_indice_documentos, 'r', encoding='utf-8') as arq:
             self.documentos = json.load(arq)
 
         with open(configs['url_arquivo_mensagens'], 'r', encoding='utf-8') as arq:
