@@ -1,0 +1,418 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+:root{
+    --azul-turquesa: #3bbeb1;
+    --azul-turquesa-medio: #2fa599;
+    --azul-turquesa-escuro: #24857b;
+    --azul-claro: #1A73E8;
+    --azul-medio: #145dbd;
+    --azul-escuro: #163C70;
+    --branco-fundo-1: #f6f6f6;
+    --branco-fundo-2: #f8f9fa;
+    --branco-fundo-3: #ccc;
+    --cinza-claro: #e9ecef;
+    --cinza-medio: #9e9c9c;
+    --cinza-escuro: #616161;
+    --verde-escuro: #0f5132;
+    --verde-medio: #badbcc;
+    --verde-claro: #d1e7dd;
+    --laranja-escuro: #664d03;
+    --laranja-medio: #ffecb5;
+    --laranja-claro: #fff3cd;
+    --vermelho-escuro: #842029;
+    --vermelho-medio: #f5c2c7;
+    --vermelho-claro: #f8d7da;
+
+    --verde: green;
+    --laranja: orange;
+    --vermelho: rgb(196, 0, 0);
+}
+body{
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--branco-fundo-1);
+    font-family: Roboto, sans-serif;
+}
+hr{
+    border: 0;
+    border-top: 1px solid var(--cinza-claro);
+    height: 0;
+}
+.cabecalho{
+    width: 100%;
+    background-color: var(--azul-escuro);
+}
+.titulo{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    color: white;
+    font-family: 'Montserrat', sans-serif;
+}
+.logo{
+    padding-right: 15px;
+    align-self: center;
+}
+.logo img{
+    height: 40px;
+}
+.rotulo-titulo h1{
+    padding-left: 15px;
+    align-self: center;
+    border-left: 1px solid white;
+    font-size: 28px;
+}
+.container-conteudo{
+    width: 50%;
+    min-width: 414px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    border-radius: 5px;
+}
+.cabecalho-assistente{
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    padding: 5px;
+    box-shadow: 0px 4px 4px -4px;
+    z-index: 1000;
+}
+.info-assistente{
+    display: flex;
+    align-items: center;
+}
+.img-assistente{
+    margin: 10px;
+    height: 60px;
+    border-radius: 50%;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--azul-turquesa-medio);
+}
+.rotulo-assistente{
+    margin-left: 10px;
+    font-size: 22px;
+    font-family: Roboto, sans-serif;
+    color: var(--azul-escuro)
+}
+.botao-pdf {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    background-color: transparent;
+    color: var(--cinza-escuro);
+    border: 1px solid var(--cinza-claro);
+    border-radius: 20px;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+    margin-right: 10px;
+}
+.botao-pdf:hover {
+    background-color: var(--cinza-claro);
+}
+.botao-pdf .material-icons {
+    font-size: 20px;
+}
+.wrapper-container-exibicao-mensagens{
+    padding: 0px 10px;
+}
+.container-exibicao-mensagens{
+    flex: 1;
+    margin-bottom: 20px;
+    height: calc(100vh - 305px);
+    padding: 10px;
+    overflow: auto;
+    background-color: var(--cinza-claro);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+.text-box{
+    width: 75%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    background-color: var(--branco-fundo-2);
+    word-wrap: break-word;
+    box-sizing: border-box;
+    font-size: small;
+    box-shadow: 1px 1px 2px rgb(0, 0, 0, 0.1);
+    justify-content:space-between;
+}
+.align-left{
+    align-self: flex-start;
+}
+.align-right{
+    align-self: flex-end;
+}
+.mensagem-enviada{
+    align-self: flex-end;
+    background-color: var(--azul-escuro);
+    color: white;
+}
+.mensagem-recebida{
+    align-self: flex-start;
+    background-color: white;
+}
+.mensagem-erro{
+    align-self: flex-start;
+    background-color: #ffdddd;
+    color:#bb3434
+}
+.toggle-fontes-label{
+    color: var(--azul-claro);
+    font-weight: bold;
+    cursor: pointer;
+}
+.fontes{
+    font-size: smaller;
+    font-style: italic;
+}
+.fontes-aberto{
+    display:block;
+}
+.fontes-fechado{
+    display:none;
+}
+.documento{
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--cinza-claro);
+    border-radius: 5px;
+    padding: 3px;
+    margin-bottom: 10px;
+    color: var(--cinza-escuro);
+}
+.documento-titulo{
+    font-weight: bold;
+}
+.documento-conteudo{
+    
+}
+.botoes-aval{
+  display: flex;
+  justify-content: flex-end;
+}
+.icone-aval{
+  font-size: medium;
+  color: var(--cinza-medio);
+  cursor: pointer;
+  margin-left: 5px;
+  position: relative;
+}
+
+.icone-aval:hover .tooltip {
+    display:block;
+}
+
+.comentario-aval {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.tooltip {
+    display: none;
+    text-align: center;
+    font-size: small;
+    font-family:Arial, Helvetica, sans-serif;
+    padding: 10px;
+    position: absolute;
+    bottom: 20px;
+    right: 16px;
+    z-index: 1000;
+    border: 1px solid transparent;
+    border-radius: .25rem;
+}
+.positivo .tooltip{
+    color: var(--verde-escuro);
+    border-color: var(--verde-medio);
+    background-color: var(--verde-claro);
+}
+.negativo .tooltip{
+    color: var(--laranja-escuro);
+    border-color: var(--laranja-medio);
+    background-color: var(--laranja-claro);
+}
+.alerta .tooltip{
+    color: var(--vermelho-escuro);
+    border-color: var(--vermelho-medio);
+    background-color: var(--vermelho-claro);
+}
+.vermelho{
+    color: var(--vermelho);
+}
+.verde{
+    color: var(--verde);
+}
+.laranja{
+    color: var(--laranja);
+}
+.cinza{
+    color: var(--cinza-medio);
+}
+.container-envio-mensagens{
+    display: flex;
+    flex-direction: row;
+    justify-content:space-between;
+}
+#text-input{
+    width:100%;
+    height: 37px;
+    margin-bottom: 10px;
+    margin-right: 10px;
+    border: 1px solid var(--branco-fundo-3);
+    border-radius: 4px;
+    padding-left: 10px;
+}
+#text-input:disabled{
+    background-color: var(--branco-fundo-3);
+}
+
+#botao-enviar{
+    width: 80px;
+    height: 41px;
+    border: none;
+    border-radius: 4px;
+    background-color: var(--azul-claro);
+    color: white;
+    cursor: pointer;
+}
+#botao-enviar:hover{
+    background-color: var(--azul-medio);
+}
+#botao-enviar:disabled:hover{
+    background-color: var(--cinza-medio);
+    color: var(--cinza-escuro);
+}
+#botao-enviar:disabled{
+    background-color: #9e9c9c;
+    color: #616161;
+    cursor:default;
+}
+@media (max-width: 414px){
+    .titulo{
+        flex-direction: column;
+        align-items: center;
+        margin-top: 10px;
+    }
+    .container-conteudo{
+        width: 100%;
+        min-width: 300px;
+        border: none;
+        box-shadow: none;
+    }
+    .logo{
+        padding-right: 15px;
+        align-self: center;
+    }
+    .logo img{
+        height: 30px;
+    }
+    .rotulo-titulo h1{
+        border-left: 0px;
+        font-size: 20px;
+        padding: 0px;
+        margin: .3em;
+    }
+    .nome-bot{
+        display: flex;
+        align-items: center;
+    }
+    .botao-pdf{
+        display: none;
+    }
+}
+
+.pdf-wrapper{
+    font-family: Roboto, sans-serif;
+    background-color: white;
+}
+.pdf-wrapper .cabecalho{
+    all: initial;
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    background-color: var(--azul-escuro);
+}
+.pdf-wrapper .identificador-sessao {
+    margin-bottom: 30px;
+    width: 100%;
+    text-align: right;
+    font-size: 12px;
+    color: #666;
+    border-top: 1px solid #ccc;
+    background-color: white;
+}
+.pdf-wrapper .text-box{
+    all: initial;
+}
+.pdf-wrapper .mensagem-enviada{
+    all: initial;
+    font-family: Roboto, sans-serif;
+    font-size: large;
+    font-weight: bold;
+    padding-top: 40px;
+}
+.pdf-wrapper .mensagem-recebida{
+    all: initial;
+    font-family: Roboto, sans-serif;
+}
+.pdf-wrapper .mensagem-erro{
+    all: initial;
+    font-family: Roboto, sans-serif;
+}
+.pdf-wrapper .toggle-fontes-label{
+    all: initial;
+    display: none;
+}
+.pdf-wrapper .fontes{
+    all: initial;
+    font-size: smaller;
+    font-style: italic;
+    font-family: Roboto, sans-serif;
+
+}
+.pdf-wrapper .botoes-aval{
+    display: none;
+}
+.pdf-wrapper .documento{
+    margin-left: 30px;
+}
+
+
+@media print {
+    * {
+        -webkit-print-color-adjust: exact !important; /* Chrome/Safari */
+        print-color-adjust: exact !important;         /* Firefox */
+      }
+    .pdf-wrapper {
+        display: block;
+        position: relative;
+        width: 100%;
+    }
+    
+    body *:not(.pdf-wrapper, .pdf-wrapper *) {
+        display: none;
+    }
+}
+
+@keyframes dot-blink1{ 0%, 25%{opacity: 0;} 26%, 50%{opacity: 1;} 51%, 75%{opacity: 1;} 76%, 100%{opacity: 1;} }
+@keyframes dot-blink2{ 0%, 25%{opacity: 0;} 26%, 50%{opacity: 0;} 51%, 75%{opacity: 1;} 76%, 100%{opacity: 1;} }
+@keyframes dot-blink3{ 0%, 25%{opacity: 0;} 26%, 50%{opacity: 0;} 51%, 75%{opacity: 0;} 76%, 100%{opacity: 1;} }
+.dots{font-weight: bolder; font-size: large;}
+.dot1{animation: dot-blink1 2s infinite;}
+.dot2{animation: dot-blink2 2s infinite;}
+.dot3{animation: dot-blink3 2s infinite;}

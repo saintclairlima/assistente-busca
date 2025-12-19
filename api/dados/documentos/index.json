@@ -1,0 +1,93 @@
+{   
+    "regime_juridico_servidores_rn" : {
+        "url": "regime_juridico_servidores_rn.txt",
+        "titulo": "Regime Jurídico dos Servidores do Rio Grande do Norte, LEI COMPLEMENTAR ESTADUAL Nº 122, DE 30 DE JUNHO DE 1994",
+        "autor": "Governo do Rio Grande do Norte",
+        "fonte": "documentos/html/regime_juridico_servidores_rn.html",
+        "texto_articulado": true
+    },
+    "regimento_alrn": {
+        "url": "regimento_al.txt",
+        "titulo": "Regimento Interno - ALRN",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/regimento_al.html",
+        "texto_articulado": true
+    },    
+    "res_alt_plano_de_cargos_carreiras_vencimento_alrn" : {
+        "url": "res_alt_plano_de_cargos_carreiras_vencimento_alrn.txt",
+        "titulo": "Resolução Nº 75, de 27 de junho de 2024 - Alteração no Plano de Cargos, Carreiras e Vencimentos dos servidores efetivos",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_alt_plano_de_cargos_carreiras_vencimento_alrn.html",
+        "texto_articulado": true
+    },
+    "res_auxilio_saude_alrn" : {
+        "url": "res_auxilio_saude_alrn.txt",
+        "titulo": "Resolução Nº 78, de 10 de julho de 2024 - auxílio de assistência à saúde no âmbito da Assembleia Legislativa do Rio Grande do Norte",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_auxilio_saude_alrn.html",
+        "texto_articulado": true
+    },
+    "res_avaliacao_desempenho_estagio_probatorio_alrn" : {
+        "url": "res_avaliacao_desempenho_estagio_probatorio_alrn.txt",
+        "titulo": "Resolução Nº 106/2018 - Avaliação do servidor em estágio probatório de trabalho",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_avaliacao_desempenho_estagio_probatorio_alrn.html",
+        "texto_articulado": true
+    },
+    "res_avaliacao_desempenho":{
+        "url": "res_avaliacao_desempenho.txt",
+        "titulo": "Resolução Nº 2388 de 27 de agosto de 2019 - avaliação de desempenho e evolução funcional dos servidores",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_avaliacao_desempenho.html",
+        "texto_articulado": true
+    },
+    "res_base_calculo_ferias_decimo_alrn" : {
+        "url": "res_base_calculo_ferias_decimo_alrn.txt",
+        "titulo": "Resolução Nº 77, de 10 de julho de 2024 - base de cálculo do terço de férias e da gratificação natalina (13º salário)",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_base_calculo_ferias_decimo_alrn.html",
+        "texto_articulado": true
+    },
+    "res_plano_de_cargos_carreiras_vencimento_alrn" : {
+        "url": "res_plano_de_cargos_carreiras_vencimento_alrn.txt",
+        "titulo": "Resolução Nº 089/2017 - Plano de Cargos, Carreiras e Vencimentos dos servidores efetivos",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_plano_de_cargos_carreiras_vencimento_alrn.html",
+        "texto_articulado": true
+    },
+    "res_regulamentacao_cargos": {
+        "url": "res_regulamentacao_cargos.txt",
+        "titulo": "Resolução Nº 618 de 21 de junho de 2022 - Regulamenta os cargos de Analista Legislativo e o de Técnico Legislativo",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_regulamentacao_cargos.html",
+        "texto_articulado": true
+    },
+    "res_substituicao_cargo_funcao_alrn" : {
+        "url": "res_substituicao_cargo_funcao_alrn.txt",
+        "titulo": "Resolução Nº 64, de 19 de dezembro de 2022 - Substituição de cargos e funções",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_substituicao_cargo_funcao_alrn.html",
+        "texto_articulado": true
+    },
+    "res_venda_ferias" : {
+        "url": "res_venda_ferias.txt",
+        "titulo": "Resolução Nº 133, de 27 de março de 2025 - Regulamenta as férias dos servidores e dos membros do Poder Legislativo",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/res_venda_ferias.html",
+        "texto_articulado": true
+    },
+    "manual_processo_legislativo" : {
+        "url": "manual_processo_legislativo.md",
+        "titulo": "Manual de Processo Legislativo - ALERN",
+        "autor": "Assembleia Legislativa do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/manual_processo_legislativo.html",
+        "texto_articulado": false
+    },
+    "constituicao_estadual" : {
+        "url": "constituicao_estadual.txt",
+        "titulo": "Constituição do Estado do Rio Grande do Norte",
+        "autor": "Governo do Estado do Rio Grande do Norte - ALERN",
+        "fonte": "documentos/html/constituicao_estadual.html",
+        "texto_articulado": true
+    }
+}

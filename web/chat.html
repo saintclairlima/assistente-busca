@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <title>Dialogar</title>
+
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <link rel="icon" type="image/png" href="/web/img/favicon/favicon-48x48.png" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/web/img/favicon/favicon.svg" />
+    <link rel="shortcut icon" href="/web/img/favicon/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/web/img/favicon/apple-touch-icon.png" />
+    <link rel="manifest" href="/web/img/favicon/site.webmanifest" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script src="/web/markdown.js"></script>
+    <script src="/web/chat.js"></script>
+    <script>
+        function obterIdSessao() {
+            let cookies = document.cookie.split(";")
+                .map(cookie => cookie.split("="))
+                .reduce(function (obj, cookie) {
+                    obj[decodeURIComponent(cookie[0].trim())]= decodeURIComponent(cookie[1].trim());
+                    return obj;
+                }, {});
+            
+            return cookies["idCliente"];
+        }
+
+        var historico = [];
+        var urlHost = "TAG_INSERCAO_URL_HOST";
+        var mostrarCampoComentario = TAG_INSERCAO_MOSTRAR_CAMPO_COMENTARIO; // true ou false
+        var idSessao = "TAG_INSERCAO_UUID_SESSAO";
+        var idCliente = obterIdSessao();
+    </script>
+    <link rel="stylesheet" href="/web/chat.css">
+</head>
+<body>
+    
+    <div class="cabecalho">
+        <div class="titulo">
+            <div class="logo"><img src="/web/img/logo_al.png"></div>
+            <!-- <div class="rotulo-titulo"><h1>D<span style="color:#3bbeb1;">IA</span>LOGAR</h1></div> -->
+        </div>
+    </div>
+
+    <div class="container-conteudo">
+        <div class="cabecalho-assistente">
+            <div class="info-assistente">
+                <img class="img-assistente" src="/web/img/Assistente_.png">
+                <!-- <span class="rotulo-assistente">Legis</span> -->
+                <h1 class="rotulo-assistente">D<span style="color:#3bbeb1;">IA</span>LOGAR</h1>
+            </div>
+            <button class="botao-pdf" onclick="salvarConversa()">
+                <span class="material-icons">print</span>
+                <span>Imprimir</span>
+            </button>
+        </div>
+
+        <div class="wrapper-container-exibicao-mensagens">
+            <div class="container-exibicao-mensagens" id="container-exibicao-mensagens">
+                <!-- Divs das mensagens serão adicionadas aqui -->
+                <div class="text-box mensagem-recebida">
+                    <p>Bem vindo ao <strong>D<span style="color:#3bbeb1;">IA</span>LOGAR</strong>, um assistente de busca de conteúdo em documentos normativos da ALRN.</p>
+                    <p>Você pode fazer perguntas sobre o Regimento Interno da ALRN, o Regime Jurídico dos Servidores do RN e resoluções que tratam do Auxílio de Assistência à Saúde, 
+                        da Base de Cálculo de Férias e Décimo Terceiro, da Avaliação de Desempenho de Estágio Probatório, do Plano de Cargos e Carreira 
+                        e da Substituição de Férias de Cargos Comissionados ou Funções Gratificadas.</p>
+                    <p>Também posso falar sobre assuntos contidos no <strong>Manual de Processo Legislativo</strong>.</p>
+                    <p>Para facilitar, peço a gentileza de fazer perguntas de forma clara e específica. Farei o possível para encontrar a resposta.</p>
+                    <p>Tenha em mente que, como estou em fase de testes, é possível que minhas respostas tenham algumas incorreções. 
+                        É importante verificar os documentos normativos diretamente, em caso de dúvida.</p>
+                </div>
+            </div>
+            
+            <form class="container-envio-mensagens" id="container-envio-mensagens">
+                <input type="text" id="text-input" placeholder="Digite sua pergunta" required="required" oninvalid="setCustomValidity('Escreva uma pergunta')" autofocus>
+                <button onclick="enviarPergunta()" id="botao-enviar">Enviar</button>
+            </form>
+        </div>
+
+    </div>
+</body>
+</html>

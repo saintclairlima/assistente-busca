@@ -1,0 +1,11 @@
+**/__pycache__/
+/**-env
+api/.env
+api/configuracoes/arq_conf.json
+api/dados/bancos_vetores/*
+api/modelos/*
+api/testes/resultados/*
+!api/dados/bancos_vetores/bancos_vetores.zip
+**.db
+wandb
+.vscode
