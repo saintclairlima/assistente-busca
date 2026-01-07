@@ -1,3 +1,4 @@
+from pathlib import Path
 import argparse
 import ast
 import json
@@ -480,7 +481,7 @@ class GerenciadorBancoVetores:
             configuracoes.embedding_bge_m3: 'BGE-M3'
         }
         descritor = {
-            "nome": url_banco_vetores.split('/')[-1],
+            "nome": Path(url_banco_vetores).name,
             "colecoes": [
                 {
                     "uuid": uuids_colecoes[idx],
@@ -559,6 +560,6 @@ if __name__ == "__main__":
 ## Modelo de Execução
 # python -m api.dados.gerenciador_banco_vetores \
 # --nome_banco_vetores banco_assistente \
-# --lista_colecoes "['documentos_rh_instructor', 'documentos_rh_openai', 'documentos_rh_alibaba', 'documentos_rh_llama', 'documentos_rh_deepseek-r1', 'documentos_rh_bert_pt', 'documentos_rh_bge_m3']" \
-# --lista_nomes_modelos_embeddings "['hkunlp/instructor-xl', 'text-embedding-ada-002', 'Alibaba-NLP/gte-multilingual-base', 'llama3.1', 'deepseek-r1:14b', 'pierreguillou/bert-base-cased-squad-v1.1-portuguese', 'BAAI/bge-m3']" \
+# --lista_colecoes "['documentos_rh_bge_m3']" \
+# --lista_nomes_modelos_embeddings "['BAAI/bge-m3']" \
 # --comprimento_max_fragmento 300

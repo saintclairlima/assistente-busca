@@ -228,7 +228,6 @@ class ClassificadorIntencaoEmbeddings(ClassificadorIntencao):
                     solver='saga',
                     C=12.398517892412489,
                     class_weight=None,
-                    multi_class='ovr',
                     verbose=1,
                     max_iter=824
                 ))

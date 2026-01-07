@@ -269,8 +269,8 @@ copy api\configuracoes\arq_conf_template.json api\configuracoes\arq_conf.json
 
 ## Preparando o banco de vetores
 
-### Bancos de Vetores já inclusos no projeto
-Para fins de demonstração e uso direto, neste repositório foi incluído alguns banco detoriais já prontos. O conteúdo dos bancos vetoriais disponíveis é:
+### Banco de Vetores incluso no projeto
+Para fins de demonstração e uso direto, neste repositório foram incluídos documentos para geraçaõ do banco vetorial. O conteúdo dos documentos é:
 
 * Regime Jurídico dos Servidores do Rio Grande do Norte
 * Regimento Interno da Assembleia Legislativa do Rio Grande do Norte - Alern
@@ -282,33 +282,13 @@ Para fins de demonstração e uso direto, neste repositório foi incluído algun
 * Resolução Nº 77/2024 da Alern
 * Resolução Nº 78/2024 da Alern
 
-No arquivo `api/dados/bancos_vetores/bancos_vetores.zip` há um conjunto de bancos vetoriais já prontos para uso - dentre eles os que foram usados para testes. Cada um deles possui um arquivo `descritor.json` com as configurações utilizadas na sua criação. Dentre eles, o que obteve melhores resultados foi a coleção `documentos_rh_bge_m3` do banco vetorial `banco_assistente` (número máximo de palavras: 300; sem instrução oferecida ao modelo de embeddings).
-
-Dentro do mesmo banco vetorial `banco_assistente` há a coleção `documentos_rh_openai`, a qual foi criada utilizando os emebddings da OpenAI, via `chromadb.utils.embedding_functions.OpenAIEmbeddingFunction`, utilizando o modelo `text-embedding-ada-002` (vide descritor do banco vetorial), bem como outras coleções utilizando modelos a partir da classe `SentenceTransformer`. Segue o comparativo da performance de cada modelo, em que "top 10" representa a porcentagem das vezes em que uma consulta feita resulta na recuperação do documento adequado dentre os 10 melhores resultados e "top 5" dentre os 5 melhores resultados.
-
-| Coleção | Modelo | Recall - top 10 | Recall - top 5 |
-| --- | --- | --- | --- |
-`documentos_rh_bge_m3` | BAAI/BGE-M3 | 92,6% | 87,9%
-`documentos_rh_openai` | Open AI/Ada-002 | 91,2% | 86,1%
-`documentos_rh_alibaba` | Alibaba-NLP/GTE | 87,5% | 80,5%
-`documentos_rh_instructor` | HKU-NLP/Instructor | 84,9% | 78,6%
-`documentos_rh_bert_pt` | Bert-Base-Cased-Squat-1-PtBr | 7,15% | 5,6%
-`documentos_rh_deepseek` | Deepseek/Deepseek-R1 (destilado) | 4,3% | 2,0%
-`documentos_rh_llama` | Meta/Llama3.1 | 3,2% | 1,9% 
-
-Para se utilizar desses bancos de vetores, pode-se descompactar seu conteúdo diretamente na pasta `bancos_vetores`, dado que os arquivos de configurações já estão por padrão definidos para utilizar a coleção `documentos_rh_bge_m3` do banco vetorial `banco_assistente`. Em um ambiente Linux executa-se:
+Para se gerar e utilizar o banco vetorial com os documentos inclusos, utilizando as configurações padrão, executa-se a ferramenta de geração de bancos vetoriais da seguinte forma:
 
 ```bash
-unzip api/dados/bancos_vetores/bancos_vetores.zip -d api/dados/bancos_vetores
+python -m api.dados.gerenciador_banco_vetores --nome_banco_vetores banco_assistente --lista_colecoes "['documentos_rh_bge_m3']" --lista_nomes_modelos_embeddings "['BAAI/bge-m3']" --comprimento_max_fragmento 300
 ```
 
-Em um ambiente Windows:
-
-```bash
-tar -xf .\api\dados\bancos_vetores\bancos_vetores.zip -C .\api\dados\bancos_vetores
-```
-
-Se for de sua conveniência, a exclusão dos arquivos pode ser realizada, dado que são dispensáveis.
+O nome da coleção (`'documentos_rh_bge_m3'`) e o modelo (`BAAI/BGE-m3`) utilizados podem ser alterados, bem como os documentos base a serem usados para geraçaõ do banco vetorial, desde que ajustado o [arquivo de configuração](#arquivo-de-configuração), conforme descrito na sessão abaixo.
 
 ### Criando um banco de vetores com conteúdo customizado
 Para se criar um banco de vetores, é necessário preparar um conjunto de documentos. Por convenção, são armazenados em `/api/dados/documentos/`. Caso sejam armazenado em outra localização, ajustar o [arquivo de configuração](#arquivo-de-configuração) para `url_pasta_documentos` apontar o caminho correto - bem como `url_indice_documentos`, que normalmente fica junto com os documentos.

@@ -1,20 +1,21 @@
+REM echo "Criando ambiente virtual python..."
+REM python -m venv chat-env
+REM chat-env\Scripts\activate
+REM echo "\n\n\n"
+
 echo "Preparando os arquivos necessários..."
 copy api\.env.TEMPLATE api\.env
 copy api\configuracoes\arq_conf_template.json api\configuracoes\arq_conf.json
-tar -xf .\api\dados\bancos_vetores\bancos_vetores.zip -C .\api\dados\bancos_vetores
-rmdir /s /q api\dados\bancos_vetores\banco_vetores_alrn
-rmdir /s /q api\dados\bancos_vetores\banco_vetores_regimento_resolucoes_rh
-rmdir /s /q api\dados\bancos_vetores\resultados_testes
-echo "\n\n\n"
-
-echo "Criando ambiente virtual python..."
-python -m venv chat-env
-chat-env\Scripts\activate
-echo "\n\n\n"
 
 echo "Instalando dependências..."
+python -m pip install --upgrade pip
+REM  pip install torch --index-url https://download.pytorch.org/whl/cpu                   # Ambiente com CPU
+REM  pip install --pre torch --index-url https://download.pytorch.org/whl/nightly/cu126   # Ambiente com CUDA 12.6
 pip install -r requirements.txt
 echo "\n\n\n"
+
+echo "Criando banco vetorial a partir dos documentos..."
+python -m api.dados.gerenciador_banco_vetores --nome_banco_vetores banco_assistente --lista_colecoes "['documentos_rh_bge_m3']" --lista_nomes_modelos_embeddings "['BAAI/bge-m3']" --comprimento_max_fragmento 300
 
 echo "Criando banco SQLite para persistência das interações..."
 python -m api.dados.persistencia
