@@ -270,7 +270,7 @@ class GeradorDeRespostas:
                     'tag': 'interacao-finalizada',
                     'conteudo': ids_persistencia_interacao
                 }
-            ).json()
+            ).json() + '\n'
         
         if self.tabela_log_requisicao:
             self.tabela_log_requisicao.add_data(pergunta, texto_resposta_llm, lista_documentos_formatados, tempo_recuperacao_documentos, tempo_estimativa_bert, resposta_completa_llm, tempo_inicio_stream_resposta, tempo_cliente_llm)
@@ -336,7 +336,7 @@ class GeradorDeRespostas:
                     'tag': 'interacao-finalizada',
                     'conteudo': ids_persistencia_interacao
                 }
-            ).json()
+            ).json() + '\n'
         
         yield msg
         if self.fazer_log: print('Concluído')
@@ -355,7 +355,7 @@ class GeradorDeRespostas:
                     'tag': 'frag-resposta-llm',
                     'conteudo': resposta
                 }
-            ).json()
+            ).json() + '\n'
         
         dados_interacao = {
             'pergunta': dados_chat.pergunta,
@@ -388,7 +388,7 @@ class GeradorDeRespostas:
                     'tag': 'interacao-finalizada',
                     'conteudo': ids_persistencia_interacao
                 }
-            ).json()
+            ).json() + '\n'
         
         yield msg
         if self.fazer_log: print('Concluído')
@@ -403,7 +403,7 @@ class GeradorDeRespostas:
                     'tag': 'servir-documento',
                     'conteudo': resposta
                 }
-            ).json()
+            ).json() + '\n'
         
         dados_interacao = {
             'pergunta': dados_chat.pergunta,
@@ -436,7 +436,7 @@ class GeradorDeRespostas:
                     'tag': 'interacao-finalizada',
                     'conteudo': ids_persistencia_interacao
                 }
-            ).json()
+            ).json() + '\n'
         
         yield msg
         if self.fazer_log: print('Concluído')
@@ -482,4 +482,4 @@ class GeradorDeRespostas:
                 'tag': 'persistencia-avaliacao',
                 'conteudo': dados_avaliacao
             }
-        ).json()
+        ).json() + '\n'
