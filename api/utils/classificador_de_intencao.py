@@ -178,11 +178,13 @@ class ClassificadorIntencaoEmbeddings(ClassificadorIntencao):
         caminho_classificador='api/modelos/classificador_intencao_embeddings.joblib',
         modelo_embeddings=configuracoes.embedding_bge_m3,
         pipeline=None,
-        log_progresso=False
+        log_progresso=False,
+        device=configuracoes.device
     ):
         
-        device = 'cuda' if cuda.is_available() else 'cpu'
-        print(f'-- Carregando modelo de embeddings ({modelo_embeddings})')
+        if not device:
+            device = 'cuda' if cuda.is_available() else 'cpu'
+        print(f'-- Carregando modelo de embeddings ({modelo_embeddings} - device={device})')
         self.embedder = SentenceTransformer(modelo_embeddings, device=device, trust_remote_code=True)
 
         self.metadados = {
