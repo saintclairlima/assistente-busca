@@ -89,5 +89,12 @@
         "autor": "Governo do Estado do Rio Grande do Norte - ALERN",
         "fonte": "documentos/html/constituicao_estadual.html",
         "texto_articulado": true
+    },
+    "alernprev" : {
+        "url": "alernprev_regulamento.txt",
+        "titulo": "Regulamento do Plano de Previdência Complementar ALERNPrev",
+        "autor": "BB Previdência",
+        "fonte": "documentos/html/alernprev_regulamento.html",
+        "texto_articulado": true
     }
 }
