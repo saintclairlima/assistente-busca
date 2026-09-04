@@ -96,5 +96,19 @@
         "autor": "BB Previdência",
         "fonte": "documentos/html/alernprev_regulamento.html",
         "texto_articulado": true
+    },
+    "alernprev_faq" : {
+        "url": "alernprev_faq.txt",
+        "titulo": "Perguntas Frequentes do ALERNPrev",
+        "autor": "BB Previdência",
+        "fonte": "documentos/html/alernprev_faq.html",
+        "texto_articulado": false
+    },
+    "lei_previdencia_complementar" : {
+        "url": "lei_previdencia_complementar.txt",
+        "titulo": "Lei complementar estadual 724 de 2022 - Previdência Complementar da ALRN",
+        "autor": "BB Previdência",
+        "fonte": "documentos/html/lei_previdencia_complementar.html",
+        "texto_articulado": true
     }
 }

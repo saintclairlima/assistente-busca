@@ -379,7 +379,7 @@ class GerenciadorBancoVetores:
         funcao_embeddings = self.obter_funcao_embeddings(nome_modelo=nome_modelo_embeddings)
         colecao = cliente_chroma.get_collection(name=nome_colecao, embedding_function=funcao_embeddings)
 
-        print(f'>>> Atualizando Banco {url_banco_vetores} - Coleção {nome_colecao} - Embeddings {nome_modelo_embeddings}')
+        print(f'>>> Atualizando Banco Vetorial {url_banco_vetores} - Coleção {nome_colecao} - Embeddings {nome_modelo_embeddings}')
 
         uuids_fragmentos_incluidos = []
         qtd_fragmentos = len(fragmentos)
@@ -444,6 +444,128 @@ class GerenciadorBancoVetores:
         
         print('\n-- Tabelas SQL atualizadas!')
         return None
+
+    
+    def adicionar_documento_par_valor (self,
+        rotulo_documento,
+        comprimento_max_fragmento=configuracoes.num_maximo_palavras_por_fragmento,
+        url_indice_documentos=None,
+        url_banco_vetores=configuracoes.url_banco_vetores,
+        nome_colecao=configuracoes.nome_colecao_de_documentos,
+        nome_modelo_embeddings=configuracoes.embedding_bge_m3):
+        
+        if url_indice_documentos:
+            with open(url_indice_documentos, 'r', encoding='utf-8') as arq:
+                info_documento = json.load(arq)[rotulo_documento]
+        else:
+            info_documento = configuracoes.documentos[rotulo_documento]
+        
+        with open(os.path.join(configuracoes.url_pasta_documentos,info_documento['url']), 'r', encoding='utf-8') as arq:
+            conteudo = arq.read()
+        conteudo = conteudo.split('\n\n')
+        
+        funcao_embeddings = self.obter_funcao_embeddings(nome_modelo=nome_modelo_embeddings)
+        
+        ids = []
+        contents   = []
+        metadatas  = []
+        embeddings = []
+        
+        num_itens = len(conteudo)
+        print(f'>>> Gerando conteúdo, embeddings e metadados...')
+        for idx, item in enumerate(conteudo):
+            uuid_frag = str(uuid.uuid4())
+            chave = item.split('\n')[0]
+            embedding = funcao_embeddings([chave])[0]
+            page_content = item
+            metadata =  {
+                'id': uuid_frag,
+                'titulo': f'{info_documento["titulo"]}',
+                'subtitulo': f'Pergunta {idx + 1}',
+                'autor': f'{info_documento["autor"]}',
+                'fonte': f'{info_documento["fonte"]}',
+                'tag_fragmento' : f'{rotulo_documento}:{idx+1}'
+            }
+            
+            ids.append(uuid_frag)
+            contents.append(page_content)
+            metadatas.append(metadata)
+            embeddings.append(embedding)
+            print(f'\r>>> -- processados {idx + 1} de {num_itens}...', end='')
+        print(f'\n>>> -- concluído!')
+
+        print(f'>>> Atualizando Banco Vetorial {url_banco_vetores} - Coleção {nome_colecao} - Embeddings {nome_modelo_embeddings}')
+        cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
+        colecao = cliente_chroma.get_collection(name=nome_colecao, embedding_function=funcao_embeddings)
+        colecao.add(
+            documents=contents,
+            ids=ids,
+            metadatas=metadatas,
+            embeddings=embeddings
+        )
+        
+        print('\n>>> -- Coleção atualizada com novo documento')
+        return self.persistir_fragmentos_sql(
+            ids,
+            url_banco_vetores,
+            nome_colecao
+        )
+
+    def persistir_fragmentos_sql(self,
+        uuids_fragmentos_incluidos,
+        url_banco_vetores=configuracoes.url_banco_vetores,
+        nome_colecao=configuracoes.nome_colecao_de_documentos):
+
+        print('>>> Atualizando tabelas SQL...')
+        from api.dados.persistencia import GerenciadorPersistenciaSQL, GerenciadorPersistenciaSQLite
+        if configuracoes.tipo_persistencia == 'mssql':
+            gp = GerenciadorPersistenciaSQL()
+        elif configuracoes.tipo_persistencia == 'sqlite':
+            gp = GerenciadorPersistenciaSQLite()
+        
+        cliente_chroma = chromadb.PersistentClient(path=url_banco_vetores)
+        colecao = cliente_chroma.get_collection(name=nome_colecao)
+            
+        banco_dados = gp.obter_conexao_banco()
+
+        colecoes_uuids = {
+            resultado[1]: str(resultado[0])
+            for resultado in banco_dados.executar_query_select(tabela='colecao', colunas=['uuid_colecao', 'nome'])
+        }
+
+        query_inserir_doc = 'INSERT INTO Documento ' + \
+                            '(UUID_Documento, Tag_Fragmento, Conteudo, Titulo, Subtitulo, Autor, Fonte, UUID_Colecao) ' + \
+                            'VALUES (?,?,?,?,?,?,?,?);'
+        
+        fragmentos = colecao.get(ids=uuids_fragmentos_incluidos)
+
+        fragmentos = [
+                {
+                    'id': fragmentos['ids'][idx],
+                    'conteudo': fragmentos['documents'][idx],
+                    'metadados':  fragmentos['metadatas'][idx],
+                }
+                for idx in range(len(fragmentos['ids']))
+            ]
+        
+        for idx, frag in enumerate(fragmentos):
+            print(f'\r>>> Persistindo fragmento {idx+1} de {len(fragmentos)}', end='')
+            uuid_documento=frag['metadados']['id']
+            tag_fragmento=frag['metadados']['tag_fragmento']
+            conteudo=frag['conteudo']
+            titulo=frag['metadados']['titulo']
+            subtitulo=frag['metadados']['subtitulo']
+            autor=frag['metadados']['autor']
+            fonte=frag['metadados']['fonte']
+            uuid_colecao=colecoes_uuids[nome_colecao]
+            
+            dados = [uuid_documento, tag_fragmento, conteudo, titulo, subtitulo, autor, fonte, uuid_colecao]
+            id_doc_inserido = banco_dados.executar_query_insercao(query=query_inserir_doc, dados=dados)
+        
+        print('\n-- Tabelas SQL atualizadas!')
+        return None
+
+        
 
         
     def executar(self,
